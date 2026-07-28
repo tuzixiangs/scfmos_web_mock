@@ -1,3 +1,9 @@
+import {
+  intranetPermissionMenus,
+  type IntranetPermissionMenu
+} from './intranet-permission-menus'
+import { intranetQuickMenus } from './intranet-quick-menus'
+
 /**
  * 本地演示数据。只放稳定、脱敏的业务样例，按需可继续补充具体接口。
  * 统一响应在 src/mock/index.ts 中组装为后端约定的 { code, msg, data }。
@@ -81,6 +87,26 @@ export const dashboardTabs = [
   { attribute6: 'contract', backlogGroupName: '合同业务', backlogGroupNum: '2', count: 1 }
 ]
 
+// 这三项在当前导出的前端包中没有对应的页面文件。保留真实菜单入口，
+// 并指向本地占位页，避免打开菜单时动态路由找不到组件而报错。
+const fallbackMenuComponents = new Set([
+  'projectparamconfigerandmanager/preInputApply/index',
+  'projectparamconfigerandmanager/preInputMaintianApply/index',
+  'projectparamconfigerandmanager/preInputApply/detail/index'
+])
+
+const normalizeIntranetMenus = (menus: IntranetPermissionMenu[]): IntranetPermissionMenu[] =>
+  menus.map((menu) => ({
+    ...menu,
+    // 内网返回中有两个同名的 componentName，Vue Router 会覆盖先注册的路由。
+    componentName: menu.id === 1285 ? 'DzhtSupplyApproveChain' : menu.componentName,
+    component:
+      typeof menu.component === 'string' && fallbackMenuComponents.has(menu.component)
+        ? 'mock/UnavailableFeature'
+        : menu.component,
+    children: Array.isArray(menu.children) ? normalizeIntranetMenus(menu.children) : menu.children
+  }))
+
 export const permissionInfo = {
   permissions: ['*:*:*'],
   roles: ['admin'],
@@ -95,25 +121,6 @@ export const permissionInfo = {
     email: 'mock@example.com'
   },
   dept: { id: 1, name: '总行供应链金融部' },
-  quickMenus: [],
-  menus: [
-    {
-      id: 100, parentId: 0, name: '客户管理', path: '/customerInfoMGM', icon: 'ep:user', visible: true, keepAlive: true,
-      children: [
-        { id: 101, parentId: 100, name: '公司客户管理', path: 'companyCustomerMGM/customerMGM', component: 'customerInfoMGM/companyCustomerMGM/customerMGM/index', icon: 'ep:office-building', visible: true, keepAlive: true }
-      ]
-    },
-    {
-      id: 200, parentId: 0, name: '授信申请', path: '/creditapplication', icon: 'ep:document', visible: true, keepAlive: true,
-      children: [
-        { id: 201, parentId: 200, name: '授信申请待办', path: 'pendding', component: 'creditapplication/pendding/index', icon: 'ep:timer', visible: true, keepAlive: true }
-      ]
-    },
-    {
-      id: 300, parentId: 0, name: '项目管理', path: '/projectMana', icon: 'ep:files', visible: true, keepAlive: true,
-      children: [
-        { id: 301, parentId: 300, name: '项目授信审批', path: 'projectCreditMana/xmsxsp', component: 'projectMana/projectCreditMana/xmsxsp/index', icon: 'ep:search', visible: true, keepAlive: true }
-      ]
-    }
-  ]
+  quickMenus: normalizeIntranetMenus(intranetQuickMenus),
+  menus: normalizeIntranetMenus(intranetPermissionMenus)
 }

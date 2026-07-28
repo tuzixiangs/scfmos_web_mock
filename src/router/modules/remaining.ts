@@ -659,7 +659,7 @@ const remainingRouter: AppRouteRecordRaw[] = [
         },
         {
           path:'creditApplyJob/detail',
-          component:()=> import("@/views/creditapplication/creditApplyJob/customerDetail/index.vue"),
+          component:()=> import("@/views/creditapplication/creditApplyJob/projectCreditDetail/index.vue"),
           name:'creditApplyJobDetail',
           meta:{
             title:'授信额度申请-详情',
@@ -806,6 +806,68 @@ const remainingRouter: AppRouteRecordRaw[] = [
           canTo: true,
           hidden: true
         },
+      }
+    ]
+  },
+  {
+    path: '/indebt/debtRuleManagement',
+    component: Layout,
+    name: 'DebtRuleManagementDirect',
+    meta: {
+      hidden: true
+    },
+    children: [
+      {
+        path: 'supplementApply',
+        component: () => import('@/views/indebt/debtRuleManagement/index.vue'),
+        name: 'DebtRuleSupplementApplyDirect',
+        meta: { title: '债项规则补配申请', noCache: true, canTo: true, hidden: true }
+      },
+      {
+        path: 'supplementApproval',
+        component: () => import('@/views/indebt/debtRuleManagement/index.vue'),
+        name: 'DebtRuleSupplementApprovalDirect',
+        meta: { title: '债项规则补配审批', noCache: true, canTo: true, hidden: true }
+      },
+      {
+        path: 'ruleMaintenance',
+        component: () => import('@/views/indebt/debtRuleManagement/index.vue'),
+        name: 'DebtRuleMaintenanceDirect',
+        meta: { title: '债项规则维护', noCache: true, canTo: true, hidden: true }
+      },
+      {
+        path: 'ruleLibrary',
+        component: () => import('@/views/indebt/debtRuleManagement/index.vue'),
+        name: 'DebtRuleLibraryDirect',
+        meta: { title: '债项规则库管理', noCache: true, canTo: true, hidden: true }
+      }
+    ]
+  },
+  {
+    path: '/indebt/debtLedgerQuery',
+    component: Layout,
+    name: 'DebtLedgerQueryDirect',
+    meta: {
+      hidden: true
+    },
+    children: [
+      {
+        path: 'orderContractLedgerQuery',
+        component: () => import('@/views/indebt/debtLedgerQuery/orderContractLedgerQuery/index.vue'),
+        name: 'OrderContractLedgerQueryDirect',
+        meta: { title: '订单/合同台账查询', noCache: true, canTo: true, hidden: true }
+      },
+      {
+        path: 'assetLedgerQuery',
+        component: () => import('@/views/indebt/debtLedgerQuery/assetLedgerQuery/index.vue'),
+        name: 'AssetLedgerQueryDirect',
+        meta: { title: '债项资产台账查询', noCache: true, canTo: true, hidden: true }
+      },
+      {
+        path: 'offlineLedgerQuery',
+        component: () => import('@/views/indebt/debtLedgerQuery/offlineLedgerQuery/index.vue'),
+        name: 'OfflineLedgerQueryDirect',
+        meta: { title: '线下台账查询', noCache: true, canTo: true, hidden: true }
       }
     ]
   },

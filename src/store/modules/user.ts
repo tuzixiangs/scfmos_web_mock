@@ -61,7 +61,9 @@ export const useUserStore = defineStore('admin-user', {
         this.resetState()
         return null
       }
-      let userInfo = wsCache.get(CACHE_KEY.USER)
+      // 本地 Mock 开发期间菜单经常调整，刷新页面时优先重新获取权限，避免命中旧菜单缓存。
+      let userInfo =
+        import.meta.env.VITE_USE_MOCK === 'true' ? await getInfo() : wsCache.get(CACHE_KEY.USER)
       if (!userInfo) {
         userInfo = await getInfo()
       }

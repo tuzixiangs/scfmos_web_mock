@@ -124,7 +124,7 @@ defineExpose({
     <Icon v-show="visible" class="mr-4px" icon="ep:minus" />
     <el-button link> 查询条件 </el-button>
   </div>
-  <el-scrollbar max-height="180px" class="mb-2">
+  <div v-show="visible" class="search-scroll-area mb-2">
     <!-- update by 芋艿：class="-mb-15px" 用于降低和 ContentWrap 组件的底部距离，避免空隙过大 -->
     <Form
       v-show="visible"
@@ -163,7 +163,7 @@ defineExpose({
         <slot :name="name"></slot>
       </template>
     </Form>
-  </el-scrollbar>
+  </div>
   <template v-if="layout === 'bottom'">
     <div :style="bottonButtonStyle" class="mb-2" v-show="visible">
       <ElButton v-if="showSearch" tpye="" @click="search">
@@ -183,3 +183,10 @@ defineExpose({
     </div>
   </template>
 </template>
+
+<style scoped>
+.search-scroll-area {
+  max-height: 180px;
+  overflow: auto;
+}
+</style>
