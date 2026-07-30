@@ -119,6 +119,54 @@ import { assetLedgerProjects, assetLedgerRecords } from './asset-ledger-query'
 import { offlineLedgerQueryProjects, offlineLedgerQueryRecords } from './offline-ledger-query'
 import { assetRiskContractLedgers, assetRiskCustomerLedgers, assetRiskLedgerProjects } from './asset-risk-ledger-query'
 import { debtRuleApprovalRecords, debtRuleLibraryRecords, debtRuleMaintenanceRecords, debtRuleSupplementRecords } from './debt-rule-management'
+import {
+  chainCompanyCustomerRecords,
+  chainPersonCustomerRecords,
+  coreCustomerRecords
+} from './chain-customer'
+import {
+  financingApplicationMenu,
+  financingApplicationRecords,
+  financingClearingRecords,
+  financingTicketRecords
+} from './financing-application-management'
+import {
+  contractRegistrationMenu,
+  contractRegistrationPage
+} from './contract-registration'
+import { loanApplicationMenu, loanApplicationPage } from './loan-application'
+import { loanApprovalMenus, loanApprovalPage } from './loan-approval'
+import { approvalChangeApplicationMenu, approvalChangeApplicationPage } from './approval-change-application'
+import {
+  linkedBusinessApprovalMenus,
+  linkedContractApprovalPage,
+  linkedQuotaApprovalMenus
+} from './linked-contract-approval'
+import {
+  supplyChainDecisionApplicationMenu,
+  supplyChainDecisionCheckMenu,
+  supplyChainDecisionPage
+} from './supply-chain-decision-data'
+import {
+  cancelProjectParamAdjustmentRecord,
+  createProjectParamAdjustmentRecord,
+  projectParamAdjustmentMenu,
+  projectParamAdjustmentPage,
+  projectParamAdjustmentProjects
+} from './project-param-adjustment'
+import {
+  companyCustomerDetail,
+  companyCustomerList,
+  companyCustomerPageVO,
+  companyCustomerViewMenu,
+  selfEmployedCustomerDetail,
+  selfEmployedCustomerList,
+  selfEmployedCustomerPageVO,
+  selfEmployedCustomerViewMenu,
+  workflowDetail,
+  workflowDetailMenu,
+  workflowDetailPageVO
+} from './customer-company-detail'
 
 const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
 const urlPath = (url = '') => url.split('?')[0].replace(/^https?:\/\/[^/]+/, '')
@@ -519,6 +567,93 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     data = permissionInfo
   } else if (/\/system\/dict-data\/simple-list$/.test(url)) {
     data = dictData
+  } else if (/\/system\/business\/approveMenu\/Menu$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = query.codeNo === 'TSELCreditApplyMain'
+      ? cloneMockData(financingApplicationMenu)
+      : query.codeNo === 'BookInContractMain'
+        ? cloneMockData(contractRegistrationMenu)
+        : query.codeNo === 'ParamAdjustApplyMain'
+          ? cloneMockData(projectParamAdjustmentMenu)
+        : optionData
+  } else if (/\/system\/putout-info\/getMenuList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = query.codeNo === 'PutOutApplyMain' ? cloneMockData(loanApplicationMenu) : optionData
+  } else if (/\/system\/putout-info\/getApprovePutOutApplyMenu$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const type = String(payload.type || '') as 'N' | 'Y'
+    data = cloneMockData(loanApprovalMenus[type] || [])
+  } else if (/\/system\/putout-info\/reviewLendingApplicationsRecheckPage$/.test(url)) {
+    data = cloneMockData(loanApprovalPage(parseMockPayload(config.data)))
+  } else if (/\/system\/putout-info\/pendPutOutApplyList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(loanApplicationPage(query))
+  } else if (/\/system\/approveChangeApply\/getMenuList$/.test(url)) {
+    data = cloneMockData(approvalChangeApplicationMenu)
+  } else if (/\/system\/approveChangeApply\/getApproveChangeApplyList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(approvalChangeApplicationPage(query))
+  } else if (/\/system\/ProjectWhiteList\/getMenu$/.test(url)) {
+    data = cloneMockData(supplyChainDecisionApplicationMenu)
+  } else if (/\/system\/ProjectWhiteList\/getApproveMenu$/.test(url)) {
+    data = cloneMockData(supplyChainDecisionCheckMenu)
+  } else if (/\/system\/ProjectWhiteList\/getProjectWhiteList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(supplyChainDecisionPage(query))
+  } else if (/\/system\/paramAdjust\/page$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(projectParamAdjustmentPage(query))
+  } else if (/\/system\/paramAdjust\/qryProjectNameListPage$/.test(url)) {
+    data = { total: projectParamAdjustmentProjects.length, list: cloneMockData(projectParamAdjustmentProjects), records: cloneMockData(projectParamAdjustmentProjects) }
+  } else if (/\/system\/paramAdjust\/addApply$/.test(url)) {
+    data = cloneMockData(createProjectParamAdjustmentRecord(parseMockPayload(config.data)))
+  } else if (/\/system\/paramAdjust\/cancelApply$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    data = { success: Boolean(cancelProjectParamAdjustmentRecord(payload.serialNo || payload.serialno)) }
+  } else if (/\/system\/ContractTask\/ContractTaskList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(linkedQuotaApprovalMenus[String(query.flag || 'N') as 'N' | 'Y'] || [])
+  } else if (/\/system\/ContractTask\/ywContractTaskList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(linkedBusinessApprovalMenus[String(query.flag || 'N') as 'N' | 'Y'] || [])
+  } else if (/\/system\/ContractTask\/(?:ContractList|ywContractList)$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(linkedContractApprovalPage(query))
+  } else if (/\/system\/business-approve\/getBusinessApprovePage$/.test(url)) {
+    data = cloneMockData(contractRegistrationPage(parseMockPayload(config.data)))
+  } else if (/\/system\/sxctCreditApply\/page$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const phaseType = String(payload.phaseType || '')
+    const customerName = String(payload.customername || '').trim()
+    const billNo = String(payload.subbillnum || '').trim()
+    const rootBillNo = String(payload.rootbillnum || '').trim()
+    const certId = String(payload.certid || '').trim()
+    const records = financingApplicationRecords.filter((record) =>
+      (!phaseType || record.phaseType === phaseType) &&
+      (!customerName || record.customername.includes(customerName)) &&
+      (!billNo || record.subbillnum.includes(billNo)) &&
+      (!rootBillNo || record.rootbillnum.includes(rootBillNo)) &&
+      (!certId || record.certid.includes(certId))
+    )
+    data = { total: records.length, list: cloneMockData(records), records: cloneMockData(records) }
+  } else if (/\/system\/sxctCreditApply\/pagePutOutList$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const phaseType = String(payload.phaseType || '')
+    const customerName = String(payload.customername || '').trim()
+    const records = financingTicketRecords.filter((record) =>
+      (!phaseType || record.phaseType === phaseType) &&
+      (!customerName || record.customername.includes(customerName))
+    )
+    data = { total: records.length, list: cloneMockData(records), records: cloneMockData(records) }
+  } else if (/\/system\/sxctCreditApply\/pageQFDFList$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const phaseType = String(payload.phaseType || '')
+    const rootBillNo = String(payload.rootbillnum || '').trim()
+    const records = financingClearingRecords.filter((record) =>
+      (!phaseType || record.phaseType === phaseType) &&
+      (!rootBillNo || record.rootbillnum.includes(rootBillNo))
+    )
+    data = { total: records.length, list: cloneMockData(records), records: cloneMockData(records) }
   } else if (/\/system\/index\/allCount$/.test(url)) {
     data = 0
   } else if (/\/system\/index\/getWaitDealQueryListGroup$/.test(url)) {
@@ -594,6 +729,127 @@ export const mockAdapter: AxiosAdapter = async (config) => {
       ...cloneMockData(projectDetail),
       applicationNo: detailKey
     }
+  } else if (/\/system\/customerinfo\/ent\/customerInfoEntPage$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const customerName = String(query.customerName || '').trim()
+    const certID = String(query.certID || '').trim()
+    const coreCustomerNo = String(query.mfCustomerId || '').trim()
+    const records = companyCustomerList.filter((item) =>
+      (!customerName || item.customerName.includes(customerName)) &&
+      (!certID || item.certID.includes(certID)) &&
+      (!coreCustomerNo || item.mfcustomerID.includes(coreCustomerNo))
+    )
+    const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+    data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/customerinfo\/getTeamWorkProjectIntList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const customerName = String(query.customerName || '').trim()
+    const certId = String(query.certId || '').trim()
+    const projectName = String(query.projectName || '').trim()
+    const projectId = String(query.projectId || '').trim()
+    const mfCustomerId = String(query.mfCustomerId || '').trim()
+    const records = chainPersonCustomerRecords.filter((item) =>
+      (!customerName || item.customerName.includes(customerName)) &&
+      (!certId || item.certId.includes(certId)) &&
+      (!projectName || item.projectName.includes(projectName)) &&
+      (!projectId || item.projectId.includes(projectId)) &&
+      (!mfCustomerId || item.mfCustomerId.includes(mfCustomerId))
+    )
+    const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+    data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/customerinfo\/getTeamWorkProjectEntList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const customerName = String(query.customerName || '').trim()
+    const certId = String(query.certID || query.certId || '').trim()
+    const projectName = String(query.projectName || '').trim()
+    const projectId = String(query.projectId || '').trim()
+    const mfCustomerId = String(query.mfCustomerId || '').trim()
+    const records = chainCompanyCustomerRecords.filter((item) =>
+      (!customerName || item.customerName.includes(customerName)) &&
+      (!certId || item.certId.includes(certId)) &&
+      (!projectName || item.projectName.includes(projectName)) &&
+      (!projectId || item.projectId.includes(projectId)) &&
+      (!mfCustomerId || item.mfCustomerId.includes(mfCustomerId))
+    )
+    const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+    data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/customerinfo\/getTeamWorkProjectCustomerList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const customerName = String(query.customerName || '').trim()
+    const certId = String(query.certID || query.certId || '').trim()
+    const projectName = String(query.projectName || '').trim()
+    const projectId = String(query.projectId || '').trim()
+    const mfCustomerId = String(query.mfCustomerId || '').trim()
+    const records = coreCustomerRecords.filter((item) =>
+      (!customerName || item.customerName.includes(customerName)) &&
+      (!certId || item.certId.includes(certId)) &&
+      (!projectName || item.projectName.includes(projectName)) &&
+      (!projectId || item.projectId.includes(projectId)) &&
+      (!mfCustomerId || item.mfCustomerId.includes(mfCustomerId))
+    )
+    const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+    data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/custom-self-employed\/getCustomerView$/.test(url)) {
+    data = cloneMockData(selfEmployedCustomerViewMenu)
+  } else if (/\/system\/custom-self-employed\/page$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const customerName = String(query.customerName || '').trim()
+    const certId = String(query.certId || '').trim()
+    const mfCustomerId = String(query.mfCustomerId || '').trim()
+    const records = selfEmployedCustomerList.filter((item) =>
+      (!customerName || item.customerName.includes(customerName)) &&
+      (!certId || item.certId.includes(certId)) &&
+      (!mfCustomerId || item.mfCustomerID.includes(mfCustomerId))
+    )
+    const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+    data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/custom-self-employed\/get$/.test(url)) {
+    const customerId = String(urlQuery(config.url).customerid || config.params?.customerid || '')
+    const listItem = selfEmployedCustomerList.find((item) => item.customerId === customerId)
+    data = {
+      ...cloneMockData(selfEmployedCustomerDetail),
+      customerid: customerId || selfEmployedCustomerDetail.customerid,
+      customername: listItem?.customerName || selfEmployedCustomerDetail.customername,
+      mfcustomerid: listItem?.mfCustomerID || selfEmployedCustomerDetail.mfcustomerid
+    }
+  } else if (/\/system\/custom-self-employed\/getDock$/.test(url)) {
+    data = cloneMockData(selfEmployedCustomerPageVO)
+  } else if (/\/system\/customerinfo\/getCustomerPageVO$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = String(query.customerType || '') === '0320'
+      ? cloneMockData(selfEmployedCustomerPageVO)
+      : cloneMockData(companyCustomerPageVO)
+  } else if (/\/system\/customerinfo\/ent\/customerInfoEntDetail$/.test(url)) {
+    const customerId = String(urlQuery(config.url).customerId || config.params?.customerId || '')
+    const listItem = companyCustomerList.find((item) => item.customerID === customerId)
+    data = {
+      ...cloneMockData(companyCustomerDetail),
+      customerid: customerId || companyCustomerDetail.customerid,
+      enterprisename: listItem?.customerName || companyCustomerDetail.enterprisename,
+      mfcustomerid: listItem?.mfcustomerID || companyCustomerDetail.mfcustomerid
+    }
+  } else if (/\/system\/customerinfo\/ent\/getCustomerTemplateNo$/.test(url)) {
+    data = 'EnterpriseInfo1010NC'
+  } else if (/\/system\/customerinfo\/ent\/entTempSaveFlag$/.test(url)) {
+    data = '2'
+  } else if (/\/system\/customerinfo\/entImportFlag$/.test(url)) {
+    data = false
+  } else if (/\/system\/(?:singleCreditApply\/getMenuList|business-approve\/approveLineMenu|business-contract\/getMenuList|putout-info\/getPutOutDetailTree)$/.test(url)) {
+    data = cloneMockData(workflowDetailMenu)
+  } else if (/\/system\/(?:singleCreditApply\/getCreditTempFiled|business-approve\/getApproveTempFiled|customerinfo\/ent\/creditLineTemplateFiled|putout-info\/getPutOutTemplate)$|\/system\/+business-contract\/getCreditTempFiled$/.test(url)) {
+    data = cloneMockData(workflowDetailPageVO)
+  } else if (/\/system\/(?:singleCreditApply\/getDetailInfo|business-approve\/getDetailInfo|customerinfo\/ent\/creditLineDetail|business-contract\/getDetailInfo|putout-info\/getPutOutDetailValue)$/.test(url)) {
+    data = cloneMockData(workflowDetail)
   } else if (/\/system\/indebt\/inventory-goods\/page$/.test(url)) {
     data = inventoryGoodsPageData(config)
   } else if (/\/system\/indebt\/inventory-goods\/active-list$/.test(url)) {

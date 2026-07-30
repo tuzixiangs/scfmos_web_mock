@@ -145,7 +145,11 @@ const {
   currentRow,
   tableCurrentChange,
   fetchCback
-} = useTableList(Api.getCustomerInfoEntPage, { dealtype: props.params.dealtype,creditSourceFlag:'01'}, false)
+} = useTableList(Api.getCustomerInfoEntPage, {
+  dealtype: props.params.dealtype,
+  creditSourceFlag: '01',
+  phaseType: props.params.key
+}, false)
 
 fetchCback((list) => {
   list.forEach((v) => {

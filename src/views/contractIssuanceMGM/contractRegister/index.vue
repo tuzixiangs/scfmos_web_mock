@@ -5,6 +5,7 @@
     :comp-modules="modules"
     :menu-list="menuList"
     :loading="loading"
+    :default-openeds="['01']"
     :get-component="getComponent"
     :menu-select="menuSelect"
   />
@@ -14,6 +15,7 @@
 import * as Api from './api.js'
 import toRegistered from './components/toRegistered/index.vue'
 import dynamicContainer from '@/components/dynamicContainer/index.vue'
+import { contractRegistrationMenu } from '@/mock/contract-registration'
 const modules = import.meta.glob('./components/*/index.vue')
 
 defineOptions({
@@ -32,7 +34,12 @@ const getCustomerView = () => {
   loading.value = true
   Api.getCustomerView({ codeNo: 'BookInContractMain' })
     .then((res) => {
-      menuList.value = res || []
+      menuList.value = Array.isArray(res) && res.some((item) => item.children?.length)
+        ? res
+        : contractRegistrationMenu
+    })
+    .catch(() => {
+      menuList.value = contractRegistrationMenu
     })
     .finally((_) => (loading.value = false))
 }

@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
   import { getMenuList } from './api'
+  import { projectParamAdjustmentMenu } from '@/mock/project-param-adjustment'
   import dynamicContainer from '@/components/dynamicContainer/index.vue'
 
   const modules = import.meta.glob('./components/list/index.vue')
@@ -33,13 +34,22 @@
     try {
       loading.value = true
       let res = await getMenuList({ codeNo: 'ParamAdjustApplyMain' })
+      if (!Array.isArray(res) || !res.some((item) => item?.key)) {
+        res = projectParamAdjustmentMenu
+      }
       res = res.map(item => ({
         ...item,
         btns: item.value,
         value: './components/list/index.vue'
       }))
       console.log('[ res ] >', res)
-      menuList.value = res || []
+      menuList.value = res || projectParamAdjustmentMenu
+    } catch {
+      menuList.value = projectParamAdjustmentMenu.map((item) => ({
+        ...item,
+        btns: item.value,
+        value: './components/list/index.vue'
+      }))
     } finally {
       loading.value = false
     }

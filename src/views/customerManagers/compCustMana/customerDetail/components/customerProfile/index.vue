@@ -111,6 +111,12 @@ import * as Api from './api.js'
 import * as templateApi from '@/api/dynamicForm/index.js'
 import useFormChange from './hooks/useFormChange'
 
+const props = defineProps({
+  params: {
+    type: Object
+  }
+})
+
 const formRendering = ref(true)
 
 // 表单模块集合
@@ -120,9 +126,8 @@ const dockList = reactive([])
 const formTempList = ref([])
 
 const route = useRoute() // 路由对象
-
 // 该组件仅接受customerId入参，其他参数会自行获取
-const customerId = route.query.customerID || route.query.customerId || route.query.customerid
+const customerId = route.query.customerID || route.query.customerId || route.query.customerid || props.params?.customerIdByProps
 console.log('[ customerId ] >', customerId)
 
 // 获取表单字段配置

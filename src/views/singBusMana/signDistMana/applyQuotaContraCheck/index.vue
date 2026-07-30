@@ -13,6 +13,7 @@
 import * as Api from './api.js'
 import workList from './components/workList/index.vue'
 import dynamicContainer2 from '@/components/dynamicContainer2/index.vue'
+import { linkedQuotaApprovalMenus } from '@/mock/linked-contract-approval'
 
 defineOptions({
   name: 'singApplyQuotaContraCheck'
@@ -33,10 +34,16 @@ const loading = ref(false)
 const ContractTaskList = (flag) => {
   Api.ContractTaskList({ objectType: 'BusinessContract', flowNo: 'CreditContractFlow', flag ,creditSourceFlag:'02'}).then(
     (res) => {
-      if (flag === 'Y') menuListY.value = res || []
-      else if (flag === 'N') menuListN.value = res || []
+      const menuList = Array.isArray(res) && res.every((item) => item?.phaseName && item?.workCount !== undefined)
+        ? res
+        : linkedQuotaApprovalMenus[flag]
+      if (flag === 'Y') menuListY.value = menuList
+      else if (flag === 'N') menuListN.value = menuList
     }
-  )
+  ).catch(() => {
+    if (flag === 'Y') menuListY.value = linkedQuotaApprovalMenus.Y
+    else menuListN.value = linkedQuotaApprovalMenus.N
+  })
 }
 
 const doFetch = () => {

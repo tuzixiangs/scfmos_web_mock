@@ -73,16 +73,17 @@
         <el-button @click="doRiskDetection(doRiskDetectionAction)" plain> 客户信息检查 </el-button>
         <el-button @click="reqPermissionClick" plain> 权限申请 </el-button>
         <!-- <el-button @click="button1" plain tpye=""> 集团客户关联搜索 </el-button> -->
-       <!-- <el-button @click="handleGetCustomerOwnership" plain> 获取客户主办权 </el-button> -->
-        <!-- <el-button @click="button1" plain tpye=""> 移交主办权 </el-button> -->
-        <!-- <el-button @click="button1" plain tpye=""> 接收主办权 </el-button> -->
-        <!--<el-button @click="handleSyncCreditLimit" plain> 同步额度系统 </el-button> -->
+        <el-button @click="handleGetCustomerOwnership" plain> 获取客户主办权 </el-button> 
+        <el-button @click="jumpIframePage1" plain tpye=""> 移交主办权 </el-button> 
+        <el-button @click="jumpIframePage2" plain tpye=""> 接收主办权 </el-button> 
+       <el-button @click="handleSyncCreditLimit" plain> 同步额度系统 </el-button>                   
         <el-button @click="del" plain>
           删除
         </el-button>
         <el-button @click="addTeam" plain>
           加入供应链群成员
         </el-button>
+        <el-button @click="ruleTest" plain> 配置规则test </el-button>                   
       </div>
     </div>
     <el-table
@@ -132,6 +133,7 @@
       ref="CustomerIdChangeDialog"
       :initial-data="{ CustomerType: '0110' }"
       :add-loading="addLoading"
+      :is-comp-customer="true"
       title="新增"
       show-org-type
       @confirm="handleAddConfirm"
@@ -155,6 +157,8 @@
       @refresh="getList"
       @cancel="handleCreditFlowApprovalCancel"
     />
+
+    <ruleTestComp ref="ruleTestCompRef" />
   </ContentWrap>
 </template>
 
@@ -168,6 +172,8 @@ import reqPermission from './components/reqPermission.vue'
 import { useMessage } from '@/hooks/web/useMessage'
 import { personalApi } from '@/api/customerInfoMGM/personal'
 import { useRiskDetection } from '@/views/creditApplicationMGM/approvalChangeRequest/hooks'
+import { getIframeUrl } from '@/components/busiComp/crmsIframe/api'
+import ruleTestComp from './components/ruleTestComp/pop.vue'
 
 defineOptions({
   name: '/compCustMana'
@@ -200,6 +206,36 @@ const add = (type, id) => {
   // addCustomerRef.value.open(type, id)
   console.log('qweqweqw', addCustomerDialogVisible.value)
   addCustomerDialogVisible.value = true
+}
+//移交主办权
+const jumpIframePage1 = async () => {
+  loading.value = true
+   await Api.hostingRight()
+  const res = await getIframeUrl({ tpopentype: 'HostingRight',tpserialno:'0110' }).finally(
+    () => (loading.value = false)
+  )
+  router.push({
+    name: 'IframeView',
+    query: {
+      url: encodeURIComponent(res),
+      title: encodeURIComponent('移交主办权')
+    }
+  })
+}
+//接收主办权
+const jumpIframePage2 = async () => {
+  loading.value = true
+  await Api.receiveRight()
+  const res = await getIframeUrl({ tpopentype: 'ReceiveRight',tpserialno:'0110'}).finally(
+    () => (loading.value = false)
+  )
+  router.push({
+    name: 'IframeView',
+    query: {
+      url: encodeURIComponent(res),
+      title: encodeURIComponent('接收主办权')
+    }
+  })
 }
 
 const { confirmFetch } = useMessage()
@@ -314,9 +350,9 @@ const handleAddConfirm = (params) => {
 }
 
 const handleAddCancel = () => {}
-
 // 权限申请
 const reqPermissionRef = ref()
+
 const reqPermissionClick = () => {
   if (!currentRow.value?.customerID) return ElMessage.warning('请选择')
 
@@ -344,8 +380,16 @@ const handleGetCustomerOwnership = async () => {
     var params = {}
     params.customerId = currentRow.value?.customerID
     const res = await personalApi.getCustomerRight(params)
-    ElMessage.success('获取成功')
-    getList()
+    console.log(res)
+    if(res.GetHost == 'Y'){
+      reqPermissionRef.value.open({
+        ...currentRow.value,
+        isHostRights: true
+      })
+    }else{
+      ElMessage.success('获取成功')
+      getList()
+    }
   } finally {
 
     loading.value = false
@@ -396,5 +440,10 @@ const doRiskDetectionAction = () => {
 }
 const button1 = () => {
   ElMessage.info('功能待实现')
+}
+
+const ruleTestCompRef = ref()
+const ruleTest = () => {
+  ruleTestCompRef.value.open()
 }
 </script>

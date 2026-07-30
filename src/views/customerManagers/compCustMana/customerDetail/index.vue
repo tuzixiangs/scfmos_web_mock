@@ -4,6 +4,7 @@
     :comp-modules="modules"
     :menu-list="menuList"
     :loading="loading"
+    :defaultMenuParams="props"
     :default-component="customerProfile"
     :get-component="getComponent"
     :menu-select="menuSelect"
@@ -21,6 +22,12 @@ defineOptions({
   name: 'customerDetail'
 })
 
+const props = defineProps({
+  customerIdByProps: {
+    type: String
+  }
+})
+
 // 默认展示客户概况
 const activeMenu = ref('010010')
 const route = useRoute()
@@ -28,15 +35,14 @@ const route = useRoute()
 const menuList = ref([])
 const showCustomerName = ref(true)
 
-const customerID =  route.query?.customerId || route.query?.customerID || route.query?.customerid
+const customerId = computed(()=>route.query?.customerId || route.query?.customerID || route.query?.customerid || props.customerIdByProps)
 
 
 // 获取菜单列表
 const loading = ref(false)
 const getCustomerView = () => {
   loading.value = true
-  console.log('customerId22',customerID)
-  Api.getCustomerView({ codeNo: 'EnterpriseView', customerId:customerID })
+  Api.getCustomerView({ codeNo: 'EnterpriseView', customerId:customerId.value })
     .then((res) => {
     
       menuList.value = res || []
@@ -58,8 +64,13 @@ const menuSelect = (menu) => {
   const isIframeVh = ['020010','020030'].includes(menu?.key)
    console.log('menumenumenu',menu,menu.key);
   return {
-    tpserialno:customerID,
+    tpserialno:customerId.value,
+    customerId: customerId.value,
     iframeVh:isIframeVh ? '100vh' : '100%'
   }
 }
+
+
+
+
 </script>

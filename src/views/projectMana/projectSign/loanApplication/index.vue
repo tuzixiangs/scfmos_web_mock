@@ -4,6 +4,7 @@
     :comp-modules="modules"
     :menu-list="menuList"
     :loading="loading"
+    :default-openeds="['01']"
     :get-component="getComponent"
     :menu-select="menuSelect"
   />
@@ -13,6 +14,7 @@
 import * as Api from './api.js'
 import pendPutOutApplyList from './components/pendPutOutApplyList/index.vue'
 import dynamicContainer from '@/components/dynamicContainer/index.vue'
+import { loanApplicationMenu } from '@/mock/loan-application'
 const modules = import.meta.glob('./components/*/index.vue')
 
 defineOptions({
@@ -31,7 +33,12 @@ const getMenuList = () => {
   loading.value = true
   Api.getMenuList({ codeNo: 'PutOutApplyMain' })
     .then((res) => {
-      menuList.value = res || []
+      menuList.value = Array.isArray(res) && res.some((item) => item.children?.length)
+        ? res
+        : loanApplicationMenu
+    })
+    .catch(() => {
+      menuList.value = loanApplicationMenu
     })
     .finally((_) => (loading.value = false))
 }

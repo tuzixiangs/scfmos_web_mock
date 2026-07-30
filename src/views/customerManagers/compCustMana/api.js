@@ -35,3 +35,14 @@ export const applyRole = (data) => {
 export const deleteBelongAttribute1 = (data) => {
   return  request.post({url:`system/customerinfo/deleteBelongAttribute1`,data})
 }
+
+// 移交主办权调用通用接口
+export const hostingRight = (data) => {
+  return  request.post({url:`system/customerinfo/hostingRight`})
+}
+
+
+// 接收主办权调用通用接口
+export const receiveRight = (data) => {
+  return  request.post({url:`system/customerinfo/receiveRight`})
+}

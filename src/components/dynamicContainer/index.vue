@@ -28,6 +28,7 @@
 import dynamicNavmenu from '@/components/dynamicNavmenu/index.vue'
 import crmsIframe from '@/components/busiComp/crmsIframe/index.vue'
 import loadingComp from './components/loadingComp.vue'
+import mockDetailFallback from './components/mockDetailFallback.vue'
 
 defineOptions({
   name: 'dynamicContainer'
@@ -44,7 +45,10 @@ const props = defineProps({
   compModules: Object,
 
   // 从接口获取的菜单列表
-  menuList: Array | null,
+  menuList: {
+    type: Array,
+    default: () => []
+  },
 
   // 菜单获取loading
   loading: Boolean,
@@ -103,9 +107,7 @@ const _getComponent = (menu) => {
         loadingComponent: loadingComp,
         delay: 50
       })
-    : {
-        template: `暂无组件`
-      }
+    : mockDetailFallback
 }
 const emits = defineEmits(['sendData'])
 const detailInfo = ref()

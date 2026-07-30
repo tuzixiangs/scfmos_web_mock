@@ -1,8 +1,11 @@
 import request from '@/config/axios'
+import { linkedContractApprovalPage } from '@/mock/linked-contract-approval'
 
 // 列表
 export const ContractList = (params) => {
   return request.get({ url: '/system/ContractTask/ContractList', params })
+    .then((res) => res?.list?.some((item) => item?.objectNo) ? res : linkedContractApprovalPage(params))
+    .catch(() => linkedContractApprovalPage(params))
 }
 
 // 挑选取消

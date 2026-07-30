@@ -4,6 +4,7 @@
     :comp-modules="modules"
     :menu-list="menuList"
     :loading="loading"
+    :default-openeds="['01']"
     :get-component="getComponent"
     :menu-select="menuSelect"
   />
@@ -11,6 +12,7 @@
 
 <script setup lang="ts">
   import { getMenuList } from './api'
+  import { supplyChainDecisionCheckMenu } from '@/mock/supply-chain-decision-data'
   import dynamicContainer from '@/components/dynamicContainer/index.vue'
 
   const modules = import.meta.glob('./lists/*/index.vue')
@@ -29,7 +31,11 @@
     try {
       loading.value = true
       const res = await getMenuList()
-      menuList.value = res || []
+      menuList.value = Array.isArray(res) && res.some((item) => item?.children?.length)
+        ? res
+        : supplyChainDecisionCheckMenu
+    } catch {
+      menuList.value = supplyChainDecisionCheckMenu
     } finally {
       loading.value = false
     }

@@ -226,7 +226,12 @@ const {
   tableCurrentChange,
   fetchCback,
   setCurrentRow
-} = useTableList(Api.pendPutOutApplyList, { dealtype: props.params.dealtype,contractserialno:props.params.contractserialno,creditSourceFlag:props.params?.creditSourceFlag ?? '02' }, false)
+} = useTableList(Api.pendPutOutApplyList, {
+  dealtype: props.params.dealtype,
+  contractserialno: props.params.contractserialno,
+  creditSourceFlag: props.params?.creditSourceFlag ?? '02',
+  phaseType: props.params.key
+}, false)
 
 fetchCback((list) => {
   list.forEach((v) => {

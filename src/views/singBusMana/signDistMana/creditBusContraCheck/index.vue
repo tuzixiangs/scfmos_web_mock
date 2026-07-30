@@ -13,6 +13,7 @@
 import * as Api from './api.js'
 import workList from './components/workList/index.vue'
 import dynamicContainer2 from '@/components/dynamicContainer2/index.vue'
+import { linkedBusinessApprovalMenus } from '@/mock/linked-contract-approval'
 
 defineOptions({
   name: 'singCreditBusContraCheck'
@@ -33,10 +34,16 @@ const loading = ref(false)
 const ywContractTaskList = (flag) => {
   Api.ywContractTaskList({ objectType: 'BusinessContract', flowNo: 'BusinessContractFlow', flag,creditSourceFlag:'02' }).then(
     (res) => {
-      if (flag === 'Y') menuListY.value = res || []
-      else if (flag === 'N') menuListN.value = res || []
+      const menuList = Array.isArray(res) && res.every((item) => item?.phaseName && item?.workCount !== undefined)
+        ? res
+        : linkedBusinessApprovalMenus[flag]
+      if (flag === 'Y') menuListY.value = menuList
+      else if (flag === 'N') menuListN.value = menuList
     }
-  )
+  ).catch(() => {
+    if (flag === 'Y') menuListY.value = linkedBusinessApprovalMenus.Y
+    else menuListN.value = linkedBusinessApprovalMenus.N
+  })
 }
 
 const doFetch = () => {

@@ -13,6 +13,7 @@
 import * as Api from './api.js'
 import workList from './components/workList/index.vue'
 import dynamicContainer2 from '@/components/dynamicContainer2/index.vue'
+import { loanApprovalMenus } from '@/mock/loan-approval'
 
 defineOptions({
   name: 'loanAppliApprCheck'
@@ -22,9 +23,9 @@ defineOptions({
 const menuListY = ref()
 const menuListN = ref()
 
-const menuSelect = (menu) => {
+const menuSelect = () => {
   return {
-    objectType: 'BusinessContract'
+    objectType: 'PutOutApply'
   }
 }
 
@@ -33,10 +34,16 @@ const loading = ref(false)
 const getApprovePutOutApplyMenu = (type) => {
   Api.getApprovePutOutApplyMenu({ type,creditSourceFlag:'02'  }).then(
     (res) => {
-      if (type === 'Y') menuListY.value = res || []
-      else if (type === 'N') menuListN.value = res || []
+      const menuList = Array.isArray(res) && res.every((item) => item?.phaseName && item?.workCount !== undefined)
+        ? res
+        : loanApprovalMenus[type]
+      if (type === 'Y') menuListY.value = menuList
+      else if (type === 'N') menuListN.value = menuList
     }
-  )
+  ).catch(() => {
+    if (type === 'Y') menuListY.value = loanApprovalMenus.Y
+    else menuListN.value = loanApprovalMenus.N
+  })
 }
 
 const doFetch = () => {

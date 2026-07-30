@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model="visible" title="权限申请" width="500px">
+  <Dialog v-model="visible" :title="title" width="500px">
     <!-- <div style="width: 100%; display: flex; justify-content: center"> -->
     <el-form
       ref="formRef"
@@ -13,20 +13,26 @@
       <el-form-item label="客户名称" prop="customerName">
         <el-input v-model="formData.customerName" disabled placeholder="请选择客户名称" />
       </el-form-item>
-      <el-form-item label="是否申请信息查看权" prop="applyAttribute1">
-        <el-select v-model="formData.applyAttribute1" clearable placeholder="请选择">
+      <el-form-item label="是否客户主办权" prop="applyAttribute" v-if="isHostRights">
+        <el-select v-model="formData.applyAttribute" :disabled="isHostRights" clearable placeholder="请选择">
           <el-option label="有" :value="1" />
           <el-option label="无" :value="2" />
         </el-select>
       </el-form-item>
-      <el-form-item label="是否申请信息维护权" prop="applyAttribute2">
-        <el-select v-model="formData.applyAttribute2" clearable placeholder="请选择">
+      <el-form-item label="是否申请信息查看权" prop="applyAttribute1" v-if="!isHostRights">
+        <el-select v-model="formData.applyAttribute1" :disabled="isHostRights" clearable placeholder="请选择">
           <el-option label="有" :value="1" />
           <el-option label="无" :value="2" />
         </el-select>
       </el-form-item>
-      <el-form-item label="是否申请业务申办权" prop="applyAttribute3">
-        <el-select v-model="formData.applyAttribute3" clearable placeholder="请选择">
+      <el-form-item label="是否申请信息维护权" prop="applyAttribute2" v-if="!isHostRights">
+        <el-select v-model="formData.applyAttribute2" :disabled="isHostRights" clearable placeholder="请选择">
+          <el-option label="有" :value="1" />
+          <el-option label="无" :value="2" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否申请业务申办权" prop="applyAttribute3" v-if="!isHostRights">
+        <el-select v-model="formData.applyAttribute3" :disabled="isHostRights" clearable placeholder="请选择">
           <el-option label="有" :value="1" />
           <el-option label="无" :value="2" />
         </el-select>
@@ -54,6 +60,10 @@ import * as RoleApi from '@/api/system/role'
 import * as Api from '../api.js'
 
 defineOptions({ name: 'SystemRoleForm' })
+const isHostRights = ref(false)
+const title = computed(()=> {
+  return isHostRights.value ? '获取客户主办权' : '权限申请'
+})
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -62,6 +72,7 @@ const visible = ref(false) // 弹窗的是否展示
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formData = reactive({})
 const formRules = reactive({
+  applyAttribute:  [{ required: true, message: '客户主办权不能为空', trigger: 'change' }],
   applyAttribute1: [{ required: true, message: '信息查看权不能为空', trigger: 'change' }],
   applyAttribute2: [{ required: true, message: '信息维护权不能为空', trigger: 'change' }],
   applyAttribute3: [{ required: true, message: '证业务申办权不能为空', trigger: 'change' }],
@@ -81,10 +92,19 @@ const open = async (row, params) => {
     formRef.value.resetFields()
     formData.customerID = row.customerID?row.customerID :row.customerId 
     formData.customerName = row.customerName
-    formData.certID = row.certID?row.certID :row.certId 
-    formData.applyAttribute1 = row.belongAttribute1 == '有' ? 1 : 2
-    formData.applyAttribute2 = row.belongAttribute2 == '有' ? 1 : 2
-    formData.applyAttribute3 = row.belongAttribute3 == '有' ? 1 : 2
+    formData.certID = row.certID?row.certID :row.certId
+    isHostRights.value = row?.isHostRights ?? false
+    if(isHostRights.value) {
+      formData.applyAttribute = 1
+      formData.applyAttribute1 = 1
+      formData.applyAttribute2 = 1
+      formData.applyAttribute3 = 1
+    }else {
+      formData.applyAttribute = ''
+      formData.applyAttribute1 = row.belongAttribute1 == '有' ? 1 : 2
+      formData.applyAttribute2 = row.belongAttribute2 == '有' ? 1 : 2
+      formData.applyAttribute3 = row.belongAttribute3 == '有' ? 1 : 2
+    }
     formData.applyReason = ''
   })
 }

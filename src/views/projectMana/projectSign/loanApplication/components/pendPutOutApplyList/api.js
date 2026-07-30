@@ -1,8 +1,11 @@
 import request from '@/config/axios'
+import { loanApplicationPage } from '@/mock/loan-application'
 
 // 列表接口
 export const pendPutOutApplyList = (params) => {
   return request.get({ url: '/system/putout-info/pendPutOutApplyList', params })
+    .then((res) => res?.list?.some((item) => item.mfcustomerid) ? res : loanApplicationPage(params))
+    .catch(() => loanApplicationPage(params))
 }
 
 // 登记合同

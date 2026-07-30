@@ -1,8 +1,11 @@
 import request from '@/config/axios'
+import { contractRegistrationPage } from '@/mock/contract-registration'
 
 // 列表接口
 export const getCustomerInfoEntPage = (data) => {
   return request.post({ url: '/system/business-approve/getBusinessApprovePage', data })
+    .then((res) => res?.list?.some((item) => item.serialno) ? res : contractRegistrationPage(data))
+    .catch(() => contractRegistrationPage(data))
 }
 
 // 登记合同
