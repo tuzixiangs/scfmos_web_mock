@@ -5,7 +5,7 @@
         <el-avatar :size="60">
           <Icon icon="ep:avatar" :size="60" />
         </el-avatar>
-        <span class="text-18px font-bold">供应链金融管理作业平台系统</span>
+        <span class="text-18px font-bold">供应链原型平台</span>
       </div>
       <Icon icon="tdesign:qrcode" :size="20" />
     </div>

@@ -62,6 +62,7 @@ import customerDetail from '@/views/customerManagers/indCustMana/personal/custom
 import customerDetail2 from '@/views/customerManagers/indCustMana/sxrs/customerDetail/index.vue'
 import viewApplyPhaseOpinion from './components/viewApplyPhaseOpinion/index.vue'
 import CreditApplyJobDetail from '@/views/creditapplication/creditApplyJob/customerDetail/index.vue'
+import RuleTestComp from '@/views/customerManagers/compCustMana/components/ruleTestComp/index.vue'
 
 const modules = import.meta.glob('./components/*/index.vue')
 
@@ -91,6 +92,12 @@ const activeMenu = ref('010')
 const route = useRoute()
 
 const menuList = ref([])
+const debtRuleConfigMenu = {
+  key: 'debtRuleConfig',
+  title: '债项规则配置',
+  value: '__debt_rule_config__',
+  isLeaf: true
+}
 // relativeserialNoByCreditLine为了兼容合同登记中展示批复详情
 const serialNo = computed(()=> props.serialNoByProps || route.query.relativeserialNoByCreditLine || route.query.serialno || route.query.serialNo)
 
@@ -104,7 +111,11 @@ const getCustomerView = () => {
     serialNo: serialNo.value
   })
     .then((res) => {
-      menuList.value = res || []
+      const sourceMenus = Array.isArray(res) ? res : []
+      menuList.value = [...sourceMenus, debtRuleConfigMenu]
+    })
+    .catch(() => {
+      menuList.value = [debtRuleConfigMenu]
     })
     .finally((_) => (loading.value = false))
 }
@@ -117,6 +128,9 @@ getCustomerView()
 const getComponent = (menu) => {
   if (menu.value === './components/customerProfile/index.vue') {
     return baseInfo
+  }
+  if (menu.value === debtRuleConfigMenu.value) {
+    return RuleTestComp
   }
 }
 const menuSelect = (menu) => {

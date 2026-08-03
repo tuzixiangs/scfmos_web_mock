@@ -7,14 +7,14 @@
       <div class="absoluteContent">
         <!-- <img style="width: 107px;height: 126px;" src="@/assets/imgs/loginItem.png" /> -->
         <p>H i,你好！</p>
-        <p>欢迎登录供应链金融管理作业平台</p>
+        <p>欢迎登录供应链原型平台</p>
       </div>
       <!-- <div
         :class="`${prefixCls}__left flex-1 bg-gray-500 bg-opacity-20 relative p-30px lt-xl:hidden`"
       > -->
         <!-- 左上角的 logo + 系统标题 -->
         <!-- <div class="relative flex items-center text-white">
-          <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/logo.png" />
+          <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/platform-mark.svg" />
           <span class="text-20px font-bold">{{ underlineToHump(appStore.getTitle) }}</span>
         </div> -->
         <!-- 左边的背景图 + 欢迎语 -->
@@ -39,9 +39,9 @@
         >
 
           <!-- <Toolbar :toolbar-list="['color','theme']" /> -->
-            
+
           <!-- <div class="flex items-center at-2xl:hidden at-xl:hidden">
-            <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/logo.png" />
+            <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/platform-mark.svg" />
             <span class="text-20px font-bold">{{ underlineToHump(appStore.getTitle) }}</span>
           </div>
           <div class="flex items-center justify-end space-x-10px">

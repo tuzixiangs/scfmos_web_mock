@@ -1143,8 +1143,20 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
     "alwaysShow": true,
     "children": [
       {
-        "id": 1726,
+        "id": 1760,
         "parentId": 1239,
+        "name": "存货类",
+        "path": "",
+        "component": null,
+        "componentName": "InventoryCategoryDirectory",
+        "icon": null,
+        "visible": true,
+        "keepAlive": true,
+        "alwaysShow": true,
+        "children": [
+      {
+        "id": 1726,
+        "parentId": 1760,
         "name": "存货类商品管理",
         "path": "inventoryGoods",
         "component": "indebt/inventoryGoods/index",
@@ -1157,7 +1169,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       },
       {
         "id": 1727,
-        "parentId": 1239,
+        "parentId": 1760,
         "name": "仓库管理",
         "path": "warehouseManagement",
         "component": "indebt/warehouseManagement/index",
@@ -1170,7 +1182,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       },
       {
         "id": 1728,
-        "parentId": 1239,
+        "parentId": 1760,
         "name": "订单/合同信息修改",
         "path": "orderContractModification",
         "component": "indebt/orderContractModification/index",
@@ -1183,7 +1195,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       },
       {
         "id": 1729,
-        "parentId": 1239,
+        "parentId": 1760,
         "name": "存货类价格管理",
         "path": "inventoryPriceManagement",
         "component": "indebt/inventoryPriceManagement/index",
@@ -1196,7 +1208,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       },
       {
         "id": 1730,
-        "parentId": 1239,
+        "parentId": 1760,
         "name": "债项资产到港管理",
         "path": "assetArrivalManagement",
         "component": "indebt/assetArrivalManagement/index",
@@ -1209,7 +1221,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       },
       {
         "id": 1731,
-        "parentId": 1239,
+        "parentId": 1760,
         "name": "债项资产管理",
         "path": "assetManagement",
         "component": null,
@@ -1275,7 +1287,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       },
       {
         "id": 1736,
-        "parentId": 1239,
+        "parentId": 1760,
         "name": "债项台账查询",
         "path": "debtLedgerQuery",
         "component": null,
@@ -1349,10 +1361,12 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
             "keepAlive": true,
             "alwaysShow": true,
             "children": null
-          },
-          {
+          }
+        ]
+      },
+      {
             "id": 1750,
-            "parentId": 1239,
+            "parentId": 1760,
             "name": "债项规则管理",
             "path": "debtRuleManagement",
             "component": null,
@@ -1367,7 +1381,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
               { "id": 1753, "parentId": 1750, "name": "债项规则维护", "path": "ruleMaintenance", "component": "indebt/debtRuleManagement/index", "componentName": "DebtRuleMaintenance", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
               { "id": 1754, "parentId": 1750, "name": "债项规则库管理", "path": "ruleLibrary", "component": "indebt/debtRuleManagement/index", "componentName": "DebtRuleLibrary", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null }
             ]
-          }
+      }
         ]
       }
     ]

@@ -664,7 +664,7 @@ const previewProcessJson = () => {
     previewModelVisible.value = true
   })
 }
-/* ------------------------------------------------ 供应链金融管理作业平台系统 methods ------------------------------------------------------ */
+/* ------------------------------------------------ 供应链原型平台 methods ------------------------------------------------------ */
 const processSave = async () => {
   console.log(bpmnModeler, 'bpmnModelerbpmnModelerbpmnModelerbpmnModeler')
   const { err, xml } = await bpmnModeler.saveXML()

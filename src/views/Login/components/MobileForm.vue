@@ -133,7 +133,7 @@ const loginData = reactive({
   },
   loginForm: {
     uuid: '',
-    tenantName: '供应链金融管理作业平台系统',
+    tenantName: '供应链原型平台',
     mobileNumber: '',
     code: ''
   }

@@ -143,7 +143,7 @@ export const getRedirect = (parentPath: string, children: AppCustomRouteRecordRa
   }
   const path = generateRoutePath(parentPath, children[0].path)
   // 递归子节点
-  if (children[0].children) return getRedirect(path, children[0].children)
+  return children[0].children ? getRedirect(path, children[0].children) : path
 }
 const generateRoutePath = (parentPath: string, path: string) => {
   if (parentPath.endsWith('/')) {

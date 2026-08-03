@@ -154,6 +154,7 @@ import {
   projectParamAdjustmentPage,
   projectParamAdjustmentProjects
 } from './project-param-adjustment'
+import { projectCreditApprovalMenus, projectCreditApprovalPage } from './project-credit-approval'
 import {
   companyCustomerDetail,
   companyCustomerList,
@@ -551,7 +552,7 @@ export const mockAdapter: AxiosAdapter = async (config) => {
 
   if (config.responseType === 'blob') {
     return {
-      data: new Blob(['供应链金融管理作业平台 Mock 导出数据\n'], { type: 'text/plain;charset=utf-8' }),
+      data: new Blob(['供应链原型平台 Mock 导出数据\n'], { type: 'text/plain;charset=utf-8' }),
       status: 200,
       statusText: 'OK',
       headers: { 'content-type': 'text/plain;charset=utf-8' },
@@ -610,6 +611,13 @@ export const mockAdapter: AxiosAdapter = async (config) => {
   } else if (/\/system\/paramAdjust\/cancelApply$/.test(url)) {
     const payload = parseMockPayload(config.data)
     data = { success: Boolean(cancelProjectParamAdjustmentRecord(payload.serialNo || payload.serialno)) }
+  } else if (/\/system\/creditReviewapproval\/creditReviewAprrovalTreeList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const type = String(query.type || 'N') === 'Y' ? 'Y' : 'N'
+    data = cloneMockData(projectCreditApprovalMenus[type])
+  } else if (/\/system\/creditReviewapproval\/page$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(projectCreditApprovalPage(query))
   } else if (/\/system\/ContractTask\/ContractTaskList$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     data = cloneMockData(linkedQuotaApprovalMenus[String(query.flag || 'N') as 'N' | 'Y'] || [])

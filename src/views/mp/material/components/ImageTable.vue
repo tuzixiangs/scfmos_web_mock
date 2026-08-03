@@ -63,7 +63,7 @@ const emit = defineEmits<{
   column-count: 5;
   margin-top: 10px;
 
-  /* 供应链金融管理作业平台系统：增加 10px，避免顶着上面 */
+  /* 供应链原型平台：增加 10px，避免顶着上面 */
 }
 
 .waterfall-item {

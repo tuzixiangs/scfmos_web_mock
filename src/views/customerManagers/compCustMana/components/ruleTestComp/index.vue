@@ -4,10 +4,6 @@
       <template #header>
         <div class="card-header">
           <span>规则配置-线上债项</span>
-          <div class="btns">
-            <el-button>暂 停</el-button>
-            <el-button type="primary">保 存</el-button>
-          </div>
         </div>
       </template>
       <DefineTemplate v-slot="{ $slots, title }">

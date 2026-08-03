@@ -93,8 +93,8 @@ router.beforeEach(async (to, from, next) => {
             console.warn('字典加载失败，继续执行',error)
             return Promise.resolve()
           }),
-          timeoutPromise.catch(()=> {
-            console.warn('字典加载失败，继续执行',error)
+          timeoutPromise.catch((timeoutError)=> {
+            console.warn('字典加载失败，继续执行', timeoutError)
             return Promise.resolve()
           })
         ])

@@ -9,7 +9,7 @@
       >
         <!-- 左上角的 logo + 系统标题 -->
         <div class="relative flex items-center text-white">
-          <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/logo.png" />
+          <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/platform-mark.svg" />
           <span class="text-20px font-bold">{{ underlineToHump(appStore.getTitle) }}</span>
         </div>
         <!-- 左边的背景图 + 欢迎语 -->
@@ -33,7 +33,7 @@
           class="flex items-center justify-between text-white at-2xl:justify-end at-xl:justify-end"
         >
           <div class="flex items-center at-2xl:hidden at-xl:hidden">
-            <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/logo.png" />
+            <img alt="" class="mr-10px h-48px w-48px" src="@/assets/imgs/platform-mark.svg" />
             <span class="text-20px font-bold">{{ underlineToHump(appStore.getTitle) }}</span>
           </div>
           <div class="flex items-center justify-end space-x-10px">
@@ -196,7 +196,7 @@ const loginData = reactive({
   captchaEnable: import.meta.env.VITE_APP_CAPTCHA_ENABLE !== 'false',
   tenantEnable: import.meta.env.VITE_APP_TENANT_ENABLE !== 'false',
   loginForm: {
-    tenantName: '供应链金融管理作业平台系统',
+    tenantName: '供应链原型平台',
     username: 'admin',
     password: 'admin123',
     captchaVerification: '',

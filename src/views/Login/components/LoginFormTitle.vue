@@ -1,6 +1,6 @@
 <template>
   <h2 class="enter-x mb-3 text-center text-2xl font-bold xl:text-center xl:text-3xl">
-    <!-- <img style="width:164px;height:137px;padding: 50px 0 50px 0;" src="@/assets/imgs/logo-bank.png" alt=""/> -->
+    <!-- <img style="width:164px;height:137px;padding: 50px 0 50px 0;" src="@/assets/imgs/platform-mark.svg" alt=""/> -->
     <!-- {{ getFormTitle }} -->
   </h2>
 </template>

@@ -58,7 +58,7 @@ const buyStatusOptions = ref([])
 
 const type = ref()
 /**
- * type 1e链，2通商
+ * type 1e链，2线上链路
  */
 const open = (flag = 1) => {
   formData.serialno = ''

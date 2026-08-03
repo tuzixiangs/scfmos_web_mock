@@ -186,6 +186,35 @@ export const projectCreditDetail = {
         },
         { key: 'averageSalary', label: '企业平均月工资', value: 12000, editor: 'number', unit: '元' },
         { key: 'remark', label: '备注', value: '用于核心企业上下游供应商融资及经销商备货融资。', editor: 'textarea', span: 2 }
+      ],
+      columns: [
+        { prop: 'creditProduct', label: '分项授信品种' },
+        { prop: 'customerName', label: '客户名称' },
+        { prop: 'currency', label: '业务币种' },
+        { prop: 'creditAmount', label: '额度金额' },
+        { prop: 'exposureAmount', label: '敞口金额' },
+        { prop: 'circulation', label: '是否循环' },
+        { prop: 'status', label: '状态' }
+      ],
+      rows: [
+        {
+          creditProduct: '基本综合授信额度',
+          customerName: '阿姆特拉斯供应链有限公司',
+          currency: '人民币',
+          creditAmount: '10,000,000.00',
+          exposureAmount: '8,000,000.00',
+          circulation: '是',
+          status: '待提交'
+        },
+        {
+          creditProduct: '供应链专项额度（转授信）',
+          customerName: '阿姆特拉斯供应链有限公司',
+          currency: '人民币',
+          creditAmount: '10,000,000.00',
+          exposureAmount: '8,000,000.00',
+          circulation: '是',
+          status: '待提交'
+        }
       ]
     },
     relatedCredit: {
@@ -243,6 +272,15 @@ export const projectCreditDetail = {
         { label: '还款能力评分', value: '84 分' },
         { label: '担保缓释评分', value: '82 分' },
         { label: '预警提示', value: '无重大负面预警' }
+      ]
+    },
+    debtRuleConfig: {
+      title: '债项规则配置',
+      description: '债项规则配置内容待后续业务需求确认后补充。',
+      fields: [
+        { label: '配置状态', value: '待配置' },
+        { label: '适用范围', value: '本项目授信额度申请' },
+        { label: '配置说明', value: '请根据后续确认的债项规则维护具体字段、触发条件与校验规则。', span: 2 }
       ]
     },
     guaranteeInfo: {

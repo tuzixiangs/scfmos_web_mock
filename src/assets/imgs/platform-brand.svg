@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 96" role="img" aria-label="供应链原型平台">
+  <defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4ea1ff"/>
+      <stop offset="1" stop-color="#1f67d2"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="84" height="84" rx="22" fill="url(#brand)"/>
+  <path d="M30 34h36M30 49h36M30 64h25" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="67" cy="64" r="7" fill="#62db9d"/>
+  <path d="M112 20h4v56h-4z" fill="#fff" opacity=".72"/>
+  <text x="138" y="61" fill="#fff" font-size="36" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-weight="600">供应链原型平台</text>
+</svg>

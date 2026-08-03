@@ -16,6 +16,7 @@ import router, { resetRouter } from '@/router'
 import { deleteUserCache } from '@/hooks/web/useCache'
 import { useUserStoreWithOut } from '@/store/modules/user'
 import { mockAdapter } from '@/mock'
+import { documentedApiPaths } from './documentedApiPaths'
 
 const tenantEnable = import.meta.env.VITE_APP_TENANT_ENABLE
 const { result_code, base_url, request_timeout } = config
@@ -48,9 +49,24 @@ const service: AxiosInstance = axios.create({
 
 // 本地演示模式：保持业务层 request 调用方式不变，由统一 mock 适配器返回数据。
 // 仅本地开发环境开启；部署或接入真实后端时设置 VITE_USE_MOCK=false 即可。
-if (import.meta.env.VITE_USE_MOCK === 'true') {
+const useMock = import.meta.env.VITE_USE_MOCK === 'true'
+const useMockFallback = import.meta.env.VITE_API_FALLBACK_TO_MOCK === 'true'
+
+const normalizeRequestPath = (url = '') => {
+  const path = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0]
+  return path.replace(/^\/admin-api/, '')
+}
+
+if (useMock) {
   service.defaults.adapter = mockAdapter
   console.info('[mock] 本地 Mock 服务已启用')
+} else if (useMockFallback) {
+  const httpAdapter = axios.getAdapter('xhr')
+  service.defaults.adapter = (requestConfig) => {
+    const path = normalizeRequestPath(requestConfig.url)
+    return documentedApiPaths.has(path) ? httpAdapter(requestConfig) : mockAdapter(requestConfig)
+  }
+  console.info('[api] 真实接口模式已启用；未在接口文档中的原型接口继续使用 Mock')
 }
 
 // request拦截器

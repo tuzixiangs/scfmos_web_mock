@@ -68,8 +68,8 @@ watch(
     >
       <img
         class="h-30px w-auto transition-all duration-300"
-        src="@/assets/imgs/systemLogo1.png"
-        alt="logo"
+        src="@/assets/imgs/platform-brand.svg"
+        alt="供应链原型平台"
       />
       <!-- <div
         v-if="show"

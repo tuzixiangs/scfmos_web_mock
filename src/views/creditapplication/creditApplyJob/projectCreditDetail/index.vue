@@ -16,7 +16,6 @@
       <section v-if="activeTab === 'detail'" class="detail-workspace">
         <aside class="detail-sidebar">
           <div class="customer-heading">
-            <span class="customer-avatar">项</span>
             <div>
               <p>{{ detail.customerName }}</p>
               <span>{{ detail.customerId }}</span>
@@ -46,6 +45,16 @@
               </button>
             </el-collapse-item>
           </el-collapse>
+          <button
+            type="button"
+            class="detail-direct-module"
+            :class="{ 'is-active': activeSection === 'debtRuleConfig' }"
+            @click="selectSection('', 'debtRuleConfig')"
+          >
+            <Icon icon="ep:folder-opened" class="menu-folder" />
+            <span>债项规则配置</span>
+            <Icon icon="ep:arrow-right" class="module-arrow" />
+          </button>
         </aside>
 
         <main class="detail-content">
@@ -70,7 +79,9 @@
             </div>
           </div>
 
-          <div class="section-card">
+          <rule-test-comp v-if="activeSection === 'debtRuleConfig'" class="credit-rule-config" />
+
+          <div v-else class="section-card">
             <div class="section-title">
               <span>{{ activeSectionData.title }}</span>
               <small v-if="activeSectionData.description">{{ activeSectionData.description }}</small>
@@ -172,12 +183,16 @@
               </div>
             </div>
 
+            <div v-if="isBasicSection && activeSectionData.rows?.length" class="allocation-title">
+              额度分配信息
+            </div>
             <el-table
               v-if="activeSectionData.rows?.length"
               :data="activeSectionData.rows"
               border
               stripe
               class="detail-table"
+              :class="{ 'basic-allocation-table': isBasicSection }"
             >
               <el-table-column
                 v-for="column in activeSectionData.columns"
@@ -266,6 +281,7 @@ import {
   getProjectCreditDetail,
   saveProjectCreditDetail
 } from '@/api/creditapplication/creditApplyJob/projectCreditDetail'
+import RuleTestComp from '@/views/customerManagers/compCustMana/components/ruleTestComp/index.vue'
 
 type PickerType = 'enterprise' | 'businessType' | 'guarantee'
 
@@ -588,6 +604,31 @@ watch(
   }
 }
 
+.detail-direct-module {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 8px;
+  color: #333;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+
+  &:hover,
+  &.is-active {
+    color: #1677d2;
+    background: #e6f1ff;
+  }
+
+  .module-arrow {
+    margin-left: auto;
+    font-size: 14px;
+  }
+}
+
 .menu-dot {
   width: 5px;
   height: 5px;
@@ -778,6 +819,216 @@ watch(
     color: var(--el-text-color-secondary);
     font-size: 12px;
   }
+}
+
+/* 对齐内网项目授信详情的紧凑业务表单布局 */
+.project-credit-detail {
+  padding: 0;
+  background: #f5f5f5;
+}
+
+.detail-tabs {
+  gap: 5px;
+  min-height: 42px;
+  padding: 5px 10px 0;
+  background: #f5f5f5;
+  border-bottom: 1px solid #dcdfe6;
+
+  .el-button {
+    height: 32px;
+    padding: 0 18px;
+    margin: 0;
+    color: #444;
+    background: #fff;
+    border-color: #dcdfe6;
+    border-radius: 2px 2px 0 0;
+
+    &.el-button--primary {
+      color: #fff;
+      background: #3a8ee6;
+      border-color: #3a8ee6;
+    }
+  }
+}
+
+.detail-workspace {
+  grid-template-columns: 188px minmax(0, 1fr);
+  min-height: calc(100vh - 156px);
+  background: #fff;
+  border: 0;
+  border-radius: 0;
+}
+
+.detail-sidebar {
+  padding: 10px 8px;
+  background: #f2f4f7;
+  border-right-color: #dcdfe6;
+}
+
+.customer-heading {
+  display: block;
+  padding: 4px 10px 10px;
+
+  p {
+    margin: 0 0 5px;
+    font-size: 14px;
+  }
+
+  span:not(.customer-avatar) {
+    font-size: 12px;
+  }
+}
+
+.customer-avatar {
+  display: none;
+}
+
+.detail-menu {
+  :deep(.el-collapse-item__header) {
+    height: 34px;
+    padding: 0 8px;
+    color: #333;
+    font-size: 14px;
+    background: transparent;
+    border-bottom: 0;
+  }
+
+  :deep(.el-collapse-item__wrap) {
+    background: transparent;
+    border-bottom: 0;
+  }
+
+  :deep(.el-collapse-item__content) {
+    padding-bottom: 2px;
+  }
+}
+
+.menu-folder {
+  margin-right: 5px;
+  color: #555;
+}
+
+.detail-menu-item {
+  min-height: 28px;
+  padding: 0 8px 0 24px;
+  font-size: 13px;
+  border-radius: 0;
+
+  &:hover,
+  &.is-active {
+    color: #1677d2;
+    background: #e6f1ff;
+  }
+}
+
+.menu-dot {
+  width: 4px;
+  height: 4px;
+  margin-right: 7px;
+}
+
+.detail-content,
+.customer-detail-tab,
+.attachments-tab {
+  padding: 10px 18px 20px;
+  background: #fff;
+}
+
+.detail-content .detail-toolbar {
+  justify-content: flex-start;
+  min-height: 34px;
+  padding: 0 0 8px;
+
+  > div:first-child {
+    display: none;
+  }
+}
+
+.toolbar-actions {
+  gap: 6px;
+
+  .el-tag {
+    display: none;
+  }
+
+  .el-button {
+    height: 28px;
+    padding: 0 12px;
+  }
+}
+
+.section-card {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.section-title {
+  display: block;
+  padding: 7px 0 9px;
+  margin: 0 0 4px;
+  border-bottom: 1px solid #dcdfe6;
+
+  span {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  small {
+    margin-left: 12px;
+    font-size: 12px;
+  }
+}
+
+.field-grid {
+  gap: 0 34px;
+}
+
+.field-row {
+  grid-template-columns: 122px minmax(0, 1fr);
+  min-height: 32px;
+  border-bottom: 0;
+}
+
+.field-label,
+.field-value {
+  padding: 6px 0;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.field-label {
+  color: #555;
+}
+
+.field-grid--editing .field-row {
+  min-height: 38px;
+}
+
+.field-input {
+  margin: 2px 0;
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 28px;
+  }
+}
+
+.field-checkboxes {
+  gap: 0 12px;
+  padding: 5px 0;
+
+  :deep(.el-checkbox) {
+    height: 24px;
+  }
+}
+
+.allocation-title {
+  padding: 18px 0 8px;
+  color: #303133;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 @media (max-width: 900px) {

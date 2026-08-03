@@ -1,7 +1,7 @@
 <!--
   - Copyright (C) 2018-2019
   - All rights reserved, Designed By www.joolun.com
-  供应链金融管理作业平台系统：
+  供应链原型平台：
   ① 移除 avue 组件，使用 ElementUI 原生组件
 -->
 <template>
