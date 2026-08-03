@@ -108,7 +108,7 @@ const prefixCls = getPrefixCls('login')
   }
 }
 .loginBg{
-  background-image: url('@/assets/imgs/login-bg.png');
+  background-image: url('@/assets/imgs/login-bg-v2.png');
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;

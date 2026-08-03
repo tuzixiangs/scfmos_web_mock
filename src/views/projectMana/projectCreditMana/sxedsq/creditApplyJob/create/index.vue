@@ -1615,7 +1615,7 @@ const submitForm = async () => {
      console.log(paramsTemp)
    //调用前置校验
     const flag =  await creditApplyJobApi.getProjectcoreviewApplyCount(paramsTemp)
-    if(flag == 0 && formData.occurrenceType=='084'){
+    if(flag == 0 && formData.value.occurrenceType === '084'){
         return message.error('所关联的项目需要存在对应审批通过的新增或续作协审')
     }
     const params = {

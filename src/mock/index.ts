@@ -693,13 +693,127 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     const pageNo = Number(query.pageNo || query.pageNum || 1)
     const pageSize = Number(query.pageSize || 10)
+    const objectNo = String(query.objectNo || query.serialNo || '').trim()
+    const customerName = String(query.customerName || '').trim()
+    const records = projectCreditApplyRecords.filter(
+      (record) =>
+        (!objectNo || record.objectNo.includes(objectNo)) &&
+        (!customerName || record.customerName.includes(customerName))
+    )
     data = {
-      total: projectCreditApplyRecords.length,
-      list: projectCreditApplyRecords,
-      records: projectCreditApplyRecords,
+      total: records.length,
+      list: cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize)),
+      records: cloneMockData(records),
       pageNo,
       pageSize
     }
+  } else if (/\/system\/singleCreditApply\/qryOccurrenceTypeList$/.test(url)) {
+    data = [
+      { itemno: '080', itemname: '新增' },
+      { itemno: '084', itemname: '续作' },
+      { itemno: '088', itemname: '复议' },
+      { itemno: '095', itemname: '展期' },
+      { itemno: '098', itemname: '提额' }
+    ]
+  } else if (/\/system\/(?:singleCreditApply\/qryCompangyCustomerPage|creditLimitApply\/qryPeerCustomerPage)$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const customerName = String(query.customerName || '').trim()
+    const customerID = String(query.customerID || '').trim()
+    const customers = [
+      {
+        customerID: 'C2025040300000003',
+        customerName: '阿姆特拉斯供应链有限公司',
+        customerTypeName: '公司客户',
+        certID: '91310115MA1K4C8M8P',
+        certTypeName: '统一社会信用代码'
+      },
+      {
+        customerID: 'C2025040300000004',
+        customerName: '新城贸易有限公司',
+        customerTypeName: '公司客户',
+        certID: '91310115MA1K4D5N7Q',
+        certTypeName: '统一社会信用代码'
+      }
+    ].filter(
+      (customer) =>
+        (!customerName || customer.customerName.includes(customerName)) &&
+        (!customerID || customer.customerID.includes(customerID))
+    )
+    data = { total: customers.length, list: customers, records: customers }
+  } else if (/\/system\/creditLimitApply\/qryBusinessVarietyTree$/.test(url)) {
+    data = [
+      {
+        typeNo: 'SCF',
+        typeName: '供应链融资',
+        children: [
+          { typeNo: 'SCF_WORKING_CAPITAL', typeName: '单一客户综合授信', leaf: true },
+          { typeNo: 'SCF_DEALER_FINANCE', typeName: '经销商融资', leaf: true }
+        ]
+      }
+    ]
+  } else if (/\/system\/creditLimitApply\/qryCooperativeProjectPage$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const projectName = String(query.projectName || '').trim()
+    const customerID = String(query.customerID || '').trim()
+    const projects = [
+      {
+        projectID: 'PJ202607010001',
+        projectName: '钢贸供应链融资项目',
+        customerID: 'C2025040300000003'
+      },
+      {
+        projectID: 'PJ202607020002',
+        projectName: '经销商融资项目',
+        customerID: 'C2025040300000004'
+      }
+    ].filter(
+      (project) =>
+        (!projectName || project.projectName.includes(projectName)) &&
+        (!customerID || project.customerID === customerID)
+    )
+    data = { total: projects.length, list: projects, records: projects }
+  } else if (/\/system\/creditLimitApply\/getProjectcoreviewApplyCount$/.test(url)) {
+    data = 1
+  } else if (/\/system\/creditLimitApply\/saveCreditLimitApply$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const serialNo = `BA20260803${String(projectCreditApplyRecords.length + 1).padStart(8, '0')}`
+    const customerName =
+      payload.customerID === 'C2025040300000004' ? '新城贸易有限公司' : '阿姆特拉斯供应链有限公司'
+    const businessTypeName =
+      payload.businessType === 'SCF_DEALER_FINANCE' ? '经销商融资' : '单一客户综合授信'
+    const projectName =
+      payload.relaTeamWork === 'PJ202607020002' ? '经销商融资项目' : '钢贸供应链融资项目'
+    const record = {
+      id: Date.now(),
+      objectNo: serialNo,
+      serialNo,
+      customerID: String(payload.customerID || 'C2025040300000003'),
+      customerName,
+      projectName,
+      mrchFlg: '供应链金融平台',
+      businessType: String(payload.businessType || 'SCF_WORKING_CAPITAL'),
+      businessTypeName,
+      virtualOccurTypeName:
+        String(payload.occurType || '080') === '084' ? '续作' : String(payload.occurType || '080') === '088' ? '复议' : '新增',
+      applyModelTypeName: '授信审批',
+      currencyName: '人民币',
+      businessSum: 10000000,
+      exposureSum: 8000000,
+      sourceFrom: '供应链金融平台',
+      operateUserName: '本地演示用户',
+      operateOrgName: '供应链金融部',
+      flowName: '授信申请流程',
+      endTime: '',
+      applyType: 'CreditLineApply',
+      objectType: 'CreditApply',
+      phaseNo: '0010',
+      phaseName: '待提交',
+      createTime: '2026-08-03 10:00:00',
+      operatorName: '本地演示用户',
+      operatorOrgName: '供应链金融部'
+    }
+    projectCreditApplyRecords.unshift(record)
+    data = cloneMockData(record)
   } else if (/\/system\/creditLimitApply\/saveProjectDetail$/.test(url)) {
     const payload = parseMockPayload(config.data)
     const serialNo = String(payload.serialNo || projectCreditDetail.applicationNo)
