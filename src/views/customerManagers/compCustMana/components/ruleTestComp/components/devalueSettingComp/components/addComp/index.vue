@@ -60,12 +60,14 @@
       </div>
     </template>
     <selectCommodityPop ref="selectCommodityPopRef" />
+    <selComClassPop ref="selComClassPopRef" />
   </Dialog>
 </template>
 
 <script setup>
 import selectInputComp from '@/components/selectInput/index.vue'
 import selectCommodityPop from '../selectCommodity/selectCommodityPop.vue'
+import selComClassPop from '../../../commonComp/selComClassPop/index.vue'
 
 const props = defineProps({
   type: {
@@ -87,9 +89,9 @@ const open = () => {
   formData.d = ''
 }
 
-const selectCommodityPopRef = ref()
+const selComClassPopRef = ref()
 const openClick1 = () => {
-  selectCommodityPopRef.value.open()
+  selComClassPopRef.value.open()
 }
 
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗

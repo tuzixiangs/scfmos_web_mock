@@ -55,11 +55,19 @@ const {
 
 setTimeout(() => {
   list.value.push({})
+  list.value.push({})
+  list.value.push({})
+  list.value.push({})
+  list.value.push({})
+  list.value.push({})
+  list.value.push({})
+  list.value.push({})
+  list.value.push({})
+  list.value.push({})
 }, 10);
 
 const columns = [
-  { label: '商品类别', field: 'serialNo', minWidth: 120 },
-  { label: '境内/外采购', field: 'objectNo', minWidth: 220 },
+  { label: '债项资产', field: 'serialNo', minWidth: 120 },
   { label: '规则编号', field: 'phaseNo', minWidth: 220 },
   { label: '规则类型', field: 'phaseName', minWidth: 120 },
   { label: '规则名称', field: 'userId', minWidth: 220 },

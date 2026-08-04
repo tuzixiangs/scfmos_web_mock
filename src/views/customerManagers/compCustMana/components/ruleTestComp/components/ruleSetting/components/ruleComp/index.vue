@@ -56,6 +56,7 @@
 
     <selectRuleTypePop ref="selectRuleTypePopRef" />
     <selectCommodityPop ref="selectCommodityPopRef" />
+    <selComClassPop ref="selComClassPopRef" />
   </div>
 </template>
 
@@ -63,6 +64,7 @@
 import selectInputComp from '@/components/selectInput/index.vue'
 import selectRuleTypePop from './components/selectRuleTypePop.vue'
 import selectCommodityPop from './components/selectCommodityPop.vue'
+import selComClassPop from '../../../commonComp/selComClassPop/index.vue'
 import { createReusableTemplate } from '@vueuse/core'
 
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
@@ -71,9 +73,9 @@ const selectRuleTypePopRef = ref()
 const openClick1 = () => {
   selectRuleTypePopRef.value.open()
 }
-const selectCommodityPopRef = ref()
+const selComClassPopRef = ref()
 const openClick2 = () => {
-  selectCommodityPopRef.value.open()
+  selComClassPopRef.value.open()
 }
 </script>
 
