@@ -156,7 +156,9 @@ const generateRoutePath = (parentPath: string, path: string) => {
 }
 export const pathResolve = (parentPath: string, path: string) => {
   if (isUrl(path)) return path
-  const childPath = path.startsWith('/') || !path ? path : `/${path}`
+  // Vue Router 会把以 / 开头的嵌套路由视为绝对路径，菜单地址也要遵循同一规则。
+  if (path.startsWith('/')) return path.replace(/\/\//g, '/')
+  const childPath = !path ? path : `/${path}`
   return `${parentPath}${childPath}`.replace(/\/\//g, '/')
 }
 

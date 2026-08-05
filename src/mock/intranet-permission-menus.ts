@@ -1440,7 +1440,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
         "id": 1765,
         "parentId": 1239,
         "name": "债项方案",
-        "path": "debtScheme",
+        "path": "/indebtRule",
         "component": null,
         "componentName": null,
         "icon": null,
@@ -1448,10 +1448,10 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
         "keepAlive": true,
         "alwaysShow": true,
         "children": [
-          { "id": 1766, "parentId": 1765, "name": "规则配置详情", "path": "ruleConfigDetail", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeRuleConfigDetail", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
-          { "id": 1767, "parentId": 1765, "name": "规则配置", "path": "ruleConfig", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeRuleConfig", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
-          { "id": 1768, "parentId": 1765, "name": "债项因子设置", "path": "debtFactorSetting", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeFactorSetting", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
-          { "id": 1769, "parentId": 1765, "name": "债项因子详情", "path": "debtFactorDetail", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeFactorDetail", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null }
+          { "id": 1766, "parentId": 1765, "name": "规则配置详情", "path": "indebtRuleSetting", "component": "indebtRule/indebtRuleSetting/index", "componentName": "indebtRuleSetting", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1767, "parentId": 1765, "name": "规则配置", "path": "indebtRuleList", "component": "indebtRule/indebtRuleList/index", "componentName": "indebtRuleList", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1768, "parentId": 1765, "name": "债项因子设置", "path": "crVariablesGroupList", "component": "indebtRule/crVariablesGroupList/index", "componentName": "crVariablesGroupList", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1769, "parentId": 1765, "name": "债项因子详情", "path": "crVariablesList", "component": "indebtRule/crVariablesList/index", "componentName": "crVariablesList", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null }
         ]
       }
         ]
