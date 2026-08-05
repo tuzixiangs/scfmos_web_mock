@@ -1,21 +1,17 @@
 <template>
-  <dynamicContainer
-    :active-menu="activeMenu"
-    :comp-modules="modules"
-    :menu-list="orderContractModificationMenus"
-    :menu-select="handleMenuSelect"
-  />
+  <OrderContractModificationWorkList :params="{ mode: activeMenu }" />
 </template>
 
 <script setup lang="ts">
-import dynamicContainer from '@/components/dynamicContainer/index.vue'
-import { orderContractModificationMenus } from './common'
+import OrderContractModificationWorkList from './components/workList/index.vue'
 
 defineOptions({ name: 'OrderContractModification' })
 
 const route = useRoute()
-const activeMenu = computed(() => String(route.query?.key || 'application'))
-const modules = import.meta.glob('./components/*/index.vue')
-
-const handleMenuSelect = (menu: { mode: 'application' | 'record' }) => ({ mode: menu.mode })
+// 顶层菜单拆分后，“查询”入口默认定位到历史修改记录；原页面内切换仍然可用。
+const activeMenu = computed(() =>
+  String(route.name) === 'OrderContractModificationRecordQuery'
+    ? 'record'
+    : String(route.query?.key || 'application')
+)
 </script>

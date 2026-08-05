@@ -1158,40 +1158,94 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
         "id": 1726,
         "parentId": 1760,
         "name": "存货类商品管理",
-        "path": "inventoryGoods",
-        "component": "indebt/inventoryGoods/index",
-        "componentName": "InventoryGoodsManagement",
+        "path": "",
+        "component": null,
+        "componentName": null,
         "icon": null,
         "visible": true,
         "keepAlive": true,
         "alwaysShow": true,
-        "children": null
-      },
-      {
-        "id": 1727,
-        "parentId": 1760,
-        "name": "仓库管理",
-        "path": "warehouseManagement",
-        "component": "indebt/warehouseManagement/index",
-        "componentName": "WarehouseManagement",
-        "icon": null,
-        "visible": true,
-        "keepAlive": true,
-        "alwaysShow": true,
-        "children": null
+        "children": [
+          {
+            "id": 1763,
+            "parentId": 1726,
+            "name": "商品维护",
+            "path": "inventoryGoods",
+            "component": "indebt/inventoryGoods/index",
+            "componentName": "InventoryGoodsManagement",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          },
+          {
+            "id": 1727,
+            "parentId": 1726,
+            "name": "仓库管理",
+            "path": "warehouseManagement",
+            "component": "indebt/warehouseManagement/index",
+            "componentName": "WarehouseManagement",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          },
+          {
+            "id": 1764,
+            "parentId": 1726,
+            "name": "仓库审批",
+            "path": "warehouseApproval",
+            "component": "indebt/warehouseManagement/index",
+            "componentName": "WarehouseApproval",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          }
+        ]
       },
       {
         "id": 1728,
         "parentId": 1760,
-        "name": "订单/合同信息修改",
-        "path": "orderContractModification",
-        "component": "indebt/orderContractModification/index",
-        "componentName": "OrderContractModification",
+        "name": "订单/合同管理",
+        "path": "",
+        "component": null,
+        "componentName": null,
         "icon": null,
         "visible": true,
         "keepAlive": true,
         "alwaysShow": true,
-        "children": null
+        "children": [
+          {
+            "id": 1761,
+            "parentId": 1728,
+            "name": "订单/合同信息修改",
+            "path": "orderContractModification",
+            "component": "indebt/orderContractModification/index",
+            "componentName": "OrderContractModification",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          },
+          {
+            "id": 1762,
+            "parentId": 1728,
+            "name": "订单/合同信息查询",
+            "path": "orderContractModificationQuery",
+            "component": "indebt/orderContractModification/index",
+            "componentName": "OrderContractModificationRecordQuery",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          }
+        ]
       },
       {
         "id": 1729,
@@ -1381,6 +1435,24 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
               { "id": 1753, "parentId": 1750, "name": "债项规则维护", "path": "ruleMaintenance", "component": "indebt/debtRuleManagement/index", "componentName": "DebtRuleMaintenance", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
               { "id": 1754, "parentId": 1750, "name": "债项规则库管理", "path": "ruleLibrary", "component": "indebt/debtRuleManagement/index", "componentName": "DebtRuleLibrary", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null }
             ]
+      },
+      {
+        "id": 1765,
+        "parentId": 1239,
+        "name": "债项方案",
+        "path": "debtScheme",
+        "component": null,
+        "componentName": null,
+        "icon": null,
+        "visible": true,
+        "keepAlive": true,
+        "alwaysShow": true,
+        "children": [
+          { "id": 1766, "parentId": 1765, "name": "规则配置详情", "path": "ruleConfigDetail", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeRuleConfigDetail", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1767, "parentId": 1765, "name": "规则配置", "path": "ruleConfig", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeRuleConfig", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1768, "parentId": 1765, "name": "债项因子设置", "path": "debtFactorSetting", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeFactorSetting", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1769, "parentId": 1765, "name": "债项因子详情", "path": "debtFactorDetail", "component": "indebt/debtScheme/index", "componentName": "DebtSchemeFactorDetail", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null }
+        ]
       }
         ]
       }

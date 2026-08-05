@@ -14,7 +14,10 @@ import { warehouseApplicationMenus } from './common'
 defineOptions({ name: 'WarehouseManagement' })
 
 const route = useRoute()
-const activeMenu = computed(() => String(route.query?.key || 'pending'))
+const isApprovalEntry = computed(() => String(route.path).includes('warehouseApproval'))
+const activeMenu = computed(() =>
+  String(route.query?.key || (isApprovalEntry.value ? 'reviewing' : 'pending'))
+)
 const modules = import.meta.glob('./components/*/index.vue')
 
 const handleMenuSelect = (menu: { phase: string }) => ({ phase: menu.phase })
