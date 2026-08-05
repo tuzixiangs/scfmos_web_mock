@@ -3,7 +3,8 @@
     class="!p-0"
     body-class="!overflow-y-unset"
     width="500px"
-    top="2vh"
+    append-to-body
+    top="10vh"
     v-model="visible"
     title="规则配置测试页面1111"
   >

@@ -84,6 +84,7 @@
           加入供应链群成员
         </el-button>
         <el-button @click="ruleTest" plain> 配置规则test </el-button>                   
+        <el-button @click="indebtDataTestHandle" plain> 债项数据test </el-button>                   
       </div>
     </div>
     <el-table
@@ -159,6 +160,7 @@
     />
 
     <ruleTestComp ref="ruleTestCompRef" />
+    <indebtDataTest ref="indebtDataTestRef" />
   </ContentWrap>
 </template>
 
@@ -174,6 +176,7 @@ import { personalApi } from '@/api/customerInfoMGM/personal'
 import { useRiskDetection } from '@/views/creditApplicationMGM/approvalChangeRequest/hooks'
 import { getIframeUrl } from '@/components/busiComp/crmsIframe/api'
 import ruleTestComp from './components/ruleTestComp/pop.vue'
+import indebtDataTest from './components/indebtDataTest/index.vue'
 
 defineOptions({
   name: '/compCustMana'
@@ -445,5 +448,9 @@ const button1 = () => {
 const ruleTestCompRef = ref()
 const ruleTest = () => {
   ruleTestCompRef.value.open()
+}
+const indebtDataTestRef = ref()
+const indebtDataTestHandle = () => {
+  indebtDataTestRef.value.open()
 }
 </script>
