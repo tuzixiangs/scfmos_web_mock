@@ -132,7 +132,9 @@ const today = () => now().slice(0, 10)
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 const warningRule = (rate: number) => `价格下跌达到${Math.round(rate * 100)}%时触发跌价补偿平衡公式`
-const calculateWarningLine = (item: Pick<InventoryPriceItem, 'latestUnitPrice' | 'monitoringUnitPrice' | 'warningRate'>) => {
+const calculateWarningLine = (
+  item: Pick<InventoryPriceItem, 'latestUnitPrice' | 'monitoringUnitPrice' | 'warningRate'>
+) => {
   const basePrice = item.monitoringUnitPrice > 0 ? item.monitoringUnitPrice : item.latestUnitPrice
   return amount(basePrice * (1 - item.warningRate))
 }
@@ -159,7 +161,20 @@ const refreshSummary = (record: InventoryPriceApplicationRecord) => {
 }
 
 const record = (
-  data: Omit<InventoryPriceApplicationRecord, | 'images' | 'opinions' | 'items' | 'largeCategory' | 'middleCategory' | 'smallCategory' | 'origin' | 'inboundUnitPrice' | 'latestUnitPrice' | 'monitoringUnitPrice' | 'monitoringSource'> & {
+  data: Omit<
+    InventoryPriceApplicationRecord,
+    | 'images'
+    | 'opinions'
+    | 'items'
+    | 'largeCategory'
+    | 'middleCategory'
+    | 'smallCategory'
+    | 'origin'
+    | 'inboundUnitPrice'
+    | 'latestUnitPrice'
+    | 'monitoringUnitPrice'
+    | 'monitoringSource'
+  > & {
     images?: InventoryPriceApplicationImage[]
     opinions?: InventoryPriceApplicationOpinion[]
     items: InventoryPriceItem[]
@@ -335,7 +350,7 @@ const projectItems: Record<number, InventoryPriceItem[]> = {
 }
 
 /**
- * 债项管理 - 存货类价格管理的唯一 Mock 数据源。
+ * 债项管理 - 价格盯市的唯一 Mock 数据源。
  * 每个工作节点均有样例，以便页面切换和按钮流转演示。
  */
 export const inventoryPriceApplicationRecords: InventoryPriceApplicationRecord[] = [
@@ -491,11 +506,22 @@ const getRecord = (id: number | string) =>
 
 const nextId = () => Math.max(0, ...inventoryPriceApplicationRecords.map((entry) => entry.id)) + 1
 const nextImageId = () =>
-  Math.max(0, ...inventoryPriceApplicationRecords.flatMap((entry) => entry.images.map((image) => image.id))) + 1
+  Math.max(
+    0,
+    ...inventoryPriceApplicationRecords.flatMap((entry) => entry.images.map((image) => image.id))
+  ) + 1
 const nextOpinionId = () =>
-  Math.max(0, ...inventoryPriceApplicationRecords.flatMap((entry) => entry.opinions.map((opinion) => opinion.id))) + 1
+  Math.max(
+    0,
+    ...inventoryPriceApplicationRecords.flatMap((entry) =>
+      entry.opinions.map((opinion) => opinion.id)
+    )
+  ) + 1
 const nextItemId = () =>
-  Math.max(0, ...inventoryPriceApplicationRecords.flatMap((entry) => entry.items.map((item) => item.id))) + 1
+  Math.max(
+    0,
+    ...inventoryPriceApplicationRecords.flatMap((entry) => entry.items.map((item) => item.id))
+  ) + 1
 
 const isEditable = (record: InventoryPriceApplicationRecord | undefined): string | undefined => {
   if (!record) return '价格盯市申请不存在'
@@ -552,9 +578,11 @@ export const createInventoryPriceApplicationRecord = (
   if (!project) return { success: false, message: '请选择一个当前有效项目后再新增盯市申请' }
 
   const duplicated = inventoryPriceApplicationRecords.some(
-    (entry) => entry.projectId === project.id && (entry.phase === 'pending' || entry.phase === 'reviewing')
+    (entry) =>
+      entry.projectId === project.id && (entry.phase === 'pending' || entry.phase === 'reviewing')
   )
-  if (duplicated) return { success: false, message: '该项目已有在途的价格盯市申请，请先完成或收回原申请' }
+  if (duplicated)
+    return { success: false, message: '该项目已有在途的价格盯市申请，请先完成或收回原申请' }
 
   const id = nextId()
   const sequence = String(id).padStart(4, '0')
@@ -595,7 +623,8 @@ export const updateInventoryPriceApplicationRecord = (
     const itemId = Number(change.id)
     const item = application.items.find((entry) => entry.id === itemId)
     if (!item) return { success: false, message: '商品价格维护行不存在，请刷新后重试' }
-    if (submittedIds.has(itemId)) return { success: false, message: '同一商品价格维护行不能重复提交' }
+    if (submittedIds.has(itemId))
+      return { success: false, message: '同一商品价格维护行不能重复提交' }
     submittedIds.add(itemId)
 
     const monitoringUnitPrice = numberValue(change.monitoringUnitPrice, Number.NaN)
@@ -603,7 +632,8 @@ export const updateInventoryPriceApplicationRecord = (
       return { success: false, message: `请填写“${item.smallCategory}”的有效本次盯市单价` }
     }
     const monitoringSource = trim(change.monitoringSource)
-    if (!monitoringSource) return { success: false, message: `请填写“${item.smallCategory}”的盯市来源` }
+    if (!monitoringSource)
+      return { success: false, message: `请填写“${item.smallCategory}”的盯市来源` }
 
     item.monitoringUnitPrice = amount(monitoringUnitPrice)
     item.monitoringSource = monitoringSource
@@ -611,7 +641,11 @@ export const updateInventoryPriceApplicationRecord = (
     item.warningRule = warningRule(item.warningRate)
   }
   refreshSummary(application)
-  return { success: true, message: '商品盯市单价已保存，预警线已按价格波动规则重新计算', record: application }
+  return {
+    success: true,
+    message: '商品盯市单价已保存，预警线已按价格波动规则重新计算',
+    record: application
+  }
 }
 
 export const uploadInventoryPriceExcelRecord = (
@@ -631,7 +665,11 @@ export const uploadInventoryPriceExcelRecord = (
     item.warningLine = calculateWarningLine(item)
   })
   refreshSummary(application)
-  return { success: true, message: `${uploadedName} 已模拟导入 ${application.items.length} 条商品单价`, record: application }
+  return {
+    success: true,
+    message: `${uploadedName} 已模拟导入 ${application.items.length} 条商品单价`,
+    record: application
+  }
 }
 
 export const getInventoryPriceExcelTemplate = (): InventoryPriceTemplateResult => ({
@@ -679,7 +717,9 @@ const validateForSubmit = (application: InventoryPriceApplicationRecord): string
   return invalidItem ? `请完善“${invalidItem.smallCategory}”的本次盯市单价和盯市来源` : undefined
 }
 
-export const submitInventoryPriceApplicationRecord = (id: number | string): InventoryPriceMutationResult => {
+export const submitInventoryPriceApplicationRecord = (
+  id: number | string
+): InventoryPriceMutationResult => {
   const application = getRecord(id)
   const editableError = isEditable(application)
   if (editableError || !application) return { success: false, message: editableError }
@@ -718,7 +758,9 @@ export const batchSubmitInventoryPriceApplicationRecords = (
   }
 }
 
-export const withdrawInventoryPriceApplicationRecord = (id: number | string): InventoryPriceMutationResult => {
+export const withdrawInventoryPriceApplicationRecord = (
+  id: number | string
+): InventoryPriceMutationResult => {
   const application = getRecord(id)
   if (!application || application.phase !== 'reviewing') {
     return { success: false, message: '仅审查审批中的价格盯市申请可收回，或该申请不存在' }
@@ -746,7 +788,12 @@ export const approveInventoryPriceApplicationRecord = (
   application.currentStage = '审批完成'
   application.completedAt = now()
   const ledgerEntries = syncAssetLedger(application)
-  return { success: true, message: '申请审批通过，已同步资产/价格台账', record: application, ledgerEntries }
+  return {
+    success: true,
+    message: '申请审批通过，已同步资产/价格台账',
+    record: application,
+    ledgerEntries
+  }
 }
 
 export const getInventoryPriceTrendData = (
@@ -755,7 +802,8 @@ export const getInventoryPriceTrendData = (
 ): InventoryPriceTrendResult | undefined => {
   const application = getRecord(id)
   if (!application) return undefined
-  const item = application.items.find((entry) => entry.id === Number(itemId)) || application.items[0]
+  const item =
+    application.items.find((entry) => entry.id === Number(itemId)) || application.items[0]
   if (!item) return undefined
   const day = (offset: number) => {
     const date = new Date(`${application.applicationDate}T00:00:00`)

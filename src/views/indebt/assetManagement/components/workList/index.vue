@@ -54,96 +54,52 @@
   <el-dialog
     v-model="createVisible"
     title="新增债项资产入库申请"
-    width="1080px"
+    width="860px"
     destroy-on-close
     :close-on-click-modal="false"
   >
-    <el-alert
-      title="请选择仍有待确认资产且未存在在途入库申请的有效项目。保存后默认进入“待提交的债项资产入库申请”节点。"
-      type="info"
-      :closable="false"
-      class="mb-16px"
-    />
-    <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="108px">
-      <el-form-item label="项目查询">
-        <div class="project-query-row">
-          <el-input
-            v-model.trim="projectKeyword"
-            clearable
-            placeholder="请输入项目名称或项目编号"
-            @keyup.enter="loadAvailableProjects"
-          />
-          <el-input
-            v-model.trim="linkedCustomerKeyword"
-            clearable
-            placeholder="请输入链属客户名称"
-            @keyup.enter="loadAvailableProjects"
-          />
-          <el-button :loading="projectsLoading" @click="loadAvailableProjects">
-            <Icon icon="ep:search" class="mr-4px" />查询项目
-          </el-button>
-        </div>
-      </el-form-item>
-      <el-form-item label="有效项目" prop="projectId">
-        <div class="project-picker">
-          <el-table
-            :data="availableProjects"
-            size="small"
-            border
-            highlight-current-row
-            max-height="260"
-            @row-click="selectProject"
-          >
-            <el-table-column width="58" align="center">
-              <template #default="{ row }">
-                <el-radio
-                  :model-value="String(createForm.projectId)"
-                  :label="String(row.id)"
-                  @change="selectProject(row)"
-                >
-                  <span class="sr-only">选择项目</span>
-                </el-radio>
-              </template>
-            </el-table-column>
-            <el-table-column prop="projectName" label="项目名称" min-width="155" />
-            <el-table-column prop="projectNo" label="项目编号" min-width="155" />
-            <el-table-column prop="linkedCustomerName" label="链属客户名称" min-width="170" />
-            <el-table-column prop="creditNo" label="授信编号" min-width="160" />
-            <el-table-column prop="productPlan" label="产品方案" min-width="145" />
-            <el-table-column prop="businessContractNo" label="业务合同编号" min-width="175" />
-          </el-table>
-          <el-empty
-            v-if="!projectsLoading && !availableProjects.length"
-            :image-size="58"
-            description="未找到可新增入库申请的有效项目"
-          />
-        </div>
-      </el-form-item>
+    <el-form
+      ref="createFormRef"
+      :model="createForm"
+      :rules="createRules"
+      label-width="118px"
+      class="create-project-form"
+    >
       <div class="arrival-form-grid">
-        <el-form-item label="项目名称" prop="projectName">
-          <el-input v-model="createForm.projectName" readonly placeholder="请先从上方选择项目" />
+        <el-form-item label="项目名称" prop="projectId">
+          <el-input
+            v-model="createForm.projectName"
+            readonly
+            class="project-picker-input"
+            placeholder="请选择项目"
+            @click="openProjectPicker"
+          >
+            <template #suffix>
+              <Icon icon="ep:search" />
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item label="项目编号" prop="projectNo">
-          <el-input v-model="createForm.projectNo" readonly placeholder="请先从上方选择项目" />
+          <el-input v-model="createForm.projectNo" readonly placeholder="选择项目后自动反显" />
         </el-form-item>
         <el-form-item label="链属客户名称" prop="linkedCustomerName">
           <el-input
             v-model="createForm.linkedCustomerName"
             readonly
-            placeholder="请先从上方选择项目"
+            placeholder="选择项目后自动反显"
           />
         </el-form-item>
         <el-form-item label="授信编号" prop="creditNo">
-          <el-input v-model="createForm.creditNo" readonly placeholder="请先从上方选择项目" />
+          <el-input v-model="createForm.creditNo" readonly placeholder="选择项目后自动反显" />
         </el-form-item>
         <el-form-item label="产品方案" prop="productPlan">
-          <el-input v-model="createForm.productPlan" readonly placeholder="请先从上方选择项目" />
+          <el-input v-model="createForm.productPlan" readonly placeholder="选择项目后自动反显" />
         </el-form-item>
         <el-form-item label="业务合同编号" prop="businessContractNo">
           <el-input
             v-model="createForm.businessContractNo"
             readonly
-            placeholder="请先从上方选择项目"
+            placeholder="选择项目后自动反显"
           />
         </el-form-item>
         <el-form-item label="入库类型" prop="inboundType">
@@ -161,110 +117,75 @@
   </el-dialog>
 
   <el-dialog
-    v-model="detailVisible"
-    title="债项资产入库申请详情"
+    v-model="projectPickerVisible"
+    title="选择有效项目"
     width="1080px"
-    top="5vh"
+    top="8vh"
+    append-to-body
     destroy-on-close
     :close-on-click-modal="false"
   >
-    <template v-if="detailRecord">
-      <el-tabs v-model="detailActiveTab" class="asset-management-detail-tabs">
-        <el-tab-pane label="业务合同信息" name="contract">
-          <section class="detail-section">
-            <div class="detail-section-title">业务合同基本信息</div>
-            <el-descriptions :column="3" border>
-              <el-descriptions-item label="申请编号">{{ detailRecord.applicationNo }}</el-descriptions-item>
-              <el-descriptions-item label="申请状态">
-                <el-tag :type="statusTagType(detailRecord.phase)" effect="light">
-                  {{ detailRecord.status }}
-                </el-tag>
-              </el-descriptions-item>
-              <el-descriptions-item label="申请日期">{{ detailRecord.applicationDate || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="项目名称">{{ detailRecord.projectName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="项目编号">{{ detailRecord.projectNo || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="客户名称">{{ detailRecord.customerName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="核心客户编号">{{ detailRecord.coreCustomerNo || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="链属客户名称">{{ detailRecord.linkedCustomerName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="授信编号">{{ detailRecord.creditNo || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="产品方案">{{ detailRecord.productPlan || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="关联业务合同编号">{{ detailRecord.businessContractNo || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="业务合同金额">
-                {{ formatAmount(detailRecord.businessContractAmount) }} {{ detailRecord.currency || '' }}
-              </el-descriptions-item>
-              <el-descriptions-item label="合同起始日">{{ detailRecord.contractStartDate || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="合同到期日">{{ detailRecord.contractEndDate || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="出账金额">
-                {{ formatAmount(detailRecord.outboundAmount) }} {{ detailRecord.currency || '' }}
-              </el-descriptions-item>
-              <el-descriptions-item label="出账日期">{{ detailRecord.billingDate || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="入库截止日期">{{ detailRecord.arrivalDeadline || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="当前阶段">{{ detailRecord.currentStage || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="完成时间">{{ detailRecord.completedAt || '-' }}</el-descriptions-item>
-            </el-descriptions>
-          </section>
-        </el-tab-pane>
-
-        <el-tab-pane label="入库确认信息" name="confirmation">
-          <section class="detail-section">
-            <div class="detail-section-heading">
-              <div>
-                <div class="detail-section-title">债项资产入库入库确认</div>
-                <p>待处理节点支持补充或调整确认信息；提交后将进入审查审批流程。</p>
-              </div>
-              <el-tag :type="canEditConfirmation ? 'warning' : 'info'" effect="light">
-                {{ canEditConfirmation ? '可编辑' : '审批中/已完成，仅可查看' }}
-              </el-tag>
-            </div>
-            <el-form
-              ref="confirmationFormRef"
-              :model="confirmationForm"
-              :rules="confirmationRules"
-              label-width="122px"
-              :disabled="!canEditConfirmation"
+    <el-alert
+      title="请选择仍有待确认资产且未存在在途入库申请的有效项目。"
+      type="info"
+      :closable="false"
+      class="mb-16px"
+    />
+    <div class="project-query-row mb-16px">
+      <el-input
+        v-model.trim="projectKeyword"
+        clearable
+        placeholder="请输入项目名称或项目编号"
+        @keyup.enter="loadAvailableProjects"
+      />
+      <el-input
+        v-model.trim="linkedCustomerKeyword"
+        clearable
+        placeholder="请输入链属客户名称"
+        @keyup.enter="loadAvailableProjects"
+      />
+      <el-button :loading="projectsLoading" @click="loadAvailableProjects">
+        <Icon icon="ep:search" class="mr-4px" />查询项目
+      </el-button>
+    </div>
+    <div class="project-picker" v-loading="projectsLoading">
+      <el-table
+        :data="availableProjects"
+        size="small"
+        border
+        highlight-current-row
+        max-height="420"
+        @row-click="selectProjectCandidate"
+      >
+        <el-table-column width="58" align="center">
+          <template #default="{ row }">
+            <el-radio
+              :model-value="String(selectedProject?.id ?? '')"
+              :value="String(row.id)"
+              @change="selectProjectCandidate(row)"
             >
-              <div class="arrival-form-grid">
-                <el-form-item label="入库类型" prop="inboundType">
-                  <el-select v-model="confirmationForm.inboundType" class="w-full" placeholder="请选择入库类型">
-                    <el-option label="部分入库" value="部分入库" />
-                    <el-option label="已完成入库" value="已完成入库" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="入库货值" prop="inboundValue">
-                  <el-input-number
-                    v-model="confirmationForm.inboundValue"
-                    class="w-full"
-                    :min="0"
-                    :precision="2"
-                    :controls="false"
-                    placeholder="请输入入库货值"
-                  />
-                </el-form-item>
-                <el-form-item label="币种">
-                  <el-input :model-value="confirmationForm.currency" readonly />
-                </el-form-item>
-                <el-form-item label="入库截止日期" prop="arrivalDeadline">
-                  <el-date-picker
-                    v-model="confirmationForm.arrivalDeadline"
-                    type="date"
-                    value-format="YYYY-MM-DD"
-                    class="w-full"
-                    placeholder="请选择入库截止日期"
-                  />
-                </el-form-item>
-              </div>
-            </el-form>
-            <div v-if="canEditConfirmation" class="detail-actions">
-              <el-button type="primary" :loading="detailSaving" @click="handleSaveConfirmation">
-                <Icon icon="ep:check" class="mr-4px" />保存入库确认信息
-              </el-button>
-            </div>
-          </section>
-        </el-tab-pane>
-      </el-tabs>
-    </template>
+              <span class="sr-only">选择项目</span>
+            </el-radio>
+          </template>
+        </el-table-column>
+        <el-table-column prop="projectName" label="项目名称" min-width="155" />
+        <el-table-column prop="projectNo" label="项目编号" min-width="155" />
+        <el-table-column prop="linkedCustomerName" label="链属客户名称" min-width="170" />
+        <el-table-column prop="creditNo" label="授信编号" min-width="160" />
+        <el-table-column prop="productPlan" label="产品方案" min-width="145" />
+        <el-table-column prop="businessContractNo" label="业务合同编号" min-width="175" />
+      </el-table>
+      <el-empty
+        v-if="!projectsLoading && !availableProjects.length"
+        :image-size="72"
+        description="未找到可新增入库申请的有效项目"
+      />
+    </div>
     <template #footer>
-      <el-button @click="detailVisible = false">关 闭</el-button>
+      <el-button @click="projectPickerVisible = false">取 消</el-button>
+      <el-button type="primary" :disabled="!selectedProject" @click="confirmProjectSelection">
+        确 定
+      </el-button>
     </template>
   </el-dialog>
 
@@ -282,7 +203,9 @@
     />
     <template #footer>
       <el-button @click="batchSubmitVisible = false">取 消</el-button>
-      <el-button type="primary" :loading="batchSubmitting" @click="handleBatchSubmit">确认提交</el-button>
+      <el-button type="primary" :loading="batchSubmitting" @click="handleBatchSubmit"
+        >确认提交</el-button
+      >
     </template>
   </el-dialog>
 
@@ -329,7 +252,11 @@
           <strong>{{ image.name }}</strong>
           <p>{{ image.description }}</p>
         </div>
-        <el-button link type="primary" @click="ElMessage.info('当前为 Mock 演示影像，可在此接入实际影像系统')">
+        <el-button
+          link
+          type="primary"
+          @click="ElMessage.info('当前为 Mock 演示影像，可在此接入实际影像系统')"
+        >
           预览
         </el-button>
       </div>
@@ -422,13 +349,6 @@ interface CreateForm {
   inboundType: '部分入库' | '已完成入库' | ''
 }
 
-interface ConfirmationForm {
-  inboundType: '部分入库' | '已完成入库' | ''
-  inboundValue: number
-  currency: string
-  arrivalDeadline: string
-}
-
 interface ImageFile {
   id: number | string
   name: string
@@ -442,8 +362,18 @@ const props = defineProps<{
   }
 }>()
 
-const validPhases: AssetManagementApplicationPhase[] = ['pending', 'reviewing', 'rejected', 'approved']
-const isAssetManagementApplicationPhase = (value: unknown): value is AssetManagementApplicationPhase =>
+const route = useRoute()
+const router = useRouter()
+
+const validPhases: AssetManagementApplicationPhase[] = [
+  'pending',
+  'reviewing',
+  'rejected',
+  'approved'
+]
+const isAssetManagementApplicationPhase = (
+  value: unknown
+): value is AssetManagementApplicationPhase =>
   validPhases.includes(value as AssetManagementApplicationPhase)
 const currentPhase = computed<AssetManagementApplicationPhase>(() =>
   isAssetManagementApplicationPhase(props.params?.phase) ? props.params.phase : 'pending'
@@ -462,7 +392,9 @@ const callApi = async <T,>(names: string | string[], ...args: unknown[]): Promis
 }
 
 const toObject = (value: unknown): Record<string, unknown> =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
 const unwrapData = (value: unknown): unknown => {
   const result = toObject(value)
   return result.data === undefined ? value : result.data
@@ -484,13 +416,6 @@ const phaseLabel = (phase: AssetManagementApplicationPhase) => {
   if (phase === 'rejected') return '被否决'
   if (phase === 'reviewing') return '审查审批中'
   return '待提交'
-}
-
-const statusTagType = (phase: AssetManagementApplicationPhase) => {
-  if (phase === 'approved') return 'success'
-  if (phase === 'rejected') return 'danger'
-  if (phase === 'reviewing') return 'warning'
-  return 'info'
 }
 
 const normalizeOpinion = (value: unknown, index: number): AssetManagementOpinion => {
@@ -528,7 +453,9 @@ const normalizeRecord = (
     phase,
     status: toText(record.status ?? record.applicationStatus) || phaseLabel(phase),
     applicationNo: toText(record.applicationNo ?? record.applyNo ?? record.applicationNumber),
-    customerName: toText(record.customerName ?? record.chainCustomerName ?? record.linkedCustomerName),
+    customerName: toText(
+      record.customerName ?? record.chainCustomerName ?? record.linkedCustomerName
+    ),
     coreCustomerNo: toText(record.coreCustomerNo ?? record.coreCustomerId ?? record.customerNo),
     linkedCustomerName: toText(
       record.linkedCustomerName ?? record.chainCustomerName ?? record.customerName
@@ -545,14 +472,22 @@ const normalizeRecord = (
     ),
     businessContractAmount: toNumber(record.businessContractAmount ?? record.contractAmount),
     outboundAmount: toNumber(
-      record.outboundAmount ?? record.billingAmount ?? record.drawdownAmount ?? record.disbursementAmount
+      record.outboundAmount ??
+        record.billingAmount ??
+        record.drawdownAmount ??
+        record.disbursementAmount
     ),
     billingDate: toText(
       record.billingDate ?? record.outboundDate ?? record.drawdownDate ?? record.disbursementDate
     ),
-    arrivalDeadline: toText(record.arrivalDeadline ?? record.arrivalDeadlineDate ?? record.arrivalLimitDate),
+    arrivalDeadline: toText(
+      record.arrivalDeadline ?? record.arrivalDeadlineDate ?? record.arrivalLimitDate
+    ),
     inboundValue: toNumber(
-      record.inboundValue ?? record.inboundTotalValue ?? record.storageValue ?? record.inboundGoodsValue
+      record.inboundValue ??
+        record.inboundTotalValue ??
+        record.storageValue ??
+        record.inboundGoodsValue
     ),
     currency: toText(record.currency ?? record.currencyName),
     applicationDate: toText(record.applicationDate ?? record.applyDate),
@@ -572,10 +507,14 @@ const normalizeProject = (value: unknown): AvailableProject => {
     id: (project.id ?? project.projectId ?? 0) as number | string,
     projectName: toText(project.projectName),
     projectNo: toText(project.projectNo ?? project.projectCode),
-    linkedCustomerName: toText(project.linkedCustomerName ?? project.chainCustomerName ?? project.customerName),
+    linkedCustomerName: toText(
+      project.linkedCustomerName ?? project.chainCustomerName ?? project.customerName
+    ),
     creditNo: toText(project.creditNo ?? project.creditNumber ?? project.creditApplyNo),
     productPlan: toText(project.productPlan ?? project.productPlanName ?? project.productScheme),
-    businessContractNo: toText(project.businessContractNo ?? project.contractNo ?? project.businessAgreementNo)
+    businessContractNo: toText(
+      project.businessContractNo ?? project.contractNo ?? project.businessAgreementNo
+    )
   }
 }
 
@@ -659,7 +598,9 @@ const reviewingAndApprovedFields = new Set([
 const { allSchemas } = useCrudSchemas(crudSchemas)
 const tableColumns = computed(() =>
   allSchemas.tableColumns.filter((column) =>
-    (currentPhase.value === 'pending' ? pendingFields : reviewingAndApprovedFields).has(column.field)
+    (currentPhase.value === 'pending' ? pendingFields : reviewingAndApprovedFields).has(
+      column.field
+    )
   )
 )
 
@@ -690,15 +631,12 @@ const { getList, setSearchParams } = tableMethods
 const createVisible = ref(false)
 const createLoading = ref(false)
 const createFormRef = ref<FormInstance>()
+const projectPickerVisible = ref(false)
 const projectKeyword = ref('')
 const linkedCustomerKeyword = ref('')
 const projectsLoading = ref(false)
 const availableProjects = ref<AvailableProject[]>([])
-const detailVisible = ref(false)
-const detailRecord = ref<AssetManagementRecord>()
-const detailActiveTab = ref('contract')
-const confirmationFormRef = ref<FormInstance>()
-const detailSaving = ref(false)
+const selectedProject = ref<AvailableProject>()
 const batchSubmitVisible = ref(false)
 const batchSubmitting = ref(false)
 const selectedRecords = ref<AssetManagementRecord[]>([])
@@ -727,25 +665,7 @@ const createRules: FormRules<CreateForm> = {
   inboundType: [{ required: true, message: '请选择入库类型', trigger: 'change' }]
 }
 
-const initialConfirmationForm = (): ConfirmationForm => ({
-  inboundType: '部分入库',
-  inboundValue: 0,
-  currency: '人民币',
-  arrivalDeadline: ''
-})
-const confirmationForm = reactive<ConfirmationForm>(initialConfirmationForm())
-const confirmationRules: FormRules<ConfirmationForm> = {
-  inboundType: [{ required: true, message: '请选择入库类型', trigger: 'change' }],
-  inboundValue: [
-    { required: true, type: 'number', min: 0.01, message: '请输入大于 0 的入库货值', trigger: 'blur' }
-  ],
-  arrivalDeadline: [{ required: true, message: '请选择入库截止日期', trigger: 'change' }]
-}
-
 const currentRecord = computed(() => tableObject.currentRow || undefined)
-const canEditConfirmation = computed(
-  () => detailRecord.value?.phase === 'pending' && currentPhase.value === 'pending'
-)
 
 const setCurrentRecord = (record: AssetManagementRecord) => {
   tableObject.currentRow = record
@@ -802,7 +722,16 @@ const loadAvailableProjects = async () => {
   }
 }
 
-const selectProject = (project: AvailableProject) => {
+const selectProjectCandidate = (project: AvailableProject) => {
+  selectedProject.value = project
+}
+
+const confirmProjectSelection = () => {
+  const project = selectedProject.value
+  if (!project) {
+    ElMessage.warning('请先选择一个有效项目')
+    return
+  }
   Object.assign(createForm, {
     projectId: project.id,
     projectName: project.projectName,
@@ -812,16 +741,36 @@ const selectProject = (project: AvailableProject) => {
     productPlan: project.productPlan,
     businessContractNo: project.businessContractNo
   })
+  projectPickerVisible.value = false
   createFormRef.value?.validateField('projectId')
 }
 
-const openCreate = async () => {
+const openProjectPicker = async () => {
+  selectedProject.value = createForm.projectId
+    ? {
+        id: createForm.projectId,
+        projectName: createForm.projectName,
+        projectNo: createForm.projectNo,
+        linkedCustomerName: createForm.linkedCustomerName,
+        creditNo: createForm.creditNo,
+        productPlan: createForm.productPlan,
+        businessContractNo: createForm.businessContractNo
+      }
+    : undefined
+  projectKeyword.value = ''
+  linkedCustomerKeyword.value = ''
+  projectPickerVisible.value = true
+  await loadAvailableProjects()
+}
+
+const openCreate = () => {
   Object.assign(createForm, initialCreateForm())
+  selectedProject.value = undefined
+  availableProjects.value = []
   projectKeyword.value = ''
   linkedCustomerKeyword.value = ''
   createFormRef.value?.clearValidate()
   createVisible.value = true
-  await loadAvailableProjects()
 }
 
 const handleCreate = async () => {
@@ -860,66 +809,18 @@ const getDetail = async (record: AssetManagementRecord) => {
   return recordFromResult(result)
 }
 
-const applyConfirmationForm = (record: AssetManagementRecord) => {
-  Object.assign(confirmationForm, {
-    inboundType: record.inboundType === '已完成入库' ? '已完成入库' : '部分入库',
-    inboundValue: record.inboundValue,
-    currency: record.currency || '人民币',
-    arrivalDeadline: record.arrivalDeadline
-  })
-}
-
-const openDetail = async () => {
+const openDetail = () => {
   const record = requireCurrentRecord()
   if (!record) return
-  try {
-    const detail = await getDetail(record)
-    if (!detail) return
-    detailRecord.value = detail
-    detailActiveTab.value = 'contract'
-    applyConfirmationForm(detail)
-    confirmationFormRef.value?.clearValidate()
-    detailVisible.value = true
-  } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '获取债项资产入库申请详情失败')
-  }
-}
-
-const handleSaveConfirmation = async () => {
-  if (!detailRecord.value) return
-  const valid = await confirmationFormRef.value
-    ?.validate()
-    .then(() => true)
-    .catch(() => false)
-  if (!valid) return
-
-  detailSaving.value = true
-  try {
-    const result = await callApi<unknown>(
-      ['updateAssetManagementConfirmation', 'saveAssetManagementConfirmation', 'updateAssetManagementApplication'],
-      detailRecord.value.id,
-      {
-        inboundGoodsValue: confirmationForm.inboundValue,
-        inboundType: confirmationForm.inboundType,
-        arrivalDeadline: confirmationForm.arrivalDeadline
-      }
-    )
-    if (isFailedResult(result)) {
-      ElMessage.error(result.message || '保存入库确认信息失败')
-      return
+  router.push({
+    path: route.path,
+    query: {
+      ...route.query,
+      view: 'detail',
+      id: String(record.id),
+      phase: record.phase
     }
-    const saved = recordFromResult(result)
-    if (saved) {
-      detailRecord.value = saved
-      applyConfirmationForm(saved)
-    }
-    ElMessage.success('入库确认信息已保存')
-    await refreshList()
-  } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '保存入库确认信息失败')
-  } finally {
-    detailSaving.value = false
-  }
+  })
 }
 
 const openOpinion = async () => {
@@ -999,7 +900,11 @@ const handleSignOpinion = async () => {
 
   actionLoading.value = 'sign'
   try {
-    const result = await callApi<unknown>('signAssetManagementApplicationOpinion', record.id, content)
+    const result = await callApi<unknown>(
+      'signAssetManagementApplicationOpinion',
+      record.id,
+      content
+    )
     if (isFailedResult(result)) {
       ElMessage.error(result.message || '签署意见失败')
       return
@@ -1100,7 +1005,9 @@ const normalizeImage = (value: unknown, index: number): ImageFile => {
   return {
     id: (image.id ?? image.fileId ?? index) as number | string,
     name: toText(image.name ?? image.fileName ?? `入库影像${index + 1}`),
-    description: toText(image.description ?? image.uploadedAt ?? image.createTime ?? '债项资产入库申请影像材料'),
+    description: toText(
+      image.description ?? image.uploadedAt ?? image.createTime ?? '债项资产入库申请影像材料'
+    ),
     icon: toText(image.icon) || 'ep:document'
   }
 }
@@ -1114,7 +1021,9 @@ const openImage = async (record: AssetManagementRecord) => {
     const result = await callApi<unknown>('getAssetManagementApplicationImages', record.id)
     const source = unwrapData(result)
     const resultObject = toObject(source)
-    const rows = Array.isArray(source) ? source : getArray(resultObject.list ?? resultObject.records)
+    const rows = Array.isArray(source)
+      ? source
+      : getArray(resultObject.list ?? resultObject.records)
     if (rows.length) imageItems.value = rows.map(normalizeImage)
   } catch {
     // 影像接口缺失时保留结构化 Mock 影像，页面仍可正常演示。
@@ -1228,6 +1137,24 @@ onActivated(() => {
   min-width: 0;
 }
 
+.create-project-form {
+  padding: 12px 18px 4px 4px;
+}
+
+.project-picker-input {
+  cursor: pointer;
+
+  :deep(.el-input__wrapper),
+  :deep(.el-input__inner),
+  :deep(.el-input__suffix) {
+    cursor: pointer;
+  }
+
+  :deep(.el-input__suffix) {
+    color: var(--el-color-primary);
+  }
+}
+
 .project-query-row {
   display: flex;
   width: 100%;
@@ -1240,46 +1167,13 @@ onActivated(() => {
 
 .project-picker {
   width: 100%;
+  min-height: 120px;
 }
 
 .arrival-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 18px;
-}
-
-.detail-section {
-  min-width: 0;
-}
-
-.detail-section-title {
-  margin-bottom: 14px;
-  color: #27364b;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.detail-section-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-
-  .detail-section-title {
-    margin-bottom: 5px;
-  }
-
-  p {
-    margin: 0 0 14px;
-    color: #8492a6;
-    font-size: 13px;
-  }
-}
-
-.detail-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
 }
 
 .asset-management-timeline {
@@ -1326,8 +1220,7 @@ onActivated(() => {
 }
 
 @media (max-width: 900px) {
-  .project-query-row,
-  .detail-section-heading {
+  .project-query-row {
     display: block;
   }
 

@@ -3,7 +3,12 @@ import request from '@/config/axios'
 /** 债项资产管理左侧工作台的三个稳定节点。 */
 export type AssetManagementApplicationPhase = 'pending' | 'reviewing' | 'rejected' | 'approved'
 
-export type AssetManagementApplicationStatus = '待提交' | '待处理' | '审查审批中' | '被否决' | '审批通过'
+export type AssetManagementApplicationStatus =
+  | '待提交'
+  | '待处理'
+  | '审查审批中'
+  | '被否决'
+  | '审批通过'
 export type AssetManagementInboundType = '部分入库' | '已完成入库'
 export type AssetManagementCurrency = '人民币' | '美元' | '欧元'
 
@@ -30,6 +35,50 @@ export interface AssetManagementFlowRecord {
   operator: string
   operatedAt: string
   comment?: string
+}
+
+/** 详情页中可选择的有效订单/合同。 */
+export interface AssetManagementOrderContract {
+  id: number
+  orderContractFlowNo: string
+  orderContractNo: string
+  partyOne: string
+  partyTwo: string
+  partyThree: string
+  contractTotalAmount: number
+  currentUsedAmount: number
+  remainingAvailableAmount: number
+  currency: AssetManagementCurrency
+  contractStartDate: string
+  contractEndDate: string
+  dataSource: string
+}
+
+export type AssetManagementAssetStatus = '待入库' | '已到港'
+
+/** 详情页中与订单/合同关联的债项资产明细。 */
+export interface AssetManagementAssetDetail {
+  id: number
+  orderContractId: number
+  productCode: string
+  productName: string
+  largeCategory: string
+  middleCategory: string
+  smallCategory: string
+  batchNo: string
+  containerNo: string
+  origin: string
+  specification: string
+  warehouseName: string
+  inboundQuantity: number
+  quantityUnit: string
+  initialRecognitionPrice: number
+  initialRecognitionValue: number
+  currency: AssetManagementCurrency
+  goodsStartDate: string
+  goodsEndDate: string
+  goodsOwnership: string
+  assetStatus: AssetManagementAssetStatus
 }
 
 /** 新增弹窗中可选择的有效项目及其可入库业务合同。 */
@@ -109,6 +158,8 @@ export interface AssetManagementApplicationDetail extends AssetManagementApplica
   images: AssetManagementApplicationImage[]
   opinions: AssetManagementApplicationOpinion[]
   flowRecords: AssetManagementFlowRecord[]
+  orderContracts: AssetManagementOrderContract[]
+  assetDetails: AssetManagementAssetDetail[]
 }
 
 export interface AssetManagementApplicationQuery {
@@ -159,6 +210,20 @@ export interface AssetManagementConfirmationForm {
   confirmationRemark?: string
 }
 
+export interface AssetManagementAssetUpdateForm {
+  productName: string
+  largeCategory: string
+  middleCategory: string
+  smallCategory: string
+  origin: string
+  warehouseName: string
+  goodsStartDate: string
+  goodsEndDate: string
+  inboundQuantity: number
+  initialRecognitionPrice: number
+  goodsOwnership: '核心企业' | '借款人自己'
+}
+
 export interface AssetManagementApplicationMutationResult {
   success: boolean
   message?: string
@@ -202,8 +267,21 @@ export const getAssetManagementApplicationDetail = (id: number) =>
     params: { id }
   })
 
+export const updateAssetManagementAssetDetail = (
+  applicationId: number,
+  assetId: number,
+  data: AssetManagementAssetUpdateForm
+) =>
+  request.put<AssetManagementApplicationMutationResult>({
+    url: '/system/indebt/asset-management-applications/asset-detail/update',
+    data: { applicationId, assetId, ...data }
+  })
+
 /** 与“待提交的债项资产入库申请”节点的业务措辞保持一致。 */
-export const updateAssetManagementConfirmation = (id: number, data: AssetManagementConfirmationForm) =>
+export const updateAssetManagementConfirmation = (
+  id: number,
+  data: AssetManagementConfirmationForm
+) =>
   request.put<AssetManagementApplicationMutationResult>({
     url: '/system/indebt/asset-management-applications/update-confirmation',
     data: { id, ...data }

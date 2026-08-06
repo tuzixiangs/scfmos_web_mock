@@ -1,5 +1,7 @@
 <template>
+  <AssetManagementDetail v-if="showDetail" />
   <dynamicContainer
+    v-else
     :active-menu="activeMenu"
     :comp-modules="modules"
     :menu-list="menuList"
@@ -10,10 +12,12 @@
 <script setup lang="ts">
 import dynamicContainer from '@/components/dynamicContainer/index.vue'
 import { assetManagementApplicationMenus, assetManagementApprovalMenus } from './common'
+import AssetManagementDetail from './detail/index.vue'
 
 defineOptions({ name: 'AssetManagement' })
 
 const route = useRoute()
+const showDetail = computed(() => route.query.view === 'detail' && Boolean(route.query.id))
 const isApprovalEntry = computed(() => String(route.path).includes('inboundApproval'))
 const menuList = computed(() =>
   isApprovalEntry.value ? assetManagementApprovalMenus : assetManagementApplicationMenus

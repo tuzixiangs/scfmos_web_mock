@@ -132,11 +132,7 @@
           />
         </el-form-item>
         <el-form-item label="核心客户编号" prop="coreCustomerNo">
-          <el-input
-            v-model="createForm.coreCustomerNo"
-            readonly
-            placeholder="请先从上方选择项目"
-          />
+          <el-input v-model="createForm.coreCustomerNo" readonly placeholder="请先从上方选择项目" />
         </el-form-item>
       </div>
     </el-form>
@@ -156,19 +152,31 @@
   >
     <template v-if="detailRecord">
       <el-descriptions :column="3" border class="mb-16px">
-        <el-descriptions-item label="申请编号">{{ detailRecord.applicationNo }}</el-descriptions-item>
+        <el-descriptions-item label="申请编号">{{
+          detailRecord.applicationNo
+        }}</el-descriptions-item>
         <el-descriptions-item label="申请状态">
           <el-tag :type="statusTagType(detailRecord.phase)" effect="light">
             {{ detailRecord.status }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="申请日期">{{ detailRecord.applicationDate }}</el-descriptions-item>
+        <el-descriptions-item label="申请日期">{{
+          detailRecord.applicationDate
+        }}</el-descriptions-item>
         <el-descriptions-item label="项目名称">{{ detailRecord.projectName }}</el-descriptions-item>
         <el-descriptions-item label="项目编号">{{ detailRecord.projectNo }}</el-descriptions-item>
-        <el-descriptions-item label="核心企业名称">{{ detailRecord.coreEnterpriseName }}</el-descriptions-item>
-        <el-descriptions-item label="核心客户编号">{{ detailRecord.coreCustomerNo }}</el-descriptions-item>
-        <el-descriptions-item label="当前阶段">{{ detailRecord.currentStage || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="完成时间">{{ detailRecord.completedAt || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="核心企业名称">{{
+          detailRecord.coreEnterpriseName
+        }}</el-descriptions-item>
+        <el-descriptions-item label="核心客户编号">{{
+          detailRecord.coreCustomerNo
+        }}</el-descriptions-item>
+        <el-descriptions-item label="当前阶段">{{
+          detailRecord.currentStage || '-'
+        }}</el-descriptions-item>
+        <el-descriptions-item label="完成时间">{{
+          detailRecord.completedAt || '-'
+        }}</el-descriptions-item>
       </el-descriptions>
 
       <section class="price-item-section">
@@ -215,7 +223,11 @@
           </el-table-column>
           <el-table-column label="盯市来源" min-width="150">
             <template #default="{ row }">
-              <el-select v-if="canEditPriceItems" v-model="row.monitoringSource" placeholder="请选择来源">
+              <el-select
+                v-if="canEditPriceItems"
+                v-model="row.monitoringSource"
+                placeholder="请选择来源"
+              >
                 <el-option label="行业报价" value="行业报价" />
                 <el-option label="交易平台" value="交易平台" />
                 <el-option label="现场核验" value="现场核验" />
@@ -235,7 +247,10 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-empty v-if="!(detailRecord.priceItems || []).length" description="该项目暂无可维护的商品盯市信息" />
+        <el-empty
+          v-if="!(detailRecord.priceItems || []).length"
+          description="该项目暂无可维护的商品盯市信息"
+        />
       </section>
     </template>
     <template #footer>
@@ -261,11 +276,18 @@
     </el-form>
     <template #footer>
       <el-button @click="signOpinionVisible = false">取 消</el-button>
-      <el-button type="primary" :loading="signOpinionLoading" @click="handleSignOpinion">确 定</el-button>
+      <el-button type="primary" :loading="signOpinionLoading" @click="handleSignOpinion"
+        >确 定</el-button
+      >
     </template>
   </el-dialog>
 
-  <el-dialog v-model="batchSubmitVisible" title="批量提交价格盯市申请" width="620px" destroy-on-close>
+  <el-dialog
+    v-model="batchSubmitVisible"
+    title="批量提交价格盯市申请"
+    width="620px"
+    destroy-on-close
+  >
     <el-alert
       :title="`已选择 ${selectedRecords.length} 条待提交申请，可统一签署意见后批量提交。`"
       type="warning"
@@ -286,7 +308,9 @@
     </el-form>
     <template #footer>
       <el-button @click="batchSubmitVisible = false">取 消</el-button>
-      <el-button type="primary" :loading="batchSubmitting" @click="handleBatchSubmit">确认提交</el-button>
+      <el-button type="primary" :loading="batchSubmitting" @click="handleBatchSubmit"
+        >确认提交</el-button
+      >
     </template>
   </el-dialog>
 
@@ -369,7 +393,11 @@
           <strong>{{ image.name }}</strong>
           <p>{{ image.description }}</p>
         </div>
-        <el-button link type="primary" @click="ElMessage.info('当前为 Mock 演示影像，可在此接入实际影像系统')">
+        <el-button
+          link
+          type="primary"
+          @click="ElMessage.info('当前为 Mock 演示影像，可在此接入实际影像系统')"
+        >
           预览
         </el-button>
       </div>
@@ -492,7 +520,7 @@ const api = InventoryPriceApi as unknown as Record<string, ApiFunction>
 const callApi = async <T,>(name: string, ...args: any[]): Promise<T> => {
   const fn = api[name]
   if (typeof fn !== 'function') {
-    throw new Error(`存货类价格管理 Mock 未提供 ${name} 接口`)
+    throw new Error(`价格盯市 Mock 未提供 ${name} 接口`)
   }
   return fn(...args) as Promise<T>
 }
@@ -631,13 +659,11 @@ const filteredProjects = computed(() => {
   const keyword = projectKeyword.value.trim().toLowerCase()
   const coreEnterprise = coreEnterpriseKeyword.value.trim().toLowerCase()
   if (!keyword && !coreEnterprise) return availableProjects.value
-  return availableProjects.value.filter((project) =>
-    (!keyword ||
-      [project.projectName, project.projectNo]
-        .join('|')
-        .toLowerCase()
-        .includes(keyword)) &&
-    (!coreEnterprise || project.coreEnterpriseName.toLowerCase().includes(coreEnterprise))
+  return availableProjects.value.filter(
+    (project) =>
+      (!keyword ||
+        [project.projectName, project.projectNo].join('|').toLowerCase().includes(keyword)) &&
+      (!coreEnterprise || project.coreEnterpriseName.toLowerCase().includes(coreEnterprise))
   )
 })
 
@@ -661,7 +687,9 @@ const normalizePriceItem = (value: unknown): PriceItem => {
     middleCategory: toText(item.middleCategory ?? item.middleCategoryName),
     smallCategory: toText(item.smallCategory ?? item.smallCategoryName),
     origin: toText(item.origin),
-    inboundUnitPrice: toNumber(item.inboundUnitPrice ?? item.warehouseUnitPrice ?? item.storageUnitPrice),
+    inboundUnitPrice: toNumber(
+      item.inboundUnitPrice ?? item.warehouseUnitPrice ?? item.storageUnitPrice
+    ),
     latestUnitPrice: toNumber(item.latestUnitPrice ?? item.newestUnitPrice),
     monitoringUnitPrice: toNumber(
       item.monitoringUnitPrice ?? item.currentMonitoringUnitPrice ?? item.currentPrice
@@ -693,9 +721,15 @@ const normalizePriceRecord = (
     projectName: toText(record.projectName),
     coreEnterpriseName: toText(record.coreEnterpriseName),
     coreCustomerNo: toText(record.coreCustomerNo ?? record.coreCustomerId),
-    largeCategory: toText(record.largeCategory ?? record.largeCategoryName ?? rawItems[0]?.largeCategory),
-    middleCategory: toText(record.middleCategory ?? record.middleCategoryName ?? rawItems[0]?.middleCategory),
-    smallCategory: toText(record.smallCategory ?? record.smallCategoryName ?? rawItems[0]?.smallCategory),
+    largeCategory: toText(
+      record.largeCategory ?? record.largeCategoryName ?? rawItems[0]?.largeCategory
+    ),
+    middleCategory: toText(
+      record.middleCategory ?? record.middleCategoryName ?? rawItems[0]?.middleCategory
+    ),
+    smallCategory: toText(
+      record.smallCategory ?? record.smallCategoryName ?? rawItems[0]?.smallCategory
+    ),
     origin: toText(record.origin ?? rawItems[0]?.origin),
     inboundUnitPrice: toNumber(record.inboundUnitPrice ?? rawItems[0]?.inboundUnitPrice),
     latestUnitPrice: toNumber(record.latestUnitPrice ?? rawItems[0]?.latestUnitPrice),
@@ -986,7 +1020,11 @@ const handleSignOpinion = async () => {
 
   signOpinionLoading.value = true
   try {
-    const result = await callApi<unknown>('signInventoryPriceApplicationOpinion', record.id, content)
+    const result = await callApi<unknown>(
+      'signInventoryPriceApplicationOpinion',
+      record.id,
+      content
+    )
     if (isFailedResult(result)) {
       ElMessage.error(result.message || '签署意见失败')
       return
@@ -1101,7 +1139,9 @@ const normalizeTrendRow = (value: unknown, fallback: InventoryPriceRecord): Pric
     origin: toText(row.origin ?? fallback.origin),
     inboundUnitPrice: toNumber(row.inboundUnitPrice ?? fallback.inboundUnitPrice),
     latestUnitPrice: toNumber(row.latestUnitPrice ?? fallback.latestUnitPrice),
-    monitoringUnitPrice: toNumber(row.monitoringUnitPrice ?? row.currentPrice ?? fallback.monitoringUnitPrice),
+    monitoringUnitPrice: toNumber(
+      row.monitoringUnitPrice ?? row.currentPrice ?? fallback.monitoringUnitPrice
+    ),
     warningLine: toNumber(row.warningLine ?? row.priceWarningLine ?? fallback.latestUnitPrice * 0.9)
   }
 }
@@ -1174,7 +1214,9 @@ const normalizeImage = (value: unknown, index: number): ImageFile => {
   return {
     id: (image.id ?? index) as number | string,
     name: toText(image.name ?? image.fileName ?? `盯市影像${index + 1}`),
-    description: toText(image.description ?? image.uploadedAt ?? image.createTime ?? '价格盯市申请影像材料'),
+    description: toText(
+      image.description ?? image.uploadedAt ?? image.createTime ?? '价格盯市申请影像材料'
+    ),
     icon: toText(image.icon) || 'ep:document'
   }
 }

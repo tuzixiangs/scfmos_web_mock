@@ -1250,7 +1250,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       {
         "id": 1729,
         "parentId": 1760,
-        "name": "存货类价格管理",
+        "name": "价格盯市",
         "path": "inventoryPriceManagement",
         "component": "indebt/inventoryPriceManagement/index",
         "componentName": "InventoryPriceManagement",
