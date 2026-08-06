@@ -99,8 +99,14 @@
           <el-input
             v-model="createForm.businessContractNo"
             readonly
-            placeholder="选择项目后自动反显"
-          />
+            class="contract-picker-input"
+            placeholder="请选择业务合同编号"
+            @click="openBusinessContractPicker"
+          >
+            <template #suffix>
+              <Icon icon="ep:search" />
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item label="入库类型" prop="inboundType">
           <el-select v-model="createForm.inboundType" class="w-full" placeholder="请选择入库类型">
@@ -114,6 +120,48 @@
       <el-button @click="createVisible = false">取 消</el-button>
       <el-button type="primary" :loading="createLoading" @click="handleCreate">保 存</el-button>
     </template>
+  </el-dialog>
+
+  <el-dialog
+    v-model="businessContractPickerVisible"
+    title="选择业务合同编号"
+    width="860px"
+    append-to-body
+    destroy-on-close
+    :close-on-click-modal="false"
+  >
+    <el-alert
+      :title="`当前项目：${createForm.projectName || '-'}。点击合同所在行后，仅反显业务合同编号。`"
+      type="info"
+      :closable="false"
+      class="mb-16px"
+    />
+    <div class="contract-query-row mb-16px">
+      <el-input v-model.trim="businessContractKeyword" clearable placeholder="请输入业务合同编号" />
+      <el-button @click="filterBusinessContracts">
+        <Icon icon="ep:search" class="mr-4px" />查询合同
+      </el-button>
+    </div>
+    <el-table
+      :data="filteredBusinessContracts"
+      border
+      highlight-current-row
+      max-height="420"
+      @row-click="selectBusinessContract"
+    >
+      <el-table-column prop="businessContractNo" label="业务合同编号" min-width="190" />
+      <el-table-column label="合同金额" min-width="155" align="right">
+        <template #default="{ row }">{{ formatAmount(row.contractAmount) }}</template>
+      </el-table-column>
+      <el-table-column prop="contractStartDate" label="合同起始日" min-width="135" />
+      <el-table-column prop="contractEndDate" label="合同到期日" min-width="135" />
+      <el-table-column prop="inboundType" label="入库类型" min-width="115" />
+    </el-table>
+    <el-empty
+      v-if="!filteredBusinessContracts.length"
+      :image-size="72"
+      description="未找到符合条件的业务合同"
+    />
   </el-dialog>
 
   <el-dialog
@@ -328,6 +376,18 @@ interface AvailableProject {
   creditNo: string
   productPlan: string
   businessContractNo: string
+  contractAmount: number
+  contractStartDate: string
+  contractEndDate: string
+}
+
+interface BusinessContractOption {
+  id: string
+  businessContractNo: string
+  contractAmount: number
+  contractStartDate: string
+  contractEndDate: string
+  inboundType: '部分入库' | '已完成入库'
 }
 
 interface AssetManagementPageResult {
@@ -514,7 +574,10 @@ const normalizeProject = (value: unknown): AvailableProject => {
     productPlan: toText(project.productPlan ?? project.productPlanName ?? project.productScheme),
     businessContractNo: toText(
       project.businessContractNo ?? project.contractNo ?? project.businessAgreementNo
-    )
+    ),
+    contractAmount: toNumber(project.businessContractAmount ?? project.contractAmount),
+    contractStartDate: toText(project.contractStartDate ?? project.businessContractStartDate),
+    contractEndDate: toText(project.contractEndDate ?? project.businessContractEndDate)
   }
 }
 
@@ -637,6 +700,10 @@ const linkedCustomerKeyword = ref('')
 const projectsLoading = ref(false)
 const availableProjects = ref<AvailableProject[]>([])
 const selectedProject = ref<AvailableProject>()
+const businessContractPickerVisible = ref(false)
+const businessContractKeyword = ref('')
+const businessContractOptions = ref<BusinessContractOption[]>([])
+const filteredBusinessContracts = ref<BusinessContractOption[]>([])
 const batchSubmitVisible = ref(false)
 const batchSubmitting = ref(false)
 const selectedRecords = ref<AssetManagementRecord[]>([])
@@ -662,6 +729,7 @@ const initialCreateForm = (): CreateForm => ({
 const createForm = reactive<CreateForm>(initialCreateForm())
 const createRules: FormRules<CreateForm> = {
   projectId: [{ required: true, message: '请选择一个有效项目', trigger: 'change' }],
+  businessContractNo: [{ required: true, message: '请选择业务合同编号', trigger: 'change' }],
   inboundType: [{ required: true, message: '请选择入库类型', trigger: 'change' }]
 }
 
@@ -745,6 +813,52 @@ const confirmProjectSelection = () => {
   createFormRef.value?.validateField('projectId')
 }
 
+const buildBusinessContractOptions = (project: AvailableProject): BusinessContractOption[] => {
+  const firstAmount = Number((project.contractAmount * 0.68).toFixed(2))
+  return [
+    {
+      id: `${project.id}-01`,
+      businessContractNo: project.businessContractNo,
+      contractAmount: firstAmount,
+      contractStartDate: project.contractStartDate,
+      contractEndDate: project.contractEndDate,
+      inboundType: '部分入库'
+    },
+    {
+      id: `${project.id}-02`,
+      businessContractNo: `${project.businessContractNo}-02`,
+      contractAmount: Number((project.contractAmount - firstAmount).toFixed(2)),
+      contractStartDate: project.contractStartDate,
+      contractEndDate: project.contractEndDate,
+      inboundType: '已完成入库'
+    }
+  ]
+}
+
+const filterBusinessContracts = () => {
+  const keyword = businessContractKeyword.value.trim()
+  filteredBusinessContracts.value = keyword
+    ? businessContractOptions.value.filter((item) => item.businessContractNo.includes(keyword))
+    : [...businessContractOptions.value]
+}
+
+const openBusinessContractPicker = () => {
+  if (!selectedProject.value || !createForm.projectId) {
+    ElMessage.warning('请先选择项目')
+    return
+  }
+  businessContractKeyword.value = ''
+  businessContractOptions.value = buildBusinessContractOptions(selectedProject.value)
+  filterBusinessContracts()
+  businessContractPickerVisible.value = true
+}
+
+const selectBusinessContract = (contract: BusinessContractOption) => {
+  createForm.businessContractNo = contract.businessContractNo
+  businessContractPickerVisible.value = false
+  createFormRef.value?.validateField('businessContractNo')
+}
+
 const openProjectPicker = async () => {
   selectedProject.value = createForm.projectId
     ? {
@@ -754,11 +868,18 @@ const openProjectPicker = async () => {
         linkedCustomerName: createForm.linkedCustomerName,
         creditNo: createForm.creditNo,
         productPlan: createForm.productPlan,
-        businessContractNo: createForm.businessContractNo
+        businessContractNo: createForm.businessContractNo,
+        contractAmount: selectedProject.value?.contractAmount || 0,
+        contractStartDate: selectedProject.value?.contractStartDate || '',
+        contractEndDate: selectedProject.value?.contractEndDate || ''
       }
     : undefined
   projectKeyword.value = ''
   linkedCustomerKeyword.value = ''
+  businessContractPickerVisible.value = false
+  businessContractKeyword.value = ''
+  businessContractOptions.value = []
+  filteredBusinessContracts.value = []
   projectPickerVisible.value = true
   await loadAvailableProjects()
 }
@@ -784,7 +905,8 @@ const handleCreate = async () => {
   try {
     const result = await callApi<unknown>('createAssetManagementApplication', {
       projectId: Number(createForm.projectId),
-      inboundType: createForm.inboundType
+      inboundType: createForm.inboundType,
+      businessContractNo: createForm.businessContractNo
     })
     if (isFailedResult(result)) {
       ElMessage.error(result.message || '新增债项资产入库申请失败')
@@ -1141,7 +1263,8 @@ onActivated(() => {
   padding: 12px 18px 4px 4px;
 }
 
-.project-picker-input {
+.project-picker-input,
+.contract-picker-input {
   cursor: pointer;
 
   :deep(.el-input__wrapper),
@@ -1155,7 +1278,8 @@ onActivated(() => {
   }
 }
 
-.project-query-row {
+.project-query-row,
+.contract-query-row {
   display: flex;
   width: 100%;
   gap: 10px;
@@ -1224,7 +1348,15 @@ onActivated(() => {
     display: block;
   }
 
+  .contract-query-row {
+    display: block;
+  }
+
   .project-query-row > * + * {
+    margin-top: 10px;
+  }
+
+  .contract-query-row > * + * {
     margin-top: 10px;
   }
 

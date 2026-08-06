@@ -149,6 +149,7 @@ export interface AssetManagementApplicationRecord {
 export interface AssetManagementApplicationCreatePayload {
   projectId?: number | string
   inboundType?: AssetManagementInboundType
+  businessContractNo?: string
 }
 
 export interface AssetManagementConfirmationPayload {
@@ -926,6 +927,11 @@ export const createAssetManagementApplicationRecord = (
   if (hasInProgressApplication)
     return mutationFailure('该项目已有待处理或审查审批中的入库申请，不能重复新增')
 
+  const availableContracts = buildOrderContracts(project)
+  const businessContractNo = trim(payload.businessContractNo) || project.businessContractNo
+  if (!availableContracts.some((item) => item.orderContractNo === businessContractNo))
+    return mutationFailure('请选择当前项目下的有效业务合同')
+
   const id = nextId()
   const inboundType = payload.inboundType === '已完成入库' ? '已完成入库' : '部分入库'
   const record = fromProject(project, {
@@ -943,6 +949,8 @@ export const createAssetManagementApplicationRecord = (
     opinions: [],
     flowRecords: []
   })
+  record.relatedBusinessContractNo = businessContractNo
+  record.businessContractNo = businessContractNo
   appendFlow(record, '入库申请', '创建申请')
   assetManagementApplicationRecords.unshift(record)
   return mutationSuccess(record, '已创建待提交的债项资产入库申请')

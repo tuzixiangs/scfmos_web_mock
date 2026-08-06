@@ -198,6 +198,7 @@ export interface AssetManagementProjectQuery {
 export interface AssetManagementApplicationCreateForm {
   projectId: number
   inboundType?: AssetManagementInboundType
+  businessContractNo?: string
 }
 
 /** 待处理节点的详情允许确认入库货值、入库类型和入库截止日期。 */
