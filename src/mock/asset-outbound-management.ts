@@ -567,9 +567,169 @@ const appendOpinion = (record: AssetOutboundManagementApplicationRecord, content
 export const getAssetOutboundManagementApplicationRecord = (id: number | string) =>
   assetOutboundManagementApplicationRecords.find((item) => item.id === Number(id))
 
+export interface AssetOutboundManagementCustomer {
+  id: number
+  customerName: string
+  linkedCustomerName: string
+  coreCustomerNo: string
+  projectCount: number
+}
+
+export interface AssetOutboundInventoryGoods {
+  id: number
+  goodsNo: string
+  goodsName: string
+  spec: string
+  unit: string
+  inStockQuantity: number
+  unitPrice: number
+  inStockValue: number
+}
+
+export const getAssetOutboundManagementCustomers = (keyword?: string): AssetOutboundManagementCustomer[] => {
+  const map = new Map<string, AssetOutboundManagementCustomer>()
+  let idx = 1
+  assetOutboundManagementAvailableProjects.forEach((p) => {
+    if (!p.isEffective) return
+    const custName = p.linkedCustomerName || p.customerName
+    if (!map.has(custName)) {
+      map.set(custName, {
+        id: idx++,
+        customerName: p.customerName,
+        linkedCustomerName: custName,
+        coreCustomerNo: p.coreCustomerNo,
+        projectCount: 1
+      })
+    } else {
+      map.get(custName)!.projectCount += 1
+    }
+  })
+  const list = Array.from(map.values())
+  if (!keyword || !keyword.trim()) return list
+  const kw = keyword.trim().toLowerCase()
+  return list.filter(
+    (c) =>
+      c.linkedCustomerName.toLowerCase().includes(kw) ||
+      c.coreCustomerNo.toLowerCase().includes(kw)
+  )
+}
+
+export const getAssetOutboundManagementInventoryGoods = (
+  projectId: number | string,
+  productPlan?: string
+): AssetOutboundInventoryGoods[] => {
+  const pid = Number(projectId)
+  if (pid === 1) {
+    return [
+      {
+        id: 101,
+        goodsNo: 'SP20260701-01',
+        goodsName: 'HRB400E 螺纹钢 Φ18-25mm',
+        spec: 'HRB400E 12m',
+        unit: '吨',
+        inStockQuantity: 250,
+        unitPrice: 3850,
+        inStockValue: 962500
+      },
+      {
+        id: 102,
+        goodsNo: 'SP20260701-02',
+        goodsName: 'Q235B 热轧卷板 5.75*1500mm',
+        spec: 'Q235B',
+        unit: '吨',
+        inStockQuantity: 180,
+        unitPrice: 4120,
+        inStockValue: 741600
+      },
+      {
+        id: 103,
+        goodsNo: 'SP20260701-03',
+        goodsName: 'SS400 冷轧薄板 1.0*1250mm',
+        spec: 'SS400',
+        unit: '吨',
+        inStockQuantity: 120,
+        unitPrice: 4680,
+        inStockValue: 561600
+      }
+    ]
+  } else if (pid === 2) {
+    return [
+      {
+        id: 201,
+        goodsNo: 'SP20260618-01',
+        goodsName: '1# 电解铜板 (CU-CATH-1)',
+        spec: '国标 GB/T 467-2010',
+        unit: '吨',
+        inStockQuantity: 65,
+        unitPrice: 68500,
+        inStockValue: 4452500
+      },
+      {
+        id: 202,
+        goodsNo: 'SP20260618-02',
+        goodsName: 'A00 重熔用铝锭',
+        spec: 'Al99.70',
+        unit: '吨',
+        inStockQuantity: 120,
+        unitPrice: 19800,
+        inStockValue: 2376000
+      }
+    ]
+  } else if (pid === 3) {
+    return [
+      {
+        id: 301,
+        goodsNo: 'SP20260522-01',
+        goodsName: '聚丙烯拉丝级颗粒 T30S',
+        spec: '25kg/袋 优等品',
+        unit: '吨',
+        inStockQuantity: 400,
+        unitPrice: 7600,
+        inStockValue: 3040000
+      },
+      {
+        id: 302,
+        goodsNo: 'SP20260522-02',
+        goodsName: '高密度聚乙烯 HDPE 5000S',
+        spec: '50kg/袋 优等品',
+        unit: '吨',
+        inStockQuantity: 320,
+        unitPrice: 8300,
+        inStockValue: 2656000
+      }
+    ]
+  } else {
+    return [
+      {
+        id: 401,
+        goodsNo: `SP202600${pid || 1}-01`,
+        goodsName: `${productPlan || '大宗商品'}仓单质押货物 A`,
+        spec: '标准仓单 100 单元',
+        unit: '件',
+        inStockQuantity: 500,
+        unitPrice: 2400,
+        inStockValue: 1200000
+      },
+      {
+        id: 402,
+        goodsNo: `SP202600${pid || 1}-02`,
+        goodsName: `${productPlan || '大宗商品'}仓单质押货物 B`,
+        spec: '标准仓单 50 单元',
+        unit: '件',
+        inStockQuantity: 300,
+        unitPrice: 3100,
+        inStockValue: 930000
+      }
+    ]
+  }
+}
+
 /** 根据项目生成待提交的债项资产出库申请。 */
 export const createAssetOutboundManagementApplicationRecord = (
-  payload: AssetOutboundManagementApplicationCreatePayload
+  payload: AssetOutboundManagementApplicationCreatePayload & {
+    outboundValue?: number
+    productPlan?: string
+  }
 ): AssetOutboundManagementApplicationMutationResult => {
   const projectId = Number(payload.projectId)
   const project = assetOutboundManagementAvailableProjects.find((item) => item.id === projectId && item.isEffective)
@@ -582,11 +742,17 @@ export const createAssetOutboundManagementApplicationRecord = (
 
   const id = nextId()
   const outboundType = payload.outboundType === '已完成出库' ? '已完成出库' : '部分出库'
+  const customOutboundValue =
+    payload.outboundValue && payload.outboundValue > 0
+      ? payload.outboundValue
+      : outboundType === '已完成出库'
+      ? project.disbursementAmount
+      : amount(project.disbursementAmount * 0.8)
+
   const record = fromProject(project, {
     id,
     applicationNo: `AOA${today().replaceAll('-', '')}${String(id).padStart(4, '0')}`,
-    outboundGoodsValue:
-      outboundType === '已完成出库' ? project.disbursementAmount : amount(project.disbursementAmount * 0.8),
+    outboundGoodsValue: customOutboundValue,
     applicationDate: today(),
     outboundType,
     phase: 'pending',
@@ -595,6 +761,10 @@ export const createAssetOutboundManagementApplicationRecord = (
     opinions: [],
     flowRecords: []
   })
+  if (payload.productPlan) {
+    record.productPlan = payload.productPlan
+    record.productScheme = payload.productPlan
+  }
   appendFlow(record, '出库申请', '创建申请')
   assetOutboundManagementApplicationRecords.unshift(record)
   return mutationSuccess(record, '已创建待提交的债项资产出库申请')

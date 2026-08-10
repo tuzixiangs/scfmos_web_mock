@@ -150,6 +150,9 @@ export interface AssetOutboundManagementProjectQuery {
 export interface AssetOutboundManagementApplicationCreateForm {
   projectId: number
   outboundType?: AssetOutboundManagementOutboundType
+  linkedCustomerName?: string
+  productPlan?: string
+  outboundValue?: number
 }
 
 /** 待处理节点的详情允许确认出库在库货值、出库类型和出库截止日期。 */

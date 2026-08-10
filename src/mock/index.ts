@@ -14,12 +14,20 @@ import {
 } from './inventory-goods'
 import { projectCreditApplyRecords, projectCreditDetail } from './project-credit-detail'
 import {
+  approveWarehouseInspectionRecord,
   createWarehouseApplicationRecord,
+  createWarehouseInspectionRecord,
+  effectiveSupplyChainProjects,
+  getProjectWarehousesRecord,
   getWarehouseApplicationRecord,
   signWarehouseApplicationOpinionRecord,
+  signWarehouseInspectionOpinionRecord,
   submitWarehouseApplicationRecord,
+  submitWarehouseInspectionRecord,
+  warehouseApplicationRecords,
+  warehouseInspectionRecords,
   withdrawWarehouseApplicationRecord,
-  warehouseApplicationRecords
+  withdrawWarehouseInspectionRecord
 } from './warehouse-management'
 import {
   approveInventoryPriceApplicationRecord,
@@ -301,6 +309,36 @@ const warehouseApplicationPageData = (config: AxiosRequestConfig) => {
       matchesProjectName &&
       matchesRegulator &&
       matchesWarehouseName
+    )
+  })
+  const start = (pageNo - 1) * pageSize
+  const list = cloneMockData(filtered.slice(start, start + pageSize))
+
+  return { total: filtered.length, list, records: list, pageNo, pageSize }
+}
+
+const warehouseInspectionPageData = (config: AxiosRequestConfig) => {
+  const query = { ...urlQuery(config.url), ...(config.params || {}) }
+  const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+  const pageSize = Math.max(1, Number(query.pageSize || 20))
+  const phase = String(query.phase || '').trim()
+  const status = String(query.status || query.applicationStatus || '').trim()
+  const applicationNo = String(query.applicationNo || query.applyNo || query.serialNo || '').trim()
+  const customerName = String(query.customerName || query.coreEnterpriseName || '').trim()
+  const projectName = String(query.projectName || '').trim()
+
+  const filtered = warehouseInspectionRecords.filter((record) => {
+    const matchesPhase = !phase || record.phase === phase
+    const matchesStatus = !status || record.status === status
+    const matchesApplicationNo = !applicationNo || record.applicationNo.includes(applicationNo)
+    const matchesCustomerName = !customerName || record.coreEnterpriseName.includes(customerName)
+    const matchesProjectName = !projectName || record.projectName.includes(projectName)
+    return (
+      matchesPhase &&
+      matchesStatus &&
+      matchesApplicationNo &&
+      matchesCustomerName &&
+      matchesProjectName
     )
   })
   const start = (pageNo - 1) * pageSize
@@ -1139,6 +1177,49 @@ export const mockAdapter: AxiosAdapter = async (config) => {
           opinion: cloneMockData(result.opinion)
         }
       : { success: false, message: '请填写签署意见，并确认仓库建立申请存在' }
+  } else if (/\/system\/indebt\/warehouse-inspections\/page$/.test(url)) {
+    data = warehouseInspectionPageData(config)
+  } else if (/\/system\/indebt\/warehouse-inspections\/create$/.test(url)) {
+    data = cloneMockData(createWarehouseInspectionRecord(parseMockPayload(config.data)))
+  } else if (/\/system\/indebt\/warehouse-inspections\/submit$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const record = submitWarehouseInspectionRecord(payload.id || payload.applicationId)
+    data = record
+      ? { success: true, record: cloneMockData(record) }
+      : { success: false, message: '仅待提交的巡库申请可提交，或该申请不存在' }
+  } else if (/\/system\/indebt\/warehouse-inspections\/withdraw$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const record = withdrawWarehouseInspectionRecord(payload.id || payload.applicationId)
+    data = record
+      ? { success: true, record: cloneMockData(record) }
+      : { success: false, message: '仅审查审批中的巡库申请可收回，或该申请不存在' }
+  } else if (/\/system\/indebt\/warehouse-inspections\/approve$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const record = approveWarehouseInspectionRecord(
+      payload.id || payload.applicationId,
+      payload.opinion || payload.content
+    )
+    data = record
+      ? { success: true, record: cloneMockData(record) }
+      : { success: false, message: '仅审查审批中的巡库申请可审批通过，或该申请不存在' }
+  } else if (/\/system\/indebt\/warehouse-inspections\/sign-opinion$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const result = signWarehouseInspectionOpinionRecord(
+      payload.id || payload.applicationId,
+      payload.opinion || payload.content
+    )
+    data = result
+      ? {
+          success: true,
+          record: cloneMockData(result.record),
+          opinion: cloneMockData(result.opinion)
+        }
+      : { success: false, message: '请填写签署意见，并确认巡库申请存在' }
+  } else if (/\/system\/indebt\/warehouse-inspections\/project-warehouses$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(getProjectWarehousesRecord(String(query.projectNo || '')))
+  } else if (/\/system\/indebt\/warehouse-inspections\/effective-projects$/.test(url)) {
+    data = cloneMockData(effectiveSupplyChainProjects)
   } else if (/\/system\/indebt\/inventory-price-applications\/page$/.test(url)) {
     data = inventoryPriceApplicationPageData(config)
   } else if (/\/system\/indebt\/inventory-price-applications\/available-projects$/.test(url)) {

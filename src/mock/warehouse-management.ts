@@ -255,3 +255,315 @@ export const signWarehouseApplicationOpinionRecord = (id: number | string, opini
   record.opinions = [...currentOpinions, signedOpinion]
   return { record, opinion: signedOpinion }
 }
+
+export interface WarehouseInspectionRecord {
+  id: number
+  applicationNo: string
+  coreEnterpriseName: string
+  coreCustomerNo: string
+  projectName: string
+  projectNo: string
+  inspectionDate: string
+  applicationDate: string
+  phase: WarehouseApplicationPhase
+  status: WarehouseApplicationStatus
+  currentStage?: string
+  completedAt?: string
+  receivedAt?: string
+  opinions?: WarehouseApplicationOpinion[]
+}
+
+export interface ProjectWarehouseInfo {
+  id: number
+  warehouseName: string
+  warehouseCode: string
+  warehouseType: string
+  regulatorEnterpriseName: string
+  insuranceExpiryDate: string
+  inspectionDate: string
+  status: string
+}
+
+export interface EffectiveSupplyChainProject {
+  id: number
+  projectName: string
+  projectNo: string
+  coreEnterpriseName: string
+  coreCustomerNo: string
+  productPlan: string
+}
+
+export const effectiveSupplyChainProjects: EffectiveSupplyChainProject[] = [
+  {
+    id: 1,
+    projectName: '钢贸供应链融资项目',
+    projectNo: 'PJ202607010001',
+    coreEnterpriseName: '阿姆特拉斯供应链有限公司',
+    coreCustomerNo: 'C2025040300000003',
+    productPlan: '货押融资'
+  },
+  {
+    id: 2,
+    projectName: '金属库存融资项目',
+    projectNo: 'PJ202606180006',
+    coreEnterpriseName: '华东金属贸易有限公司',
+    coreCustomerNo: 'C2025051200000018',
+    productPlan: '先票后货'
+  },
+  {
+    id: 3,
+    projectName: '化工原料仓单融资项目',
+    projectNo: 'PJ202605220009',
+    coreEnterpriseName: '恒源化工有限公司',
+    coreCustomerNo: 'C2025032600000041',
+    productPlan: '货押融资'
+  },
+  {
+    id: 4,
+    projectName: '粮食收储融资项目',
+    projectNo: 'PJ202604280012',
+    coreEnterpriseName: '丰禾农业发展有限公司',
+    coreCustomerNo: 'C2025041800000027',
+    productPlan: '先票后货'
+  },
+  {
+    id: 5,
+    projectName: '煤炭库存融资项目',
+    projectNo: 'PJ202605080007',
+    coreEnterpriseName: '华南能源有限公司',
+    coreCustomerNo: 'C2025050600000052',
+    productPlan: '货押融资'
+  }
+]
+
+export const projectWarehousesMap: Record<string, ProjectWarehouseInfo[]> = {
+  PJ202607010001: [
+    {
+      id: 1,
+      warehouseName: '南京滨江钢材仓',
+      warehouseCode: 'WH-NJ-001',
+      warehouseType: '普通仓',
+      regulatorEnterpriseName: '中储南京物流有限公司',
+      insuranceExpiryDate: '2027-06-30',
+      inspectionDate: '2026-06-15',
+      status: '正常运营'
+    },
+    {
+      id: 2,
+      warehouseName: '无锡太湖钢材中心仓',
+      warehouseCode: 'WH-WX-002',
+      warehouseType: '普通仓',
+      regulatorEnterpriseName: '江苏大金物流有限公司',
+      insuranceExpiryDate: '2027-04-20',
+      inspectionDate: '2026-06-15',
+      status: '正常运营'
+    }
+  ],
+  PJ202606180006: [
+    {
+      id: 3,
+      warehouseName: '上海临港有色仓',
+      warehouseCode: 'WH-SH-002',
+      warehouseType: '保税仓',
+      regulatorEnterpriseName: '上海物流监管服务有限公司',
+      insuranceExpiryDate: '2027-05-15',
+      inspectionDate: '2026-05-20',
+      status: '正常运营'
+    }
+  ],
+  PJ202605220009: [
+    {
+      id: 4,
+      warehouseName: '常州化工专用仓',
+      warehouseCode: 'WH-CZ-004',
+      warehouseType: '专用仓',
+      regulatorEnterpriseName: '江苏恒信监管有限公司',
+      insuranceExpiryDate: '2026-12-31',
+      inspectionDate: '2026-05-10',
+      status: '正常运营'
+    }
+  ],
+  PJ202605080007: [
+    {
+      id: 5,
+      warehouseName: '唐山港煤炭监管仓',
+      warehouseCode: 'WH-TS-006',
+      warehouseType: '堆场仓',
+      regulatorEnterpriseName: '中储能源监管有限公司',
+      insuranceExpiryDate: '2027-01-31',
+      inspectionDate: '2026-07-25',
+      status: '正常运营'
+    }
+  ]
+}
+
+export const warehouseInspectionRecords: WarehouseInspectionRecord[] = [
+  {
+    id: 1,
+    applicationNo: 'INSP202608010001',
+    coreEnterpriseName: '阿姆特拉斯供应链有限公司',
+    coreCustomerNo: 'C2025040300000003',
+    projectName: '钢贸供应链融资项目',
+    projectNo: 'PJ202607010001',
+    inspectionDate: '2026-08-15',
+    applicationDate: '2026-08-01',
+    phase: 'pending',
+    status: '待提交'
+  },
+  {
+    id: 2,
+    applicationNo: 'INSP202608020002',
+    coreEnterpriseName: '华东金属贸易有限公司',
+    coreCustomerNo: 'C2025051200000018',
+    projectName: '金属库存融资项目',
+    projectNo: 'PJ202606180006',
+    inspectionDate: '2026-08-20',
+    applicationDate: '2026-08-02',
+    phase: 'pending',
+    status: '待提交'
+  },
+  {
+    id: 3,
+    applicationNo: 'INSP202607280003',
+    coreEnterpriseName: '恒源化工有限公司',
+    coreCustomerNo: 'C2025032600000041',
+    projectName: '化工原料仓单融资项目',
+    projectNo: 'PJ202605220009',
+    inspectionDate: '2026-08-10',
+    applicationDate: '2026-07-28',
+    receivedAt: '2026-07-29 09:00:00',
+    phase: 'reviewing',
+    status: '审查审批中',
+    currentStage: '分行债项管理岗审批',
+    opinions: [
+      {
+        id: 1,
+        content: '巡库计划时间合理，仓库经营情况良好，拟同意巡库申请。',
+        signer: '王立强',
+        signedAt: '2026-07-29 10:15:00'
+      }
+    ]
+  },
+  {
+    id: 4,
+    applicationNo: 'INSP202607200004',
+    coreEnterpriseName: '华南能源有限公司',
+    coreCustomerNo: 'C2025050600000052',
+    projectName: '煤炭库存融资项目',
+    projectNo: 'PJ202605080007',
+    inspectionDate: '2026-07-25',
+    applicationDate: '2026-07-20',
+    receivedAt: '2026-07-21 10:00:00',
+    phase: 'approved',
+    status: '审批通过',
+    currentStage: '审批完成',
+    completedAt: '2026-07-23 15:30:00',
+    opinions: [
+      {
+        id: 2,
+        content: '审批通过。巡库日期已更新至该项目关联的所有仓库。',
+        signer: '分行债项管理岗',
+        signedAt: '2026-07-23 15:30:00'
+      }
+    ]
+  }
+]
+
+export const createWarehouseInspectionRecord = (payload: any): WarehouseInspectionRecord => {
+  const id = Math.max(0, ...warehouseInspectionRecords.map((r) => r.id)) + 1
+  const sequence = String(id).padStart(4, '0')
+  const record: WarehouseInspectionRecord = {
+    id,
+    applicationNo: `INSP${today().replaceAll('-', '')}${sequence}`,
+    coreEnterpriseName: trim(payload.coreEnterpriseName) || '阿姆特拉斯供应链有限公司',
+    coreCustomerNo: trim(payload.coreCustomerNo) || 'C2025040300000003',
+    projectName: trim(payload.projectName) || '钢贸供应链融资项目',
+    projectNo: trim(payload.projectNo) || 'PJ202607010001',
+    inspectionDate: trim(payload.inspectionDate) || today(),
+    applicationDate: today(),
+    phase: 'pending',
+    status: '待提交'
+  }
+  warehouseInspectionRecords.unshift(record)
+  return record
+}
+
+export const submitWarehouseInspectionRecord = (id: number | string) => {
+  const record = warehouseInspectionRecords.find((r) => r.id === Number(id))
+  if (!record || record.phase !== 'pending') return undefined
+  record.phase = 'reviewing'
+  record.status = '审查审批中'
+  record.currentStage = '分行债项管理岗审批'
+  record.receivedAt = now()
+  return record
+}
+
+export const withdrawWarehouseInspectionRecord = (id: number | string) => {
+  const record = warehouseInspectionRecords.find((r) => r.id === Number(id))
+  if (!record || record.phase !== 'reviewing') return undefined
+  record.phase = 'pending'
+  record.status = '待提交'
+  record.currentStage = undefined
+  return record
+}
+
+export const approveWarehouseInspectionRecord = (id: number | string, opinion?: unknown) => {
+  const record = warehouseInspectionRecords.find((r) => r.id === Number(id))
+  if (!record || record.phase !== 'reviewing') return undefined
+  record.phase = 'approved'
+  record.status = '审批通过'
+  record.currentStage = '审批完成'
+  record.completedAt = now()
+  const content = trim(opinion) || '审批通过，已将巡库日期同步更新至项目下所有关联仓库。'
+  const currentOpinions = record.opinions || []
+  record.opinions = [
+    ...currentOpinions,
+    {
+      id: Math.max(0, ...currentOpinions.map((item) => item.id)) + 1,
+      content,
+      signer: '分行债项管理岗',
+      signedAt: now()
+    }
+  ]
+
+  const pNo = record.projectNo
+  if (projectWarehousesMap[pNo]) {
+    projectWarehousesMap[pNo].forEach((wh) => {
+      wh.inspectionDate = record.inspectionDate
+    })
+  }
+
+  return record
+}
+
+export const signWarehouseInspectionOpinionRecord = (id: number | string, opinion: unknown) => {
+  const record = warehouseInspectionRecords.find((r) => r.id === Number(id))
+  const content = trim(opinion)
+  if (!record || !content) return undefined
+  const currentOpinions = record.opinions || []
+  const signedOpinion = {
+    id: Math.max(0, ...currentOpinions.map((item) => item.id)) + 1,
+    content,
+    signer: '分行债项管理岗',
+    signedAt: now()
+  }
+  record.opinions = [...currentOpinions, signedOpinion]
+  return { record, opinion: signedOpinion }
+}
+
+export const getProjectWarehousesRecord = (projectNo: string) => {
+  const list = projectWarehousesMap[projectNo]
+  if (list) return list
+  return [
+    {
+      id: 99,
+      warehouseName: '标准供应链监管仓',
+      warehouseCode: 'WH-STD-099',
+      warehouseType: '普通仓',
+      regulatorEnterpriseName: '中央仓储物流有限公司',
+      insuranceExpiryDate: '2027-12-31',
+      inspectionDate: '2026-07-01',
+      status: '正常运营'
+    }
+  ]
+}

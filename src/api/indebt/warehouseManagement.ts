@@ -80,6 +80,71 @@ export interface WarehouseApplicationSubmitResult {
   opinion?: WarehouseApplicationOpinion
 }
 
+export interface WarehouseInspectionRecord {
+  id: number
+  applicationNo: string
+  coreEnterpriseName: string
+  coreCustomerNo: string
+  projectName: string
+  projectNo: string
+  inspectionDate: string
+  applicationDate: string
+  phase: WarehouseApplicationPhase
+  status: WarehouseApplicationStatus
+  currentStage?: string
+  completedAt?: string
+  receivedAt?: string
+  opinions?: WarehouseApplicationOpinion[]
+}
+
+export interface WarehouseInspectionQuery {
+  pageNo?: number
+  pageSize?: number
+  phase?: WarehouseApplicationPhase
+  status?: WarehouseApplicationStatus
+  applicationNo?: string
+  customerName?: string
+  coreEnterpriseName?: string
+  projectName?: string
+  isApproval?: boolean
+}
+
+export interface WarehouseInspectionPageResult {
+  total: number
+  list: WarehouseInspectionRecord[]
+  records: WarehouseInspectionRecord[]
+  pageNo: number
+  pageSize: number
+}
+
+export interface WarehouseInspectionCreateForm {
+  projectName: string
+  projectNo: string
+  coreEnterpriseName: string
+  coreCustomerNo: string
+  inspectionDate: string
+}
+
+export interface ProjectWarehouseInfo {
+  id: number
+  warehouseName: string
+  warehouseCode: string
+  warehouseType: string
+  regulatorEnterpriseName: string
+  insuranceExpiryDate: string
+  inspectionDate: string
+  status: string
+}
+
+export interface EffectiveSupplyChainProject {
+  id: number
+  projectName: string
+  projectNo: string
+  coreEnterpriseName: string
+  coreCustomerNo: string
+  productPlan: string
+}
+
 export const getWarehouseApplicationPage = (params: WarehouseApplicationQuery) =>
   request.get<WarehouseApplicationPageResult>({ url: '/system/indebt/warehouse-applications/page', params })
 
@@ -109,3 +174,46 @@ export const signWarehouseApplicationOpinion = (id: number, opinion: string) =>
     url: '/system/indebt/warehouse-applications/sign-opinion',
     data: { id, opinion }
   })
+
+// 巡库申请 / 巡库审批 相关接口
+export const getWarehouseInspectionPage = (params: WarehouseInspectionQuery) =>
+  request.get<WarehouseInspectionPageResult>({ url: '/system/indebt/warehouse-inspections/page', params })
+
+export const createWarehouseInspection = (data: WarehouseInspectionCreateForm) =>
+  request.post<WarehouseInspectionRecord>({ url: '/system/indebt/warehouse-inspections/create', data })
+
+export const submitWarehouseInspection = (id: number) =>
+  request.post<WarehouseApplicationSubmitResult>({
+    url: '/system/indebt/warehouse-inspections/submit',
+    data: { id }
+  })
+
+export const withdrawWarehouseInspection = (id: number) =>
+  request.post<WarehouseApplicationSubmitResult>({
+    url: '/system/indebt/warehouse-inspections/withdraw',
+    data: { id }
+  })
+
+export const approveWarehouseInspection = (id: number, opinion?: string) =>
+  request.post<WarehouseApplicationSubmitResult>({
+    url: '/system/indebt/warehouse-inspections/approve',
+    data: { id, opinion }
+  })
+
+export const signWarehouseInspectionOpinion = (id: number, opinion: string) =>
+  request.post<WarehouseApplicationSubmitResult>({
+    url: '/system/indebt/warehouse-inspections/sign-opinion',
+    data: { id, opinion }
+  })
+
+export const getProjectWarehouses = (projectNo: string) =>
+  request.get<ProjectWarehouseInfo[]>({
+    url: '/system/indebt/warehouse-inspections/project-warehouses',
+    params: { projectNo }
+  })
+
+export const getEffectiveSupplyChainProjects = () =>
+  request.get<EffectiveSupplyChainProject[]>({
+    url: '/system/indebt/warehouse-inspections/effective-projects'
+  })
+

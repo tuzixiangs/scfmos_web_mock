@@ -57,110 +57,241 @@
   <el-dialog
     v-model="createVisible"
     title="新增债项资产出库申请"
-    width="1080px"
+    width="980px"
     destroy-on-close
     :close-on-click-modal="false"
+    class="custom-create-dialog"
   >
-    <el-alert
-      title="请选择仍有待确认资产且未存在在途出库申请的有效项目。保存后默认进入“待提交的债项资产出库申请”节点。"
-      type="info"
-      :closable="false"
-      class="mb-16px"
-    />
-    <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="108px">
-      <el-form-item label="项目查询">
-        <div class="project-query-row">
-          <el-input
-            v-model.trim="projectKeyword"
-            clearable
-            placeholder="请输入项目名称或项目编号"
-            @keyup.enter="loadAvailableProjects"
-          />
-          <el-input
-            v-model.trim="linkedCustomerKeyword"
-            clearable
-            placeholder="请输入链属客户名称"
-            @keyup.enter="loadAvailableProjects"
-          />
-          <el-button :loading="projectsLoading" @click="loadAvailableProjects">
-            <Icon icon="ep:search" class="mr-4px" />查询项目
-          </el-button>
-        </div>
-      </el-form-item>
-      <el-form-item label="有效项目" prop="projectId">
-        <div class="project-picker">
-          <el-table
-            :data="availableProjects"
-            size="small"
-            border
-            highlight-current-row
-            max-height="260"
-            @row-click="selectProject"
-          >
-            <el-table-column width="58" align="center">
-              <template #default="{ row }">
-                <el-radio
-                  :model-value="String(createForm.projectId)"
-                  :label="String(row.id)"
-                  @change="selectProject(row)"
-                >
-                  <span class="sr-only">选择项目</span>
-                </el-radio>
-              </template>
-            </el-table-column>
-            <el-table-column prop="projectName" label="项目名称" min-width="155" />
-            <el-table-column prop="projectNo" label="项目编号" min-width="155" />
-            <el-table-column prop="linkedCustomerName" label="链属客户名称" min-width="170" />
-            <el-table-column prop="creditNo" label="授信编号" min-width="160" />
-            <el-table-column prop="productPlan" label="产品方案" min-width="145" />
-            <el-table-column prop="businessContractNo" label="业务合同编号" min-width="175" />
-          </el-table>
-          <el-empty
-            v-if="!projectsLoading && !availableProjects.length"
-            :image-size="58"
-            description="未找到可新增出库申请的有效项目"
-          />
-        </div>
-      </el-form-item>
-      <div class="arrival-form-grid">
-        <el-form-item label="项目名称" prop="projectName">
-          <el-input v-model="createForm.projectName" readonly placeholder="请先从上方选择项目" />
-        </el-form-item>
-        <el-form-item label="项目编号" prop="projectNo">
-          <el-input v-model="createForm.projectNo" readonly placeholder="请先从上方选择项目" />
-        </el-form-item>
-        <el-form-item label="链属客户名称" prop="linkedCustomerName">
-          <el-input
-            v-model="createForm.linkedCustomerName"
-            readonly
-            placeholder="请先从上方选择项目"
-          />
-        </el-form-item>
-        <el-form-item label="授信编号" prop="creditNo">
-          <el-input v-model="createForm.creditNo" readonly placeholder="请先从上方选择项目" />
-        </el-form-item>
-        <el-form-item label="产品方案" prop="productPlan">
-          <el-input v-model="createForm.productPlan" readonly placeholder="请先从上方选择项目" />
-        </el-form-item>
-        <el-form-item label="业务合同编号" prop="businessContractNo">
-          <el-input
-            v-model="createForm.businessContractNo"
-            readonly
-            placeholder="请先从上方选择项目"
-          />
-        </el-form-item>
-        <el-form-item label="出库类型" prop="outboundType">
+    <div class="create-instruction-banner text-blue-600 text-sm mb-3 p-2 bg-blue-50 border border-blue-200 rounded">
+      提示：先选客户，再选项目，选完自动带出项目编号，最后选择产品方案。
+    </div>
+
+    <el-form ref="createFormRef" :model="createForm" :rules="createRules">
+      <!-- 2x2 Grid Table Matching Mockup Screenshot -->
+      <table class="grid-form-table">
+        <tbody>
+          <tr>
+            <td class="grid-header-cell required-header">项目名称</td>
+            <td class="grid-header-cell">项目编号</td>
+          </tr>
+          <tr>
+            <td class="grid-body-cell">
+              <el-input
+                v-model="createForm.projectName"
+                readonly
+                :placeholder="createForm.linkedCustomerName ? '点击选择项目名称' : '请先选择链属客户'"
+                class="clickable-input"
+                :disabled="!createForm.linkedCustomerName"
+                @click="handleProjectInputClick"
+              >
+                <template #suffix>
+                  <Icon icon="ep:search" class="cursor-pointer text-blue-500" @click.stop="handleProjectInputClick" />
+                </template>
+              </el-input>
+            </td>
+            <td class="grid-body-cell">
+              <el-input
+                v-model="createForm.projectNo"
+                readonly
+                placeholder="选择项目后自动带出"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td class="grid-header-cell required-header">链属客户名称</td>
+            <td class="grid-header-cell required-header">产品方案</td>
+          </tr>
+          <tr>
+            <td class="grid-body-cell">
+              <el-input
+                v-model="createForm.linkedCustomerName"
+                readonly
+                placeholder="点击选择链属客户名称"
+                class="clickable-input highlight-step"
+                @click="openCustomerSelect"
+              >
+                <template #suffix>
+                  <Icon icon="ep:search" class="cursor-pointer text-blue-500" @click.stop="openCustomerSelect" />
+                </template>
+              </el-input>
+            </td>
+            <td class="grid-body-cell">
+              <el-select
+                v-model="createForm.productPlan"
+                placeholder="请选择产品方案"
+                class="w-full"
+                @change="handleProductPlanChange"
+              >
+                <el-option label="货押融资" value="货押融资" />
+                <el-option label="先票后货" value="先票后货" />
+              </el-select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Supplementary Form Options -->
+      <div class="mt-4 flex gap-4">
+        <el-form-item label="出库类型" prop="outboundType" class="flex-1 mb-0">
           <el-select v-model="createForm.outboundType" class="w-full" placeholder="请选择出库类型">
             <el-option label="部分出库" value="部分出库" />
             <el-option label="已完成出库" value="已完成出库" />
           </el-select>
         </el-form-item>
       </div>
+
+      <!-- In-Stock Goods Section -->
+      <div v-if="createForm.linkedCustomerName && createForm.projectName && createForm.productPlan" class="inventory-section mt-5">
+        <div class="inventory-header flex items-center justify-between mb-3">
+          <div class="font-bold text-gray-800 text-sm flex items-center gap-2">
+            <span class="w-2.5 h-4 bg-blue-600 rounded-sm inline-block"></span>
+            在库商品列表（已选择该客户在此项目此产品中的所有在库商品，供选择出库）
+          </div>
+          <el-tag type="info" effect="plain">在库商品共 {{ inventoryGoods.length }} 项</el-tag>
+        </div>
+
+        <el-table
+          ref="inventoryTableRef"
+          :data="inventoryGoods"
+          border
+          size="small"
+          highlight-current-row
+          @selection-change="handleInventorySelectionChange"
+        >
+          <el-table-column type="selection" width="48" align="center" />
+          <el-table-column prop="goodsNo" label="商品编号" min-width="135" />
+          <el-table-column prop="goodsName" label="商品名称" min-width="180" />
+          <el-table-column prop="spec" label="规格型号" min-width="130" />
+          <el-table-column prop="unit" label="单位" width="70" align="center" />
+          <el-table-column prop="inStockQuantity" label="在库数量" width="95" align="right" />
+          <el-table-column prop="unitPrice" label="在库单价(元)" width="115" align="right">
+            <template #default="{ row }">
+              ¥ {{ formatAmount(row.unitPrice) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="inStockValue" label="在库货值(元)" width="125" align="right">
+            <template #default="{ row }">
+              ¥ {{ formatAmount(row.inStockValue) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="拟出库数量" width="125" align="center">
+            <template #default="{ row }">
+              <el-input-number
+                v-model="row.proposedOutboundQuantity"
+                :min="1"
+                :max="row.inStockQuantity"
+                size="small"
+                controls-position="right"
+                style="width: 105px;"
+                @change="calculateGoodsRowValue(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="拟出库货值(元)" width="135" align="right">
+            <template #default="{ row }">
+              <span class="text-blue-600 font-semibold">
+                ¥ {{ formatAmount(row.proposedOutboundValue) }}
+              </span>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div class="inventory-summary-bar mt-3 p-3 bg-blue-50 border border-blue-100 rounded flex justify-between items-center text-sm">
+          <div>
+            已选择 <span class="font-bold text-blue-600 text-base">{{ selectedInventoryGoods.length }}</span> 项商品出库
+          </div>
+          <div>
+            拟出库总货值：<span class="font-bold text-red-600 text-base">¥ {{ formatAmount(totalOutboundValue) }}</span>
+          </div>
+        </div>
+      </div>
     </el-form>
     <template #footer>
       <el-button @click="createVisible = false">取 消</el-button>
       <el-button type="primary" :loading="createLoading" @click="handleCreate">保 存</el-button>
     </template>
+  </el-dialog>
+
+  <!-- 链属客户选择弹窗 -->
+  <el-dialog
+    v-model="customerSelectVisible"
+    title="选择链属客户"
+    width="720px"
+    destroy-on-close
+    append-to-body
+  >
+    <div class="flex gap-2 mb-4">
+      <el-input
+        v-model.trim="customerSearchKeyword"
+        placeholder="请输入链属客户名称或核心客户编号"
+        clearable
+        @keyup.enter="loadCustomerList"
+      />
+      <el-button type="primary" @click="loadCustomerList">
+        <Icon icon="ep:search" class="mr-1" />搜 索
+      </el-button>
+    </div>
+    <el-table
+      :data="customerList"
+      border
+      size="small"
+      highlight-current-row
+      max-height="320"
+      @row-click="handleSelectCustomer"
+    >
+      <el-table-column prop="linkedCustomerName" label="链属客户名称" min-width="200" />
+      <el-table-column prop="coreCustomerNo" label="核心客户编号" min-width="160" />
+      <el-table-column prop="projectCount" label="可用有效项目数" width="130" align="center" />
+      <el-table-column label="操作" width="90" align="center">
+        <template #default="{ row }">
+          <el-button type="primary" link size="small" @click.stop="handleSelectCustomer(row)">
+            选择
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+  </el-dialog>
+
+  <!-- 有效项目选择弹窗 -->
+  <el-dialog
+    v-model="projectSelectVisible"
+    title="选择有效项目"
+    width="860px"
+    destroy-on-close
+    append-to-body
+  >
+    <div class="flex gap-2 mb-4">
+      <el-input
+        v-model.trim="projectSearchKeyword"
+        placeholder="请输入项目名称或项目编号"
+        clearable
+        @keyup.enter="loadFilteredProjects"
+      />
+      <el-button type="primary" @click="loadFilteredProjects">
+        <Icon icon="ep:search" class="mr-1" />搜 索
+      </el-button>
+    </div>
+    <el-table
+      :data="customerProjects"
+      border
+      size="small"
+      highlight-current-row
+      max-height="320"
+      @row-click="handleSelectProject"
+    >
+      <el-table-column prop="projectName" label="项目名称" min-width="170" />
+      <el-table-column prop="projectNo" label="项目编号" min-width="150" />
+      <el-table-column prop="linkedCustomerName" label="链属客户名称" min-width="170" />
+      <el-table-column prop="creditNo" label="授信编号" min-width="150" />
+      <el-table-column prop="businessContractNo" label="业务合同编号" min-width="160" />
+      <el-table-column label="操作" width="90" align="center">
+        <template #default="{ row }">
+          <el-button type="primary" link size="small" @click.stop="handleSelectProject(row)">
+            选择
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
   </el-dialog>
 
   <el-dialog
@@ -346,6 +477,12 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { ActionBar, type ActionButton } from '@/components/ActionBar'
 import { useCrudSchemas, type CrudSchema } from '@/hooks/web/useCrudSchemas'
 import * as AssetOutboundManagementApi from '@/api/indebt/assetOutboundManagement'
+import {
+  getAssetOutboundManagementCustomers,
+  getAssetOutboundManagementInventoryGoods,
+  type AssetOutboundManagementCustomer,
+  type AssetOutboundInventoryGoods
+} from '@/mock/asset-outbound-management'
 
 defineOptions({ name: 'AssetOutboundManagementApplicationWorkList' })
 
@@ -706,6 +843,11 @@ const { register, tableObject, tableMethods } = useTable<AssetOutboundManagement
 })
 const { getList, setSearchParams } = tableMethods
 
+interface SelectableInventoryGoods extends AssetOutboundInventoryGoods {
+  proposedOutboundQuantity: number
+  proposedOutboundValue: number
+}
+
 const createVisible = ref(false)
 const createLoading = ref(false)
 const createFormRef = ref<FormInstance>()
@@ -713,6 +855,22 @@ const projectKeyword = ref('')
 const linkedCustomerKeyword = ref('')
 const projectsLoading = ref(false)
 const availableProjects = ref<AvailableProject[]>([])
+
+const customerSelectVisible = ref(false)
+const customerSearchKeyword = ref('')
+const customerList = ref<AssetOutboundManagementCustomer[]>([])
+
+const projectSelectVisible = ref(false)
+const projectSearchKeyword = ref('')
+const customerProjects = ref<AvailableProject[]>([])
+
+const inventoryGoods = ref<SelectableInventoryGoods[]>([])
+const selectedInventoryGoods = ref<SelectableInventoryGoods[]>([])
+
+const totalOutboundValue = computed(() => {
+  return selectedInventoryGoods.value.reduce((sum, item) => sum + (item.proposedOutboundValue || 0), 0)
+})
+
 const detailVisible = ref(false)
 const detailRecord = ref<AssetOutboundManagementRecord>()
 const detailActiveTab = ref('contract')
@@ -742,7 +900,9 @@ const initialCreateForm = (): CreateForm => ({
 })
 const createForm = reactive<CreateForm>(initialCreateForm())
 const createRules: FormRules<CreateForm> = {
-  projectId: [{ required: true, message: '请选择一个有效项目', trigger: 'change' }],
+  linkedCustomerName: [{ required: true, message: '请选择链属客户名称', trigger: 'change' }],
+  projectName: [{ required: true, message: '请选择有效项目名称', trigger: 'change' }],
+  productPlan: [{ required: true, message: '请选择产品方案', trigger: 'change' }],
   outboundType: [{ required: true, message: '请选择出库类型', trigger: 'change' }]
 }
 
@@ -834,27 +994,142 @@ const selectProject = (project: AvailableProject) => {
   createFormRef.value?.validateField('projectId')
 }
 
+const openCustomerSelect = () => {
+  customerSearchKeyword.value = ''
+  customerSelectVisible.value = true
+  loadCustomerList()
+}
+
+const loadCustomerList = () => {
+  customerList.value = getAssetOutboundManagementCustomers(customerSearchKeyword.value)
+}
+
+const handleSelectCustomer = (row: AssetOutboundManagementCustomer) => {
+  createForm.linkedCustomerName = row.linkedCustomerName
+  linkedCustomerKeyword.value = row.linkedCustomerName
+  createForm.projectId = ''
+  createForm.projectName = ''
+  createForm.projectNo = ''
+  createForm.productPlan = ''
+  inventoryGoods.value = []
+  selectedInventoryGoods.value = []
+  customerSelectVisible.value = false
+  ElMessage.success(`已选择链属客户：${row.linkedCustomerName}，请接着选择项目`)
+}
+
+const handleProjectInputClick = () => {
+  if (!createForm.linkedCustomerName) {
+    ElMessage.warning('请先选择链属客户')
+    openCustomerSelect()
+    return
+  }
+  projectSearchKeyword.value = ''
+  projectSelectVisible.value = true
+  loadFilteredProjects()
+}
+
+const loadFilteredProjects = async () => {
+  projectsLoading.value = true
+  try {
+    const result = await callApi<unknown>(
+      ['getAvailableAssetOutboundManagementProjects', 'getEffectiveAssetOutboundManagementProjects'],
+      {
+        projectName: projectSearchKeyword.value.trim() || undefined,
+        linkedCustomerName: createForm.linkedCustomerName || undefined,
+        customerName: createForm.linkedCustomerName || undefined
+      }
+    )
+    const source = unwrapData(result)
+    const page = toObject(source)
+    const rows = Array.isArray(source) ? source : getArray(page.list ?? page.records ?? page.rows)
+    customerProjects.value = rows.map(normalizeProject)
+  } catch (error) {
+    customerProjects.value = []
+  } finally {
+    projectsLoading.value = false
+  }
+}
+
+const handleSelectProject = (project: AvailableProject) => {
+  createForm.projectId = project.id
+  createForm.projectName = project.projectName
+  createForm.projectNo = project.projectNo
+  createForm.creditNo = project.creditNo
+  createForm.businessContractNo = project.businessContractNo
+
+  if (!createForm.productPlan) {
+    createForm.productPlan = project.productPlan === '先票后货' ? '先票后货' : '货押融资'
+  }
+
+  projectSelectVisible.value = false
+  loadInventoryGoodsList()
+}
+
+const handleProductPlanChange = () => {
+  loadInventoryGoodsList()
+}
+
+const loadInventoryGoodsList = () => {
+  if (createForm.projectId && createForm.productPlan) {
+    const goods = getAssetOutboundManagementInventoryGoods(createForm.projectId, createForm.productPlan)
+    inventoryGoods.value = goods.map((item) => ({
+      ...item,
+      proposedOutboundQuantity: item.inStockQuantity,
+      proposedOutboundValue: item.inStockValue
+    }))
+    selectedInventoryGoods.value = [...inventoryGoods.value]
+  } else {
+    inventoryGoods.value = []
+    selectedInventoryGoods.value = []
+  }
+}
+
+const calculateGoodsRowValue = (row: SelectableInventoryGoods) => {
+  row.proposedOutboundValue = (row.proposedOutboundQuantity || 0) * (row.unitPrice || 0)
+}
+
+const handleInventorySelectionChange = (selection: SelectableInventoryGoods[]) => {
+  selectedInventoryGoods.value = selection
+}
+
 const openCreate = async () => {
   Object.assign(createForm, initialCreateForm())
   projectKeyword.value = ''
   linkedCustomerKeyword.value = ''
+  customerSearchKeyword.value = ''
+  projectSearchKeyword.value = ''
+  inventoryGoods.value = []
+  selectedInventoryGoods.value = []
   createFormRef.value?.clearValidate()
   createVisible.value = true
-  await loadAvailableProjects()
 }
 
 const handleCreate = async () => {
-  const valid = await createFormRef.value
-    ?.validate()
-    .then(() => true)
-    .catch(() => false)
-  if (!valid) return
+  if (!createForm.linkedCustomerName) {
+    ElMessage.warning('请选择链属客户名称')
+    return
+  }
+  if (!createForm.projectId) {
+    ElMessage.warning('请选择有效项目名称')
+    return
+  }
+  if (!createForm.productPlan) {
+    ElMessage.warning('请选择产品方案')
+    return
+  }
+  if (!selectedInventoryGoods.value.length) {
+    ElMessage.warning('请勾选拟出库的在库商品')
+    return
+  }
 
   createLoading.value = true
   try {
     const result = await callApi<unknown>('createAssetOutboundManagementApplication', {
       projectId: Number(createForm.projectId),
-      outboundType: createForm.outboundType
+      outboundType: createForm.outboundType,
+      linkedCustomerName: createForm.linkedCustomerName,
+      productPlan: createForm.productPlan,
+      outboundValue: totalOutboundValue.value
     })
     if (isFailedResult(result)) {
       ElMessage.error(result.message || '新增债项资产出库申请失败')
@@ -1342,6 +1617,57 @@ onActivated(() => {
     color: #8492a6;
     font-size: 13px;
   }
+}
+
+.create-instruction-banner {
+  padding: 12px 16px;
+  background-color: #f0f7ff;
+  border: 1px dashed #409eff;
+  border-radius: 6px;
+  margin-bottom: 18px;
+}
+
+.grid-form-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dcdfe6;
+  table-layout: fixed;
+
+  td {
+    border: 1px solid #dcdfe6;
+    padding: 8px 12px;
+    box-sizing: border-box;
+  }
+
+  .grid-header-cell {
+    width: 50%;
+    background-color: #f8fafc;
+    color: #303133;
+    font-weight: 600;
+    font-size: 14px;
+
+    &.required-header::before {
+      content: '*';
+      color: #f56c6c;
+      margin-right: 4px;
+    }
+  }
+
+  .grid-body-cell {
+    width: 50%;
+    background-color: #ffffff;
+  }
+}
+
+.clickable-input {
+  :deep(.el-input__inner) {
+    cursor: pointer;
+  }
+}
+
+.inventory-section {
+  border-top: 1px dashed #dcdfe6;
+  padding-top: 16px;
 }
 
 @media (max-width: 900px) {
