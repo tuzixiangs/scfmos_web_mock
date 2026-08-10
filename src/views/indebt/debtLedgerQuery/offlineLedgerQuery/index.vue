@@ -24,8 +24,8 @@
           :show-overflow-tooltip="true"
         >
           <template #action="{ row }">
-            <el-button link type="primary" @click.stop="openProject(row)">
-              <Icon icon="ep:document" class="mr-3px" />详情
+            <el-button link type="primary" @click.stop="openImage(row)">
+              <Icon icon="ep:picture" class="mr-3px" />查看影像
             </el-button>
           </template>
         </Table>
@@ -71,13 +71,16 @@
     <div class="ledger-note">说明：生效日期取台账更新审批通过日期；债项管理岗、贷后管理岗意见取对应签署/审批意见。</div>
   </ContentWrap>
 
-  <el-dialog v-model="imageVisible" title="线下台账影像" width="620px" destroy-on-close>
+  <el-dialog v-model="imageVisible" title="线下台账影像" width="650px" destroy-on-close>
     <el-descriptions v-if="imageRow" :column="1" border>
-      <el-descriptions-item label="影像文件">{{ imageRow.imageName }}</el-descriptions-item>
-      <el-descriptions-item label="生效日期">{{ imageRow.effectiveDate }}</el-descriptions-item>
-      <el-descriptions-item label="线下管理说明">{{ imageRow.offlineManagementDescription }}</el-descriptions-item>
+      <el-descriptions-item label="项目名称">{{ imageRow.projectName || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="核心企业名称">{{ imageRow.coreEnterpriseName || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="核心客户编号">{{ imageRow.coreCustomerNo || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="影像文件">{{ imageRow.imageName || `${imageRow.projectName || '线下台账'}影像资料合集.pdf` }}</el-descriptions-item>
+      <el-descriptions-item label="生效日期">{{ imageRow.effectiveDate || '2026-07-01' }}</el-descriptions-item>
+      <el-descriptions-item label="线下管理说明">{{ imageRow.offlineManagementDescription || '线下台账及风险核查影像凭证' }}</el-descriptions-item>
     </el-descriptions>
-    <div class="image-placeholder"><Icon icon="ep:document" /> 线下台账、管理说明及审批意见影像（Mock）</div>
+    <div class="image-placeholder"><Icon icon="ep:picture" /> 线下台账管理说明及审批意见影像凭证（Mock 演示）</div>
   </el-dialog>
 </template>
 
