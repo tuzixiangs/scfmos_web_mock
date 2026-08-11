@@ -28,6 +28,7 @@ export interface OrderContractItem {
   smallCategory: string
   batchNo: string
   cabinetNo: string
+  guidancePrice?: number
   specification: string
   origin: string
   warehouseName: string
@@ -47,6 +48,7 @@ export interface OrderContractItemPayload {
   smallCategory?: string
   batchNo?: string
   cabinetNo?: string
+  guidancePrice?: number | string
   specification?: string
   origin?: string
   warehouseName?: string
@@ -624,6 +626,7 @@ const buildItem = (payload: OrderContractItemPayload, id: number, sequence: numb
     smallCategory,
     batchNo: trim(payload.batchNo),
     cabinetNo: trim(payload.cabinetNo),
+    guidancePrice: amount(payload.guidancePrice, unitPrice),
     specification: trim(payload.specification),
     origin: trim(payload.origin),
     warehouseName: trim(payload.warehouseName) || '待选择仓库',

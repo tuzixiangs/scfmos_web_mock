@@ -226,6 +226,9 @@ import * as OfflineLedgerUpdateApi from '@/api/indebt/offlineLedgerUpdate'
 
 defineOptions({ name: 'OfflineLedgerApplicationWorkList' })
 
+const route = useRoute()
+const router = useRouter()
+
 type OfflineLedgerApplicationPhase = OfflineLedgerUpdateApi.OfflineLedgerApplicationPhase
 type OfflineLedgerApplicationRecord = OfflineLedgerUpdateApi.OfflineLedgerApplicationRecord
 type OfflineLedgerApplicationCreateForm = OfflineLedgerUpdateApi.OfflineLedgerApplicationCreateForm
@@ -253,13 +256,6 @@ const crudSchemas = reactive<CrudSchema[]>([
     minWidth: 175,
     isSearch: true,
     search: { componentProps: { placeholder: '请输入申请编号' } }
-  },
-  {
-    label: '客户名称',
-    field: 'customerName',
-    isTable: false,
-    isSearch: true,
-    search: { componentProps: { placeholder: '请输入客户名称' } }
   },
   {
     label: '核心企业名称',
@@ -488,13 +484,13 @@ const getDetail = async (record: OfflineLedgerApplicationRecord) => {
   return result as OfflineLedgerApplicationRecord
 }
 
-const openDetail = async () => {
+const openDetail = () => {
   const record = requireCurrentRecord()
   if (!record) return
-  const detail = await getDetail(record)
-  if (!detail) return
-  detailRecord.value = detail
-  detailVisible.value = true
+  router.push({
+    path: route.path,
+    query: { ...route.query, view: 'detail', id: String(record.id), phase: currentPhase.value }
+  })
 }
 
 const openImage = (record: OfflineLedgerApplicationRecord) => {

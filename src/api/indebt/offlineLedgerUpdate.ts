@@ -19,7 +19,6 @@ export interface OfflineLedgerApplicationQuery {
   phase?: OfflineLedgerApplicationPhase
   status?: OfflineLedgerApplicationStatus
   applicationNo?: string
-  customerName?: string
   projectName?: string
   coreEnterpriseName?: string
   coreCustomerNo?: string
@@ -76,6 +75,9 @@ export interface OfflineLedgerApplicationCreateForm {
 /** 兼容先前的 payload 命名，页面推荐使用 OfflineLedgerApplicationCreateForm。 */
 export type OfflineLedgerApplicationCreatePayload = OfflineLedgerApplicationCreateForm
 
+/** 待提交节点详情页允许维护的项目及线下台账信息。 */
+export type OfflineLedgerApplicationUpdateForm = Partial<OfflineLedgerApplicationCreateForm>
+
 export interface OfflineLedgerApplicationSubmitResult {
   success: boolean
   message?: string
@@ -105,6 +107,15 @@ export const withdrawOfflineLedgerApplication = (id: number) =>
 
 export const getOfflineLedgerApplicationDetail = (id: number) =>
   request.get<OfflineLedgerApplicationRecord>({ url: '/system/indebt/offline-ledger-updates/detail', params: { id } })
+
+export const updateOfflineLedgerApplication = (
+  id: number,
+  data: OfflineLedgerApplicationUpdateForm
+) =>
+  request.put<OfflineLedgerApplicationSubmitResult>({
+    url: '/system/indebt/offline-ledger-updates/update',
+    data: { id, ...data }
+  })
 
 /** 保存“签署意见”按钮录入的意见，Mock 会同步写入申请详情的 opinions。 */
 export const signOfflineLedgerApplicationOpinion = (id: number, opinion: string) =>

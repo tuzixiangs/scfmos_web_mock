@@ -250,6 +250,31 @@ export const withdrawOfflineLedgerApplicationRecord = (id: number | string) => {
 export const getOfflineLedgerApplicationRecord = (id: number | string) =>
   offlineLedgerApplicationRecords.find((item) => item.id === Number(id))
 
+export const updateOfflineLedgerApplicationRecord = (
+  id: number | string,
+  payload: OfflineLedgerApplicationCreatePayload
+) => {
+  const record = getOfflineLedgerApplicationRecord(id)
+  if (!record || record.phase !== 'pending') return undefined
+
+  const editableFields: (keyof OfflineLedgerApplicationCreatePayload)[] = [
+    'coreEnterpriseName',
+    'coreCustomerNo',
+    'productPlan',
+    'projectName',
+    'projectNo',
+    'regulatorEnterpriseName',
+    'offlineLedgerName',
+    'offlineLedgerCode',
+    'offlineLedgerType',
+    'insuranceExpiryDate'
+  ]
+  editableFields.forEach((field) => {
+    if (payload[field] !== undefined) record[field] = trim(payload[field])
+  })
+  return record
+}
+
 export const signOfflineLedgerApplicationOpinionRecord = (id: number | string, opinion: unknown) => {
   const record = offlineLedgerApplicationRecords.find((item) => item.id === Number(id))
   const content = trim(opinion)

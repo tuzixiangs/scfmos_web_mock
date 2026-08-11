@@ -631,6 +631,9 @@ import * as OrderContractModificationApi from '@/api/indebt/orderContractModific
 
 defineOptions({ name: 'OrderContractModificationWorkList' })
 
+const route = useRoute()
+const router = useRouter()
+
 type WorkMode = 'application' | 'record'
 type ContractStatus = '有效' | '失效'
 
@@ -1101,6 +1104,7 @@ const toOrderContractItemPayload = (item: ContractItem) => ({
   smallCategory: item.smallCategoryName,
   batchNo: item.batchNo,
   cabinetNo: item.cabinetNo,
+  guidancePrice: item.guidancePrice,
   specification: item.specification,
   origin: item.origin,
   warehouseName: item.warehouseAddress,
@@ -1260,22 +1264,19 @@ const getDetail = async (record: OrderContractRecord) => {
   return resultRecord(result)
 }
 
-const openDetail = async () => {
+const openDetail = () => {
   const record = requireCurrentRecord()
   if (!record) return
 
-  detailLoading.value = true
-  try {
-    const detail = await getDetail(record)
-    if (!detail) return
-    applyDetailRecord(detail)
-    detailActiveTab.value = 'contract'
-    detailVisible.value = true
-  } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '获取订单/合同详情失败')
-  } finally {
-    detailLoading.value = false
-  }
+  router.push({
+    path: route.path,
+    query: {
+      ...route.query,
+      view: 'detail',
+      id: String(record.id),
+      mode: isRecordMode.value ? 'records' : 'active'
+    }
+  })
 }
 
 const handleSaveDetail = async () => {

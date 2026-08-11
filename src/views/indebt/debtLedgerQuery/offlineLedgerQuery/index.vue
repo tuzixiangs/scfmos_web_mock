@@ -24,8 +24,8 @@
           :show-overflow-tooltip="true"
         >
           <template #action="{ row }">
-            <el-button link type="primary" @click.stop="openImage(row)">
-              <Icon icon="ep:picture" class="mr-3px" />查看影像
+            <el-button link type="primary" @click.stop="openProject(row)">
+              <Icon icon="ep:document" class="mr-3px" />详情
             </el-button>
           </template>
         </Table>
@@ -40,6 +40,13 @@
       </el-button>
       <span class="detail-title">{{ currentProject?.projectName }} - 线下台账查询</span>
       <el-tag class="ml-12px" effect="plain">{{ currentProductPlan }}</el-tag>
+      <el-tag
+        class="ml-8px"
+        :type="activeStatus === 'valid' ? 'success' : 'info'"
+        effect="plain"
+      >
+        {{ currentLedgerStatusLabel }}
+      </el-tag>
     </div>
 
     <el-descriptions v-if="currentProject" :column="4" border class="mb-16px">
@@ -50,7 +57,7 @@
     </el-descriptions>
 
     <div class="section-heading">
-      <span>线下台账记录</span>
+      <span>{{ currentLedgerStatusLabel }}的订单/合同线下台账记录</span>
       <el-tag type="info" effect="plain">共 {{ ledgerRows.length }} 条</el-tag>
     </div>
     <ActionBar :buttons="detailButtons" />
@@ -95,22 +102,31 @@ import * as OfflineLedgerQueryApi from '@/api/indebt/offlineLedgerQuery'
 defineOptions({ name: 'OfflineLedgerQuery' })
 
 type ProductPlanKey = 'prepayment' | 'pledge'
+type LedgerStatus = OfflineLedgerQueryApi.OfflineLedgerQueryStatus
 const route = useRoute()
 const initialPlan: ProductPlanKey = String(route.path).includes('/pledge') ? 'pledge' : 'prepayment'
 const activePlan = ref<ProductPlanKey>(initialPlan)
-const activeMenu = ref(`${initialPlan}-ledger`)
+const activeStatus = ref<LedgerStatus>('valid')
+const activeMenu = ref(`${initialPlan}-valid`)
 const currentProductPlan = computed(() => activePlan.value === 'pledge' ? '货押融资' : '先票/款后货')
+const currentLedgerStatusLabel = computed(() => activeStatus.value === 'valid' ? '有效' : '失效')
 const defaultOpeneds = [initialPlan]
 const planMenuList = [
   {
     key: 'prepayment',
     title: '先票/款后货',
-    children: [{ key: 'prepayment-ledger', title: '线下台账查询', plan: 'prepayment' }]
+    children: [
+      { key: 'prepayment-valid', title: '有效的订单/合同', plan: 'prepayment', status: 'valid' },
+      { key: 'prepayment-invalid', title: '失效的订单/合同', plan: 'prepayment', status: 'invalid' }
+    ]
   },
   {
     key: 'pledge',
     title: '货押融资',
-    children: [{ key: 'pledge-ledger', title: '线下台账查询', plan: 'pledge' }]
+    children: [
+      { key: 'pledge-valid', title: '有效的订单/合同', plan: 'pledge', status: 'valid' },
+      { key: 'pledge-invalid', title: '失效的订单/合同', plan: 'pledge', status: 'invalid' }
+    ]
   }
 ]
 const projects = ref<OfflineLedgerQueryApi.OfflineLedgerQueryProject[]>([])
@@ -148,8 +164,9 @@ const loadProjects = async () => {
   } finally { projectLoading.value = false }
 }
 const handleProjectSearch = (params: Recordable) => { Object.assign(projectQuery, params); loadProjects() }
-const handlePlanSelect = (menu: { key: string; plan?: ProductPlanKey }) => {
+const handlePlanSelect = (menu: { key: string; plan?: ProductPlanKey; status?: LedgerStatus }) => {
   if (menu.plan) activePlan.value = menu.plan
+  if (menu.status) activeStatus.value = menu.status
   activeMenu.value = menu.key
 }
 const openProject = async (project: OfflineLedgerQueryApi.OfflineLedgerQueryProject) => {
@@ -162,7 +179,10 @@ const loadLedgerRows = async () => {
   if (!currentProject.value) return
   ledgerLoading.value = true
   try {
-    const result = await OfflineLedgerQueryApi.getOfflineLedgerQueryPage({ projectId: currentProject.value.id })
+    const result = await OfflineLedgerQueryApi.getOfflineLedgerQueryPage({
+      projectId: currentProject.value.id,
+      status: activeStatus.value
+    })
     ledgerRows.value = result.list || result.records || []
     ledgerTableKey.value += 1
   } finally { ledgerLoading.value = false }

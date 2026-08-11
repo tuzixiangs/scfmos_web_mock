@@ -1,5 +1,7 @@
 import request from '@/config/axios'
 
+export type OfflineLedgerQueryStatus = 'valid' | 'invalid'
+
 export interface OfflineLedgerQueryProject {
   id: number
   projectNo: string
@@ -12,6 +14,7 @@ export interface OfflineLedgerQueryProject {
 export interface OfflineLedgerQueryRecord {
   id: number
   projectId: number
+  status: OfflineLedgerQueryStatus
   effectiveDate: string
   offlineManagementDescription: string
   debtManagerOpinion: string
@@ -31,7 +34,10 @@ export const getOfflineLedgerQueryProjects = (params?: Partial<OfflineLedgerQuer
     params
   })
 
-export const getOfflineLedgerQueryPage = (params: { projectId: number }) =>
+export const getOfflineLedgerQueryPage = (params: {
+  projectId: number
+  status?: OfflineLedgerQueryStatus
+}) =>
   request.get<OfflineLedgerQueryPageResult>({
     url: '/system/indebt/offline-ledgers/page',
     params

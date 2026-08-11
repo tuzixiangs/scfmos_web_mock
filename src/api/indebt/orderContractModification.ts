@@ -35,6 +35,7 @@ export interface OrderContractItem {
   smallCategory: string
   batchNo: string
   cabinetNo: string
+  guidancePrice?: number
   specification: string
   origin: string
   warehouseName: string
@@ -54,6 +55,7 @@ export interface OrderContractItemForm {
   smallCategory: string
   batchNo?: string
   cabinetNo?: string
+  guidancePrice?: number
   specification?: string
   origin?: string
   warehouseName: string

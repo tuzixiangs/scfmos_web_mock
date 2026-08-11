@@ -31,6 +31,9 @@
       <div class="detail-page-title">
         <span>{{ detailProject?.projectName }}</span>
         <el-tag type="info" effect="plain">{{ currentProductPlan }}</el-tag>
+        <el-tag :type="currentLedgerStatus === 'valid' ? 'success' : 'danger'" effect="plain">
+          {{ currentLedgerStatus === 'valid' ? '有效' : '失效' }}
+        </el-tag>
       </div>
       <div class="detail-page-subtitle">订单/合同台账查询</div>
     </div>
@@ -41,11 +44,6 @@
       <el-descriptions-item label="核心企业名称">{{ detailProject.coreEnterpriseName }}</el-descriptions-item>
       <el-descriptions-item label="核心客户编号">{{ detailProject.coreCustomerNo }}</el-descriptions-item>
     </el-descriptions>
-
-    <el-tabs v-model="activeLedgerStatus" @tab-change="loadLedgerRows">
-      <el-tab-pane label="有效的订单/合同" name="valid" />
-      <el-tab-pane label="失效的订单/合同" name="invalid" />
-    </el-tabs>
 
     <Search
       :schema="ledgerSchemas.searchSchema"
@@ -168,11 +166,14 @@ type LedgerRecord = OrderContractLedgerApi.OrderContractLedgerRecord
 type LedgerProject = OrderContractLedgerApi.OrderContractLedgerProject
 type LedgerAssetItem = OrderContractLedgerApi.OrderContractLedgerAssetItem
 
-const props = defineProps<{ params?: { productPlan?: string } }>()
+const props = defineProps<{ params?: { productPlan?: string; ledgerStatus?: LedgerStatus } }>()
 const currentProductPlan = computed(() => {
   const productPlan = unref(props.params?.productPlan)
   return typeof productPlan === 'string' && productPlan ? productPlan : '先票/款后货'
 })
+const currentLedgerStatus = computed<LedgerStatus>(() =>
+  props.params?.ledgerStatus === 'invalid' ? 'invalid' : 'valid'
+)
 
 const projectRows = ref<LedgerProject[]>([])
 const projectLoading = ref(false)
@@ -185,7 +186,6 @@ const projectQuery = reactive({
 
 const detailVisible = ref(false)
 const detailProject = ref<LedgerProject>()
-const activeLedgerStatus = ref<LedgerStatus>('valid')
 const ledgerRows = ref<LedgerRecord[]>([])
 const ledgerLoading = ref(false)
 const ledgerCurrentRow = ref<LedgerRecord>()
@@ -283,7 +283,7 @@ const { allSchemas: projectSchemas } = useCrudSchemas(projectCrudSchemas)
 const { allSchemas: ledgerSchemas } = useCrudSchemas(ledgerCrudSchemas)
 const projectColumns = computed(() => projectSchemas.tableColumns)
 const ledgerColumns = computed(() =>
-  ledgerSchemas.tableColumns.filter((column) => activeLedgerStatus.value === 'invalid' || column.field !== 'invalidDate')
+  ledgerSchemas.tableColumns.filter((column) => currentLedgerStatus.value === 'invalid' || column.field !== 'invalidDate')
 )
 
 const loadProjects = async (params = projectQuery) => {
@@ -305,7 +305,6 @@ const handleProjectSearch = (params: Recordable) => {
 
 const openProjectDetail = async (project: LedgerProject) => {
   detailProject.value = project
-  activeLedgerStatus.value = 'valid'
   Object.assign(ledgerQuery, {
     customerName: '',
     coreCustomerNo: '',
@@ -328,7 +327,7 @@ const loadLedgerRows = async () => {
   try {
     const result = await OrderContractLedgerApi.getOrderContractLedgerPage({
       ...ledgerQuery,
-      status: activeLedgerStatus.value,
+      status: currentLedgerStatus.value,
       projectId: detailProject.value.id
     })
     ledgerRows.value = result.list || result.records || []
@@ -384,9 +383,13 @@ const ledgerButtons = computed<ActionButton[]>(() => [
   { key: 'export', label: '导出 Excel', icon: 'ep:download', plain: true, onClick: handleExport }
 ])
 
-watch(currentProductPlan, () => {
-  detailVisible.value = false
-  loadProjects()
+watch([currentProductPlan, currentLedgerStatus], ([nextPlan, nextStatus], [previousPlan, previousStatus]) => {
+  if (nextPlan !== previousPlan) {
+    detailVisible.value = false
+    loadProjects()
+    return
+  }
+  if (nextStatus !== previousStatus && detailVisible.value) loadLedgerRows()
 })
 
 onActivated(() => {

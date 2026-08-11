@@ -123,6 +123,7 @@ import {
   offlineLedgerApplicationRecords,
   signOfflineLedgerApplicationOpinionRecord,
   submitOfflineLedgerApplicationRecord,
+  updateOfflineLedgerApplicationRecord,
   withdrawOfflineLedgerApplicationRecord
 } from './offline-ledger-update'
 import {
@@ -1633,6 +1634,12 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     data = offlineLedgerUpdatePageData(config)
   } else if (/\/system\/indebt\/offline-ledger-updates\/create$/.test(url)) {
     data = cloneMockData(createOfflineLedgerApplicationRecord(parseMockPayload(config.data)))
+  } else if (/\/system\/indebt\/offline-ledger-updates\/update$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const record = updateOfflineLedgerApplicationRecord(payload.id || payload.applicationId, payload)
+    data = record
+      ? { success: true, record: cloneMockData(record) }
+      : { success: false, message: '仅待提交的线下台账更新申请可以修改' }
   } else if (/\/system\/indebt\/offline-ledger-updates\/submit$/.test(url)) {
     const payload = parseMockPayload(config.data)
     const record = submitOfflineLedgerApplicationRecord(payload.id || payload.applicationId)
@@ -1761,7 +1768,9 @@ export const mockAdapter: AxiosAdapter = async (config) => {
   } else if (/\/system\/indebt\/offline-ledgers\/page$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     const list = offlineLedgerQueryRecords.filter(
-      (record) => !query.projectId || record.projectId === Number(query.projectId)
+      (record) =>
+        (!query.projectId || record.projectId === Number(query.projectId)) &&
+        (!query.status || record.status === query.status)
     )
     data = cloneMockData({ total: list.length, list, records: list })
   } else if (/\/system\/indebt\/asset-risk-ledgers\/projects$/.test(url)) {
