@@ -1210,7 +1210,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       {
         "id": 1728,
         "parentId": 1760,
-        "name": "订单/合同管理",
+        "name": "债项数据维护",
         "path": "",
         "component": null,
         "componentName": null,
@@ -1222,7 +1222,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
           {
             "id": 1761,
             "parentId": 1728,
-            "name": "订单/合同信息修改",
+            "name": "待提交债项数据修改",
             "path": "orderContractModification",
             "component": "indebt/orderContractModification/index",
             "componentName": "OrderContractModification",
@@ -1235,7 +1235,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
           {
             "id": 1762,
             "parentId": 1728,
-            "name": "订单/合同信息查询",
+            "name": "债项数据修改记录",
             "path": "orderContractModificationQuery",
             "component": "indebt/orderContractModification/index",
             "componentName": "OrderContractModificationRecordQuery",

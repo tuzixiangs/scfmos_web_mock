@@ -1,5 +1,7 @@
 <template>
+  <AssetConfirmationDetail v-if="showDetail" mode="outbound" />
   <dynamicContainer
+    v-else
     :active-menu="activeMenu"
     :comp-modules="modules"
     :menu-list="menuList"
@@ -10,10 +12,12 @@
 <script setup lang="ts">
 import dynamicContainer from '@/components/dynamicContainer/index.vue'
 import { assetOutboundManagementApplicationMenus, assetOutboundManagementApprovalMenus } from './common'
+import AssetConfirmationDetail from '../components/AssetConfirmationDetail.vue'
 
 defineOptions({ name: 'AssetOutboundManagement' })
 
 const route = useRoute()
+const showDetail = computed(() => route.query.view === 'detail' && Boolean(route.query.id))
 const isApprovalEntry = computed(() => String(route.path).includes('outboundApproval'))
 const menuList = computed(() =>
   isApprovalEntry.value ? assetOutboundManagementApprovalMenus : assetOutboundManagementApplicationMenus

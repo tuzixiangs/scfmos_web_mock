@@ -240,6 +240,23 @@ export const withdrawWarehouseApplicationRecord = (id: number | string) => {
 export const getWarehouseApplicationRecord = (id: number | string) =>
   warehouseApplicationRecords.find((item) => item.id === Number(id))
 
+export const updateWarehouseApplicationRecord = (
+  id: number | string,
+  payload: WarehouseApplicationCreatePayload
+) => {
+  const record = getWarehouseApplicationRecord(id)
+  if (!record || record.phase !== 'pending') return undefined
+  const fields: (keyof WarehouseApplicationCreatePayload)[] = [
+    'coreEnterpriseName', 'coreCustomerNo', 'projectName', 'projectNo',
+    'regulatorEnterpriseName', 'warehouseName', 'warehouseCode', 'warehouseType',
+    'insuranceExpiryDate'
+  ]
+  fields.forEach((field) => {
+    if (payload[field] !== undefined) record[field] = trim(payload[field])
+  })
+  return record
+}
+
 export const signWarehouseApplicationOpinionRecord = (id: number | string, opinion: unknown) => {
   const record = warehouseApplicationRecords.find((item) => item.id === Number(id))
   const content = trim(opinion)

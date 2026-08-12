@@ -72,6 +72,7 @@ export interface WarehouseApplicationCreateForm {
 
 /** 兼容先前的 payload 命名，页面推荐使用 WarehouseApplicationCreateForm。 */
 export type WarehouseApplicationCreatePayload = WarehouseApplicationCreateForm
+export type WarehouseApplicationUpdateForm = Partial<WarehouseApplicationCreateForm>
 
 export interface WarehouseApplicationSubmitResult {
   success: boolean
@@ -168,6 +169,12 @@ export const withdrawWarehouseApplication = (id: number) =>
 export const getWarehouseApplicationDetail = (id: number) =>
   request.get<WarehouseApplicationRecord>({ url: '/system/indebt/warehouse-applications/detail', params: { id } })
 
+export const updateWarehouseApplication = (id: number, data: WarehouseApplicationUpdateForm) =>
+  request.put<WarehouseApplicationSubmitResult>({
+    url: '/system/indebt/warehouse-applications/update',
+    data: { id, ...data }
+  })
+
 /** 保存“签署意见”按钮录入的意见，Mock 会同步写入申请详情的 opinions。 */
 export const signWarehouseApplicationOpinion = (id: number, opinion: string) =>
   request.post<WarehouseApplicationSubmitResult>({
@@ -216,4 +223,3 @@ export const getEffectiveSupplyChainProjects = () =>
   request.get<EffectiveSupplyChainProject[]>({
     url: '/system/indebt/warehouse-inspections/effective-projects'
   })
-

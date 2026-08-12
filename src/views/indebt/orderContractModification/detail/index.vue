@@ -3,8 +3,8 @@
     <div class="detail-page-toolbar">
       <el-button @click="goBack"><Icon icon="ep:arrow-left" class="mr-4px" />返 回</el-button>
       <div v-if="detail" class="application-summary">
-        <span>申请流水号：{{ detail.applicationFlowNo }}</span>
-        <span>订单/合同编号：{{ detail.orderContractNo }}</span>
+        <span>申请编号：{{ detail.applicationFlowNo }}</span>
+        <span>项目名称：{{ detail.projectName }}</span>
         <el-tag :type="detail.contractStatus === '有效' ? 'success' : 'info'" effect="light">
           {{ detail.contractStatus }}
         </el-tag>
@@ -13,143 +13,429 @@
 
     <el-alert
       v-if="detail && isRecordMode"
-      title="当前为已提交的订单/合同信息修改记录，仅支持查看。"
+      title="当前为已提交的债项数据修改记录，仅支持查看。"
       type="info"
       :closable="false"
       class="record-alert"
     />
-    <el-empty v-if="!loading && !detail" description="未获取到订单/合同信息修改详情" />
+    <el-empty v-if="!loading && !detail" description="未获取到债项数据修改详情" />
 
     <el-collapse v-if="detail" v-model="activeSections" class="system-detail-collapse">
       <el-collapse-item name="application">
-        <template #title><span class="collapse-title">申请及关联信息</span></template>
+        <template #title><span class="collapse-title">业务合同基本信息</span></template>
         <div class="collapse-content">
           <el-form label-width="140px" label-position="left" size="small" class="detail-form">
             <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="申请流水号"><el-input :model-value="detail.applicationFlowNo || '-'" disabled /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="申请日期"><el-input :model-value="detail.applicationDate || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"
+                ><el-form-item label="业务合同编号"
+                  ><el-input
+                    :model-value="detail.businessContractNo || '-'"
+                    disabled /></el-form-item
+              ></el-col>
+              <el-col :span="12"
+                ><el-form-item label="合同金额"
+                  ><el-input :model-value="formatAmount(detail.contractTotalAmount)" disabled
+                    ><template #append>{{ detail.currency }}</template></el-input
+                  ></el-form-item
+                ></el-col
+              >
             </el-row>
             <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="客户名称"><el-input :model-value="detail.customerName || '-'" disabled /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="核心客户编号"><el-input :model-value="detail.coreCustomerNo || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"
+                ><el-form-item label="合同起始日"
+                  ><el-input
+                    :model-value="detail.contractStartDate || '-'"
+                    disabled /></el-form-item
+              ></el-col>
+              <el-col :span="12"
+                ><el-form-item label="合同到期日"
+                  ><el-input :model-value="detail.contractEndDate || '-'" disabled /></el-form-item
+              ></el-col>
             </el-row>
             <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="项目名称"><el-input :model-value="detail.projectName || '-'" disabled /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="项目编号"><el-input :model-value="detail.projectNo || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"
+                ><el-form-item label="产品方案"
+                  ><el-input :model-value="detail.productScheme || '-'" disabled /></el-form-item
+              ></el-col>
+              <el-col :span="12"
+                ><el-form-item label="项目名称"
+                  ><el-input :model-value="detail.projectName || '-'" disabled /></el-form-item
+              ></el-col>
             </el-row>
             <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="业务合同编号"><el-input :model-value="detail.businessContractNo || '-'" disabled /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="产品方案"><el-input :model-value="detail.productScheme || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"
+                ><el-form-item label="链属客户名称"
+                  ><el-input :model-value="detail.customerName || '-'" disabled /></el-form-item
+              ></el-col>
+              <el-col :span="12"
+                ><el-form-item label="核心客户编号"
+                  ><el-input :model-value="detail.coreCustomerNo || '-'" disabled /></el-form-item
+              ></el-col>
             </el-row>
             <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="数据来源"><el-input :model-value="detail.dataSource || '-'" disabled /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="修改状态"><el-input :model-value="detail.modificationStatus || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"
+                ><el-form-item label="项目编号"
+                  ><el-input :model-value="detail.projectNo || '-'" disabled /></el-form-item
+              ></el-col>
+              <el-col :span="12"
+                ><el-form-item label="申请日期"
+                  ><el-input :model-value="detail.applicationDate || '-'" disabled /></el-form-item
+              ></el-col>
             </el-row>
           </el-form>
         </div>
       </el-collapse-item>
 
       <el-collapse-item name="contract">
-        <template #title><span class="collapse-title">订单/合同基础信息</span></template>
+        <template #title><span class="collapse-title">订单/合同基本信息</span></template>
         <div class="collapse-content">
-          <el-form ref="contractFormRef" :model="contractForm" :rules="contractRules" label-width="140px" label-position="left" size="small" class="detail-form">
-            <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="订单/合同编号" prop="orderContractNo"><el-input v-model.trim="contractForm.orderContractNo" :disabled="readonly" /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="订单/合同状态"><el-input :model-value="detail.contractStatus" disabled /></el-form-item></el-col>
-            </el-row>
-            <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="签约方1" prop="partyOne"><el-input v-model.trim="contractForm.partyOne" :disabled="readonly" /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="签约方2" prop="partyTwo"><el-input v-model.trim="contractForm.partyTwo" :disabled="readonly" /></el-form-item></el-col>
-            </el-row>
-            <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="签约方3"><el-input v-model.trim="contractForm.partyThree" :disabled="readonly" /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="币种" prop="currency"><el-select v-model="contractForm.currency" class="w-full" :disabled="readonly"><el-option label="人民币" value="人民币" /><el-option label="美元" value="美元" /><el-option label="欧元" value="欧元" /></el-select></el-form-item></el-col>
-            </el-row>
-            <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="订单/合同总金额" prop="contractTotalAmount"><el-input-number v-model="contractForm.contractTotalAmount" class="w-full" :min="0" :precision="2" :controls="false" :disabled="readonly" /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="本次使用金额" prop="currentUsedAmount"><el-input-number v-model="contractForm.currentUsedAmount" class="w-full" :min="0" :precision="2" :controls="false" :disabled="readonly" /></el-form-item></el-col>
-            </el-row>
-            <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="剩余可用金额"><el-input :model-value="formatAmount(remainingAmount)" disabled /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="合同起始日" prop="contractStartDate"><el-date-picker v-model="contractForm.contractStartDate" type="date" value-format="YYYY-MM-DD" class="w-full" :disabled="readonly" /></el-form-item></el-col>
-            </el-row>
-            <el-row :gutter="48">
-              <el-col :span="12"><el-form-item label="合同到期日" prop="contractEndDate"><el-date-picker v-model="contractForm.contractEndDate" type="date" value-format="YYYY-MM-DD" class="w-full" :disabled="readonly" /></el-form-item></el-col>
-            </el-row>
-          </el-form>
-          <div v-if="!isRecordMode" class="section-actions">
-            <el-button type="primary" :loading="saving" @click="saveContract">保存合同信息</el-button>
-            <el-button type="danger" plain :loading="invalidating" :disabled="detail.contractStatus === '失效'" @click="invalidateContract">置为失效</el-button>
-            <span class="action-tip">存在未结清业务时不能置为失效。</span>
+          <div class="section-toolbar">
+            <span>请选择一条有效订单/合同，下方将展示其关联的债项资产</span>
+            <el-tag :type="detail.contractStatus === '有效' ? 'success' : 'info'" effect="plain"
+              >状态：{{ detail.contractStatus }}</el-tag
+            >
           </div>
+          <el-table :data="contractRows" border highlight-current-row class="contract-table">
+            <el-table-column width="56" fixed="left" align="center"
+              ><template #default
+                ><el-radio :model-value="detail.id" :value="detail.id"
+                  ><span class="sr-only">选择订单/合同</span></el-radio
+                ></template
+              ></el-table-column
+            >
+            <el-table-column type="index" label="序号" width="66" fixed="left" align="center" />
+            <el-table-column prop="applicationFlowNo" label="订单/合同流水号" min-width="180" />
+            <el-table-column prop="orderContractNo" label="订单/合同编号" min-width="180" />
+            <el-table-column prop="partyOne" label="签约方1" min-width="190" />
+            <el-table-column prop="partyTwo" label="签约方2" min-width="190" />
+            <el-table-column prop="partyThree" label="签约方3" min-width="190" />
+            <el-table-column label="订单/合同总金额" min-width="155" align="right"
+              ><template #default="{ row }">{{
+                formatAmount(row.contractTotalAmount)
+              }}</template></el-table-column
+            >
+            <el-table-column label="本次使用金额" min-width="145" align="right"
+              ><template #default="{ row }">{{
+                formatAmount(row.currentUsedAmount)
+              }}</template></el-table-column
+            >
+            <el-table-column label="剩余可用金额" min-width="145" align="right"
+              ><template #default="{ row }">{{
+                formatAmount(row.remainingAvailableAmount)
+              }}</template></el-table-column
+            >
+            <el-table-column prop="currency" label="币种" width="90" align="center" />
+            <el-table-column prop="contractStartDate" label="合同起始日" min-width="120" />
+            <el-table-column prop="contractEndDate" label="合同到期日" min-width="120" />
+            <el-table-column prop="dataSource" label="数据来源" min-width="140" />
+            <el-table-column
+              label="操作"
+              :width="isRecordMode ? 110 : 220"
+              fixed="right"
+              align="center"
+              ><template #default="{ row }">
+                <el-button
+                  v-if="!isRecordMode"
+                  link
+                  type="primary"
+                  @click="contractEditorVisible = true"
+                  ><Icon icon="ep:edit-pen" class="mr-3px" />编辑</el-button
+                >
+                <el-button link type="primary" @click="viewContractImage(row)"
+                  ><Icon icon="ep:picture" class="mr-3px" />查看影像</el-button
+                >
+                <el-button
+                  v-if="!isRecordMode"
+                  link
+                  type="danger"
+                  :loading="invalidating"
+                  :disabled="detail.contractStatus === '失效'"
+                  @click="invalidateContract"
+                  >置为失效</el-button
+                >
+              </template></el-table-column
+            >
+          </el-table>
         </div>
       </el-collapse-item>
 
       <el-collapse-item name="items">
-        <template #title><span class="collapse-title">合同项下信息</span></template>
+        <template #title><span class="collapse-title">债项资产明细</span></template>
         <div class="collapse-content">
           <div class="section-toolbar">
-            <div v-if="!isRecordMode">
-              <el-button type="primary" @click="openItemEditor()"><Icon icon="ep:plus" class="mr-4px" />新增</el-button>
-              <el-button @click="mockExcel('上传')"><Icon icon="ep:upload" class="mr-4px" />上传 Excel</el-button>
-              <el-button @click="mockExcel('导出')"><Icon icon="ep:download" class="mr-4px" />导出模板</el-button>
-            </div>
-            <span v-else>展示该修改记录提交时的合同项下信息</span>
-            <div class="item-total">货物总金额：<strong>{{ formatAmount(itemsTotal) }} {{ detail.currency }}</strong></div>
+            <span>已选择订单/合同：{{ detail.orderContractNo }}，展示关联的债项资产信息</span>
+            <div class="item-total"
+              >债项资产总值：<strong
+                >{{ formatAmount(itemsTotal) }} {{ detail.currency }}</strong
+              ></div
+            >
           </div>
           <el-table :data="detail.items" border empty-text="暂无合同项下信息">
             <el-table-column prop="sequence" label="序号" width="66" fixed="left" align="center" />
             <el-table-column prop="productCode" label="商品编号" min-width="150" fixed="left" />
-            <el-table-column prop="productName" label="商品名称" min-width="160" fixed="left" />
-            <el-table-column prop="largeCategory" label="商品大类" min-width="130" />
-            <el-table-column prop="middleCategory" label="商品中类" min-width="130" />
-            <el-table-column prop="smallCategory" label="商品小类" min-width="130" />
+            <el-table-column label="商品名称" min-width="180" fixed="left"
+              ><template #default="{ row }"
+                ><el-input
+                  v-if="editingItemId === row.id"
+                  v-model.trim="itemForm.productName"
+                  size="small"
+                  @keyup.enter="saveInlineItem(row)"
+                /><span v-else>{{ row.productName }}</span></template
+              ></el-table-column
+            >
+            <el-table-column
+              v-for="field in categoryColumns"
+              :key="field.prop"
+              :label="field.label"
+              min-width="140"
+              ><template #default="{ row }"
+                ><div v-if="editingItemId === row.id" class="editable-category-cell"
+                  ><span>{{ itemForm[field.prop] }}</span
+                  ><el-button link type="primary" @click.stop="openCategoryDialog"
+                    ><Icon icon="ep:search" /></el-button></div
+                ><span v-else>{{ row[field.prop] }}</span></template
+              ></el-table-column
+            >
             <el-table-column prop="batchNo" label="批号" min-width="120" />
             <el-table-column prop="cabinetNo" label="柜号" min-width="120" />
-            <el-table-column label="指导价" min-width="120" align="right"><template #default="{ row }">{{ formatAmount(row.guidancePrice ?? row.unitPrice) }}</template></el-table-column>
-            <el-table-column prop="origin" label="产地" min-width="120" />
-            <el-table-column prop="warehouseName" label="仓储地" min-width="170" />
+            <el-table-column label="产地" min-width="145"
+              ><template #default="{ row }"
+                ><div v-if="editingItemId === row.id" class="editable-category-cell"
+                  ><span>{{ itemForm.origin }}</span
+                  ><el-button link type="primary" @click.stop="openOriginDialog"
+                    ><Icon icon="ep:location" /></el-button></div
+                ><span v-else>{{ row.origin }}</span></template
+              ></el-table-column
+            >
+            <el-table-column label="仓储地" min-width="185"
+              ><template #default="{ row }"
+                ><div v-if="editingItemId === row.id" class="editable-category-cell"
+                  ><span>{{ itemForm.warehouseName }}</span
+                  ><el-button link type="primary" @click.stop="openWarehouseDialog"
+                    ><Icon icon="ep:office-building" /></el-button></div
+                ><span v-else>{{ row.warehouseName }}</span></template
+              ></el-table-column
+            >
             <el-table-column prop="specification" label="规格" min-width="120" />
-            <el-table-column label="数量/重量" min-width="130" align="right"><template #default="{ row }">{{ formatQuantity(row.quantityOrWeight) }}</template></el-table-column>
-            <el-table-column label="单价" min-width="120" align="right"><template #default="{ row }">{{ formatAmount(row.unitPrice) }}</template></el-table-column>
-            <el-table-column label="总金额" min-width="140" align="right"><template #default="{ row }">{{ formatAmount(row.totalAmount) }}</template></el-table-column>
+            <el-table-column label="入库数量/重量" min-width="170" align="right"
+              ><template #default="{ row }"
+                ><el-input-number
+                  v-if="editingItemId === row.id"
+                  v-model="itemForm.quantityOrWeight"
+                  :min="0"
+                  :precision="3"
+                  :controls="false"
+                  size="small"
+                /><span v-else>{{ formatQuantity(row.quantityOrWeight) }}</span></template
+              ></el-table-column
+            >
+            <el-table-column label="初始认定价格" min-width="165" align="right"
+              ><template #default="{ row }"
+                ><el-input-number
+                  v-if="editingItemId === row.id"
+                  v-model="itemForm.unitPrice"
+                  :min="0"
+                  :precision="2"
+                  :controls="false"
+                  size="small"
+                /><span v-else>{{ formatAmount(row.unitPrice) }}</span></template
+              ></el-table-column
+            >
+            <el-table-column label="初始认定价值" min-width="150" align="right"
+              ><template #default="{ row }">{{
+                formatAmount(editingItemId === row.id ? itemCalculatedTotal : row.totalAmount)
+              }}</template></el-table-column
+            >
             <el-table-column prop="currency" label="币种" width="90" align="center" />
-            <el-table-column prop="cargoStartDate" label="货物起始日" min-width="120" />
-            <el-table-column prop="cargoEndDate" label="货物到期日" min-width="120" />
-            <el-table-column label="货物所有权" min-width="120"><template #default="{ row }">{{ row.cargoOwner === '借款人本人' ? '借款人自己' : row.cargoOwner }}</template></el-table-column>
-            <el-table-column v-if="!isRecordMode" label="操作" width="130" fixed="right" align="center">
-              <template #default="{ row }"><el-button link type="primary" @click="openItemEditor(row)">编辑</el-button><el-button link type="danger" @click="removeItem(row)">删除</el-button></template>
+            <el-table-column label="货物起始日" min-width="165"
+              ><template #default="{ row }"
+                ><el-date-picker
+                  v-if="editingItemId === row.id"
+                  v-model="itemForm.cargoStartDate"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  size="small"
+                /><span v-else>{{ row.cargoStartDate }}</span></template
+              ></el-table-column
+            >
+            <el-table-column label="货物到期日" min-width="165"
+              ><template #default="{ row }"
+                ><el-date-picker
+                  v-if="editingItemId === row.id"
+                  v-model="itemForm.cargoEndDate"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  size="small"
+                /><span v-else>{{ row.cargoEndDate }}</span></template
+              ></el-table-column
+            >
+            <el-table-column label="货物所有权" min-width="150"
+              ><template #default="{ row }"
+                ><el-select
+                  v-if="editingItemId === row.id"
+                  v-model="itemForm.cargoOwner"
+                  size="small"
+                  ><el-option label="核心企业" value="核心企业" /><el-option
+                    label="借款人自己"
+                    value="借款人本人" /></el-select
+                ><span v-else>{{
+                  row.cargoOwner === '借款人本人' ? '借款人自己' : row.cargoOwner
+                }}</span></template
+              ></el-table-column
+            >
+            <el-table-column label="操作" width="175" fixed="right" align="center">
+              <template #default="{ row }"
+                ><el-button
+                  v-if="!isRecordMode"
+                  link
+                  type="primary"
+                  :loading="itemSaving && editingItemId === row.id"
+                  @click="toggleItemEdit(row)"
+                  ><Icon
+                    :icon="editingItemId === row.id ? 'ep:check' : 'ep:edit-pen'"
+                    class="mr-3px"
+                  />{{ editingItemId === row.id ? '完成' : '编辑' }}</el-button
+                ><el-button link type="primary" @click="viewItemImage(row)"
+                  ><Icon icon="ep:picture" class="mr-3px" />查看影像</el-button
+                ></template
+              >
             </el-table-column>
           </el-table>
         </div>
       </el-collapse-item>
     </el-collapse>
 
-    <el-dialog v-model="itemEditorVisible" :title="itemForm.id ? '编辑合同项下信息' : '新增合同项下信息'" width="900px" destroy-on-close :close-on-click-modal="false">
-      <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="120px">
-        <div class="item-form-grid">
-          <el-form-item label="商品编号"><el-input :model-value="itemForm.productCode || '保存后自动生成'" disabled /></el-form-item>
-          <el-form-item label="商品名称" prop="productName"><el-input v-model.trim="itemForm.productName" /></el-form-item>
-          <el-form-item label="商品大类" prop="largeCategory"><el-select v-model="itemForm.largeCategory" class="w-full" @change="handleLargeCategoryChange"><el-option v-for="item in categoryOptions" :key="item.name" :label="item.name" :value="item.name" /></el-select></el-form-item>
-          <el-form-item label="商品中类" prop="middleCategory"><el-select v-model="itemForm.middleCategory" class="w-full" @change="handleMiddleCategoryChange"><el-option v-for="item in middleCategoryOptions" :key="item.name" :label="item.name" :value="item.name" /></el-select></el-form-item>
-          <el-form-item label="商品小类" prop="smallCategory"><el-select v-model="itemForm.smallCategory" class="w-full"><el-option v-for="item in smallCategoryOptions" :key="item" :label="item" :value="item" /></el-select></el-form-item>
-          <el-form-item label="批号"><el-input v-model.trim="itemForm.batchNo" /></el-form-item>
-          <el-form-item label="柜号"><el-input v-model.trim="itemForm.cabinetNo" /></el-form-item>
-          <el-form-item label="指导价"><el-input-number v-model="itemForm.guidancePrice" class="w-full" :min="0" :precision="2" :controls="false" /></el-form-item>
-          <el-form-item label="产地"><el-cascader v-model="itemForm.originPath" :options="originOptions" class="w-full" clearable /></el-form-item>
-          <el-form-item label="仓储地" prop="warehouseName"><el-select v-model="itemForm.warehouseName" class="w-full" filterable><el-option v-for="item in warehouseOptions" :key="item" :label="item" :value="item" /></el-select></el-form-item>
-          <el-form-item label="规格"><el-input v-model.trim="itemForm.specification" /></el-form-item>
-          <el-form-item label="数量/重量" prop="quantityOrWeight"><el-input-number v-model="itemForm.quantityOrWeight" class="w-full" :min="0" :precision="3" :controls="false" /></el-form-item>
-          <el-form-item label="单价" prop="unitPrice"><el-input-number v-model="itemForm.unitPrice" class="w-full" :min="0" :precision="2" :controls="false" /></el-form-item>
-          <el-form-item label="总金额"><el-input :model-value="formatAmount(itemCalculatedTotal)" disabled /></el-form-item>
-          <el-form-item label="币种"><el-select v-model="itemForm.currency" class="w-full"><el-option label="人民币" value="人民币" /><el-option label="美元" value="美元" /><el-option label="欧元" value="欧元" /></el-select></el-form-item>
-          <el-form-item label="货物起始日" prop="cargoStartDate"><el-date-picker v-model="itemForm.cargoStartDate" type="date" value-format="YYYY-MM-DD" class="w-full" /></el-form-item>
-          <el-form-item label="货物到期日" prop="cargoEndDate"><el-date-picker v-model="itemForm.cargoEndDate" type="date" value-format="YYYY-MM-DD" class="w-full" /></el-form-item>
-          <el-form-item label="货物所有权" prop="cargoOwner"><el-select v-model="itemForm.cargoOwner" class="w-full"><el-option label="核心企业" value="核心企业" /><el-option label="借款人自己" value="借款人本人" /></el-select></el-form-item>
-        </div>
+    <el-dialog
+      v-model="contractEditorVisible"
+      title="编辑订单/合同基本信息"
+      width="900px"
+      destroy-on-close
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="contractFormRef"
+        :model="contractForm"
+        :rules="contractRules"
+        label-width="140px"
+        class="item-form-grid"
+      >
+        <el-form-item label="订单/合同编号" prop="orderContractNo"
+          ><el-input v-model.trim="contractForm.orderContractNo" /></el-form-item
+        ><el-form-item label="币种" prop="currency"
+          ><el-select v-model="contractForm.currency" class="w-full"
+            ><el-option label="人民币" value="人民币" /><el-option
+              label="美元"
+              value="美元" /><el-option label="欧元" value="欧元" /></el-select
+        ></el-form-item>
+        <el-form-item label="签约方1" prop="partyOne"
+          ><el-input v-model.trim="contractForm.partyOne" /></el-form-item
+        ><el-form-item label="签约方2" prop="partyTwo"
+          ><el-input v-model.trim="contractForm.partyTwo"
+        /></el-form-item>
+        <el-form-item label="签约方3"
+          ><el-input v-model.trim="contractForm.partyThree" /></el-form-item
+        ><el-form-item label="订单/合同总金额" prop="contractTotalAmount"
+          ><el-input-number
+            v-model="contractForm.contractTotalAmount"
+            class="w-full"
+            :min="0"
+            :precision="2"
+            :controls="false"
+        /></el-form-item>
+        <el-form-item label="本次使用金额" prop="currentUsedAmount"
+          ><el-input-number
+            v-model="contractForm.currentUsedAmount"
+            class="w-full"
+            :min="0"
+            :precision="2"
+            :controls="false" /></el-form-item
+        ><el-form-item label="剩余可用金额"
+          ><el-input :model-value="formatAmount(remainingAmount)" disabled
+        /></el-form-item>
+        <el-form-item label="合同起始日" prop="contractStartDate"
+          ><el-date-picker
+            v-model="contractForm.contractStartDate"
+            type="date"
+            value-format="YYYY-MM-DD"
+            class="w-full" /></el-form-item
+        ><el-form-item label="合同到期日" prop="contractEndDate"
+          ><el-date-picker
+            v-model="contractForm.contractEndDate"
+            type="date"
+            value-format="YYYY-MM-DD"
+            class="w-full"
+        /></el-form-item>
       </el-form>
-      <template #footer><el-button @click="itemEditorVisible = false">取 消</el-button><el-button type="primary" :loading="itemSaving" @click="saveItem">保 存</el-button></template>
+      <template #footer
+        ><el-button @click="contractEditorVisible = false">取 消</el-button
+        ><el-button type="primary" :loading="saving" @click="saveContract"
+          >保 存</el-button
+        ></template
+      >
     </el-dialog>
+
+    <el-dialog v-model="categoryDialogVisible" title="选择商品分类" width="520px" append-to-body
+      ><el-cascader-panel
+        v-model="pendingCategoryPath"
+        :options="categoryCascaderOptions"
+      /><template #footer
+        ><el-button @click="categoryDialogVisible = false">取 消</el-button
+        ><el-button
+          type="primary"
+          :disabled="pendingCategoryPath.length !== 3"
+          @click="confirmCategory"
+          >确 定</el-button
+        ></template
+      ></el-dialog
+    >
+    <el-dialog v-model="originDialogVisible" title="选择产地" width="560px" append-to-body
+      ><el-alert
+        title="国内产地请选择到省，国外产地请选择到国家"
+        type="info"
+        :closable="false"
+        show-icon
+      /><el-cascader-panel
+        v-model="pendingOriginPath"
+        class="origin-panel"
+        :options="originSelectOptions"
+      /><template #footer
+        ><el-button @click="originDialogVisible = false">取 消</el-button
+        ><el-button type="primary" :disabled="pendingOriginPath.length !== 2" @click="confirmOrigin"
+          >确 定</el-button
+        ></template
+      ></el-dialog
+    >
+    <el-dialog v-model="warehouseDialogVisible" title="选择仓储地" width="1000px" append-to-body
+      ><el-table
+        :data="warehouseTableOptions"
+        border
+        highlight-current-row
+        @row-click="pendingWarehouse = $event"
+        ><el-table-column width="52" align="center"
+          ><template #default="{ row }"
+            ><el-radio
+              :model-value="pendingWarehouse?.warehouseName"
+              :value="row.warehouseName" /></template></el-table-column
+        ><el-table-column prop="regulator" label="监管企业名称" min-width="180" /><el-table-column
+          prop="warehouseName"
+          label="仓库名称"
+          min-width="170" /><el-table-column
+          prop="code"
+          label="仓库代码"
+          min-width="120" /><el-table-column
+          prop="type"
+          label="仓库类型"
+          min-width="100" /><el-table-column
+          prop="address"
+          label="仓库详细地址"
+          min-width="230" /></el-table
+      ><template #footer
+        ><el-button @click="warehouseDialogVisible = false">取 消</el-button
+        ><el-button type="primary" :disabled="!pendingWarehouse" @click="confirmWarehouse"
+          >确 定</el-button
+        ></template
+      ></el-dialog
+    >
   </div>
 </template>
 
@@ -157,8 +443,6 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
-  createOrderContractItem,
-  deleteOrderContractItem,
   getOrderContractModificationDetail,
   invalidateOrderContractModification,
   updateOrderContractItem,
@@ -181,8 +465,11 @@ const itemSaving = ref(false)
 const detail = ref<OrderContractModificationDetail>()
 const activeSections = ref(['application', 'contract', 'items'])
 const contractFormRef = ref<FormInstance>()
-const itemFormRef = ref<FormInstance>()
-const itemEditorVisible = ref(false)
+const contractEditorVisible = ref(false)
+const editingItemId = ref<number>()
+const categoryDialogVisible = ref(false)
+const originDialogVisible = ref(false)
+const warehouseDialogVisible = ref(false)
 
 const node = computed<OrderContractModificationNode>(() =>
   route.query.mode === 'records' || route.query.key === 'record' ? 'records' : 'active'
@@ -191,162 +478,526 @@ const isRecordMode = computed(() => node.value === 'records')
 const readonly = computed(() => isRecordMode.value || detail.value?.contractStatus === '失效')
 
 const contractForm = reactive({
-  orderContractNo: '', partyOne: '', partyTwo: '', partyThree: '',
-  contractTotalAmount: 0, currentUsedAmount: 0, currency: '人民币' as OrderContractCurrency,
-  contractStartDate: '', contractEndDate: ''
+  orderContractNo: '',
+  partyOne: '',
+  partyTwo: '',
+  partyThree: '',
+  contractTotalAmount: 0,
+  currentUsedAmount: 0,
+  currency: '人民币' as OrderContractCurrency,
+  contractStartDate: '',
+  contractEndDate: ''
 })
 const required = (message: string, trigger = 'blur') => ({ required: true, message, trigger })
 const contractRules: FormRules = {
-  orderContractNo: [required('请输入订单/合同编号')], partyOne: [required('请输入签约方1')],
-  partyTwo: [required('请输入签约方2')], currency: [required('请选择币种', 'change')],
-  contractTotalAmount: [required('请输入订单/合同总金额')], currentUsedAmount: [required('请输入本次使用金额')],
-  contractStartDate: [required('请选择合同起始日', 'change')], contractEndDate: [required('请选择合同到期日', 'change')]
+  orderContractNo: [required('请输入订单/合同编号')],
+  partyOne: [required('请输入签约方1')],
+  partyTwo: [required('请输入签约方2')],
+  currency: [required('请选择币种', 'change')],
+  contractTotalAmount: [required('请输入订单/合同总金额')],
+  currentUsedAmount: [required('请输入本次使用金额')],
+  contractStartDate: [required('请选择合同起始日', 'change')],
+  contractEndDate: [required('请选择合同到期日', 'change')]
 }
-const remainingAmount = computed(() => Math.max(contractForm.contractTotalAmount - contractForm.currentUsedAmount, 0))
-const itemsTotal = computed(() => (detail.value?.items || []).reduce((sum, item) => sum + Number(item.totalAmount || 0), 0))
+const remainingAmount = computed(() =>
+  Math.max(contractForm.contractTotalAmount - contractForm.currentUsedAmount, 0)
+)
+const itemsTotal = computed(() =>
+  (detail.value?.items || []).reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
+)
+const contractRows = computed(() => (detail.value ? [detail.value] : []))
 
-interface CategoryOption { name: string; children: { name: string; children: string[] }[] }
+interface CategoryOption {
+  name: string
+  children: { name: string; children: string[] }[]
+}
 const categoryOptions: CategoryOption[] = [
-  { name: '金属材料', children: [{ name: '钢材', children: ['热轧卷板', '冷轧卷板', '螺纹钢'] }, { name: '有色金属', children: ['铜材', '铝材'] }] },
-  { name: '化工产品', children: [{ name: '基础化工', children: ['聚乙烯', '聚丙烯'] }, { name: '精细化工', children: ['涂料', '助剂'] }] },
-  { name: '农产品', children: [{ name: '粮食', children: ['玉米', '大豆', '小麦'] }, { name: '油脂', children: ['豆油', '棕榈油'] }] }
+  {
+    name: '金属材料',
+    children: [
+      { name: '钢材', children: ['热轧卷板', '冷轧卷板', '螺纹钢'] },
+      { name: '有色金属', children: ['铜材', '铝材'] }
+    ]
+  },
+  {
+    name: '化工产品',
+    children: [
+      { name: '基础化工', children: ['聚乙烯', '聚丙烯'] },
+      { name: '精细化工', children: ['涂料', '助剂'] }
+    ]
+  },
+  {
+    name: '农产品',
+    children: [
+      { name: '粮食', children: ['玉米', '大豆', '小麦'] },
+      { name: '油脂', children: ['豆油', '棕榈油'] }
+    ]
+  }
 ]
-const originOptions = [
-  { value: '中国', label: '中国', children: ['浙江省', '江苏省', '河北省', '山东省', '广东省'].map((value) => ({ value, label: value })) },
-  ...['美国', '巴西', '澳大利亚', '德国', '日本'].map((value) => ({ value, label: value }))
+type CategoryField = 'largeCategory' | 'middleCategory' | 'smallCategory'
+const categoryColumns: { prop: CategoryField; label: string }[] = [
+  { prop: 'largeCategory', label: '商品大类' },
+  { prop: 'middleCategory', label: '商品中类' },
+  { prop: 'smallCategory', label: '商品小类' }
 ]
-const warehouseOptions = ['宁波港通监管仓', '上海临港监管仓', '天津港保税仓', '青岛前湾监管仓', '在途监管仓']
+const categoryCascaderOptions = categoryOptions.map((large) => ({
+  value: large.name,
+  label: large.name,
+  children: large.children.map((middle) => ({
+    value: middle.name,
+    label: middle.name,
+    children: middle.children.map((small) => ({ value: small, label: small }))
+  }))
+}))
+const pendingCategoryPath = ref<string[]>([])
 
-type ItemEditor = OrderContractItemForm & { id?: number; productCode?: string; guidancePrice: number; originPath: string[] }
+const provinceNames = [
+  '北京市',
+  '天津市',
+  '河北省',
+  '辽宁省',
+  '上海市',
+  '江苏省',
+  '浙江省',
+  '安徽省',
+  '福建省',
+  '山东省',
+  '河南省',
+  '湖北省',
+  '湖南省',
+  '广东省',
+  '四川省',
+  '重庆市',
+  '陕西省',
+  '新疆维吾尔自治区'
+]
+const countryNames = [
+  '美国',
+  '加拿大',
+  '巴西',
+  '澳大利亚',
+  '新西兰',
+  '日本',
+  '韩国',
+  '德国',
+  '法国',
+  '英国',
+  '俄罗斯',
+  '印度',
+  '印度尼西亚',
+  '越南',
+  '南非',
+  '智利'
+]
+const originSelectOptions = [
+  {
+    value: 'domestic',
+    label: '国内',
+    children: provinceNames.map((value) => ({ value, label: value }))
+  },
+  {
+    value: 'overseas',
+    label: '国外',
+    children: countryNames.map((value) => ({ value, label: value }))
+  }
+]
+const pendingOriginPath = ref<string[]>([])
+
+interface WarehouseOption {
+  regulator: string
+  warehouseName: string
+  code: string
+  type: string
+  address: string
+}
+const warehouseTableOptions: WarehouseOption[] = [
+  {
+    regulator: '宁波港通监管有限公司',
+    warehouseName: '宁波港通监管仓',
+    code: 'WH-NB-008',
+    type: '监管仓',
+    address: '浙江省宁波市北仑区港城路88号'
+  },
+  {
+    regulator: '上海物流监管服务有限公司',
+    warehouseName: '上海临港监管仓',
+    code: 'WH-SH-002',
+    type: '保税仓',
+    address: '上海市浦东新区临港新片区业盛路66号'
+  },
+  {
+    regulator: '华北仓储监管有限公司',
+    warehouseName: '天津港保税仓',
+    code: 'WH-TJ-003',
+    type: '保税仓',
+    address: '天津市东丽区华明大道126号'
+  },
+  {
+    regulator: '青岛前湾仓储有限公司',
+    warehouseName: '青岛前湾监管仓',
+    code: 'WH-QD-005',
+    type: '监管仓',
+    address: '山东省青岛市黄岛区前湾港路68号'
+  },
+  {
+    regulator: '供应链在途监管中心',
+    warehouseName: '在途监管仓',
+    code: 'WH-TRANSIT',
+    type: '在途仓',
+    address: '运输途中动态监管'
+  }
+]
+const pendingWarehouse = ref<WarehouseOption>()
+
+type ItemEditor = OrderContractItemForm & {
+  id?: number
+  productCode?: string
+  guidancePrice: number
+  originPath: string[]
+}
 const newItemForm = (): ItemEditor => ({
-  productName: '', largeCategory: '', middleCategory: '', smallCategory: '', batchNo: '', cabinetNo: '',
-  guidancePrice: 0, specification: '', origin: '', originPath: [], warehouseName: '', quantityOrWeight: 0,
-  unitPrice: 0, currency: detail.value?.currency || '人民币', cargoStartDate: '', cargoEndDate: '', cargoOwner: '核心企业'
+  productName: '',
+  largeCategory: '',
+  middleCategory: '',
+  smallCategory: '',
+  batchNo: '',
+  cabinetNo: '',
+  guidancePrice: 0,
+  specification: '',
+  origin: '',
+  originPath: [],
+  warehouseName: '',
+  quantityOrWeight: 0,
+  unitPrice: 0,
+  currency: detail.value?.currency || '人民币',
+  cargoStartDate: '',
+  cargoEndDate: '',
+  cargoOwner: '核心企业'
 })
 const itemForm = reactive<ItemEditor>(newItemForm())
-const itemRules: FormRules = {
-  productName: [required('请输入商品名称')], largeCategory: [required('请选择商品大类', 'change')],
-  middleCategory: [required('请选择商品中类', 'change')], smallCategory: [required('请选择商品小类', 'change')],
-  warehouseName: [required('请选择仓储地', 'change')], quantityOrWeight: [required('请输入数量/重量')],
-  unitPrice: [required('请输入单价')], cargoStartDate: [required('请选择货物起始日', 'change')],
-  cargoEndDate: [required('请选择货物到期日', 'change')], cargoOwner: [required('请选择货物所有权', 'change')]
-}
-const middleCategoryOptions = computed(() => categoryOptions.find((item) => item.name === itemForm.largeCategory)?.children || [])
-const smallCategoryOptions = computed(() => middleCategoryOptions.value.find((item) => item.name === itemForm.middleCategory)?.children || [])
-const itemCalculatedTotal = computed(() => Number(itemForm.quantityOrWeight || 0) * Number(itemForm.unitPrice || 0))
+const itemCalculatedTotal = computed(
+  () => Number(itemForm.quantityOrWeight || 0) * Number(itemForm.unitPrice || 0)
+)
 
-const formatAmount = (value: unknown) => Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const formatQuantity = (value: unknown) => Number(value || 0).toLocaleString('zh-CN', { maximumFractionDigits: 3 })
+const formatAmount = (value: unknown) =>
+  Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const formatQuantity = (value: unknown) =>
+  Number(value || 0).toLocaleString('zh-CN', { maximumFractionDigits: 3 })
 const applyDetail = (record: OrderContractModificationDetail) => {
   detail.value = record
+  editingItemId.value = undefined
   Object.assign(contractForm, {
-    orderContractNo: record.orderContractNo, partyOne: record.partyOne, partyTwo: record.partyTwo,
-    partyThree: record.partyThree, contractTotalAmount: record.contractTotalAmount,
-    currentUsedAmount: record.currentUsedAmount, currency: record.currency,
-    contractStartDate: record.contractStartDate, contractEndDate: record.contractEndDate
+    orderContractNo: record.orderContractNo,
+    partyOne: record.partyOne,
+    partyTwo: record.partyTwo,
+    partyThree: record.partyThree,
+    contractTotalAmount: record.contractTotalAmount,
+    currentUsedAmount: record.currentUsedAmount,
+    currency: record.currency,
+    contractStartDate: record.contractStartDate,
+    contractEndDate: record.contractEndDate
   })
 }
 const loadDetail = async () => {
   const id = Number(route.query.id)
-  if (!Number.isFinite(id) || id <= 0) { detail.value = undefined; return }
+  if (!Number.isFinite(id) || id <= 0) {
+    detail.value = undefined
+    return
+  }
   loading.value = true
-  try { applyDetail(await getOrderContractModificationDetail(id, node.value)) }
-  catch (error) { detail.value = undefined; ElMessage.error(error instanceof Error ? error.message : '获取订单/合同详情失败') }
-  finally { loading.value = false }
+  try {
+    applyDetail(await getOrderContractModificationDetail(id, node.value))
+  } catch (error) {
+    detail.value = undefined
+    ElMessage.error(error instanceof Error ? error.message : '获取债项数据修改详情失败')
+  } finally {
+    loading.value = false
+  }
 }
 const saveContract = async () => {
   if (!detail.value || readonly.value) return
-  const valid = await contractFormRef.value?.validate().then(() => true).catch(() => false)
+  const valid = await contractFormRef.value
+    ?.validate()
+    .then(() => true)
+    .catch(() => false)
   if (!valid) return
-  if (contractForm.currentUsedAmount > contractForm.contractTotalAmount) return ElMessage.warning('本次使用金额不能大于订单/合同总金额')
-  if (contractForm.contractEndDate < contractForm.contractStartDate) return ElMessage.warning('合同到期日不能早于合同起始日')
+  if (contractForm.currentUsedAmount > contractForm.contractTotalAmount)
+    return ElMessage.warning('本次使用金额不能大于订单/合同总金额')
+  if (contractForm.contractEndDate < contractForm.contractStartDate)
+    return ElMessage.warning('合同到期日不能早于合同起始日')
   saving.value = true
   try {
     const result = await updateOrderContractModification(detail.value.id, { ...contractForm })
     if (!result.success || !result.record) throw new Error(result.message || '保存失败')
-    applyDetail(result.record); ElMessage.success('订单/合同基础信息已保存')
-  } catch (error) { ElMessage.error(error instanceof Error ? error.message : '保存失败') }
-  finally { saving.value = false }
+    applyDetail(result.record)
+    contractEditorVisible.value = false
+    ElMessage.success('订单/合同基本信息已保存')
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '保存失败')
+  } finally {
+    saving.value = false
+  }
 }
 const invalidateContract = async () => {
   if (!detail.value) return
-  try { await ElMessageBox.confirm('确认将当前订单/合同置为失效吗？', '操作确认', { type: 'warning' }) } catch { return }
+  try {
+    await ElMessageBox.confirm('确认将当前订单/合同置为失效吗？', '操作确认', { type: 'warning' })
+  } catch {
+    return
+  }
   invalidating.value = true
   try {
     const result = await invalidateOrderContractModification(detail.value.id)
     if (!result.success || !result.record) throw new Error(result.message || '操作失败')
-    applyDetail(result.record); ElMessage.success('订单/合同已置为失效')
-  } catch (error) { ElMessage.error(error instanceof Error ? error.message : '操作失败') }
-  finally { invalidating.value = false }
+    applyDetail(result.record)
+    ElMessage.success('订单/合同已置为失效')
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '操作失败')
+  } finally {
+    invalidating.value = false
+  }
 }
-const handleLargeCategoryChange = () => { itemForm.middleCategory = ''; itemForm.smallCategory = '' }
-const handleMiddleCategoryChange = () => { itemForm.smallCategory = '' }
-const openItemEditor = (row?: OrderContractItem) => {
-  const originPath = row?.origin ? (row.origin.includes('/') ? row.origin.split('/') : [row.origin]) : []
+const startItemEdit = (row: OrderContractItem) => {
+  if (editingItemId.value !== undefined && editingItemId.value !== row.id) {
+    ElMessage.warning('请先完成当前债项资产的编辑')
+    return
+  }
+  const originPath = row?.origin
+    ? row.origin.includes('/')
+      ? row.origin.split('/')
+      : [row.origin]
+    : []
   Object.assign(itemForm, newItemForm(), row || {}, {
     guidancePrice: row?.guidancePrice ?? row?.unitPrice ?? 0,
     originPath
   })
-  itemEditorVisible.value = true
+  editingItemId.value = row.id
 }
-const saveItem = async () => {
+const openCategoryDialog = () => {
+  pendingCategoryPath.value = [
+    itemForm.largeCategory,
+    itemForm.middleCategory,
+    itemForm.smallCategory
+  ].filter(Boolean)
+  categoryDialogVisible.value = true
+}
+const confirmCategory = () => {
+  if (pendingCategoryPath.value.length !== 3) return
+  ;[itemForm.largeCategory, itemForm.middleCategory, itemForm.smallCategory] =
+    pendingCategoryPath.value
+  categoryDialogVisible.value = false
+}
+const openOriginDialog = () => {
+  const province = provinceNames.find((name) =>
+    itemForm.origin.includes(name.replace(/[省市]$/, ''))
+  )
+  const country = countryNames.find((name) => itemForm.origin.includes(name))
+  pendingOriginPath.value = province ? ['domestic', province] : country ? ['overseas', country] : []
+  originDialogVisible.value = true
+}
+const confirmOrigin = () => {
+  if (pendingOriginPath.value.length !== 2) return
+  itemForm.origin = pendingOriginPath.value[1]
+  itemForm.originPath = [...pendingOriginPath.value]
+  originDialogVisible.value = false
+}
+const openWarehouseDialog = () => {
+  pendingWarehouse.value = warehouseTableOptions.find(
+    (item) => item.warehouseName === itemForm.warehouseName
+  )
+  warehouseDialogVisible.value = true
+}
+const confirmWarehouse = () => {
+  if (!pendingWarehouse.value) return
+  itemForm.warehouseName = pendingWarehouse.value.warehouseName
+  warehouseDialogVisible.value = false
+}
+const saveInlineItem = async (row: OrderContractItem) => {
   if (!detail.value) return
-  const valid = await itemFormRef.value?.validate().then(() => true).catch(() => false)
-  if (!valid) return
-  if (itemForm.quantityOrWeight <= 0 || itemForm.unitPrice <= 0) return ElMessage.warning('数量/重量和单价必须大于0')
-  if (itemForm.cargoEndDate < itemForm.cargoStartDate) return ElMessage.warning('货物到期日不能早于货物起始日')
+  if (!itemForm.productName.trim()) return ElMessage.warning('请输入商品名称')
+  if (!itemForm.largeCategory || !itemForm.middleCategory || !itemForm.smallCategory)
+    return ElMessage.warning('请选择完整的商品分类')
+  if (!itemForm.origin) return ElMessage.warning('请选择产地')
+  if (!itemForm.warehouseName) return ElMessage.warning('请选择仓储地')
+  if (itemForm.quantityOrWeight <= 0 || itemForm.unitPrice <= 0)
+    return ElMessage.warning('入库数量/重量和初始认定价格必须大于0')
+  if (!itemForm.cargoStartDate || !itemForm.cargoEndDate)
+    return ElMessage.warning('请选择货物起止日期')
+  if (itemForm.cargoEndDate < itemForm.cargoStartDate)
+    return ElMessage.warning('货物到期日不能早于货物起始日')
   itemSaving.value = true
   try {
-    const { id, productCode: _productCode, originPath, ...payload } = itemForm
-    payload.origin = originPath.join('/')
-    const result = id ? await updateOrderContractItem(detail.value.id, id, payload) : await createOrderContractItem(detail.value.id, payload)
+    const { id: _id, productCode: _productCode, originPath: _originPath, ...payload } = itemForm
+    const result = await updateOrderContractItem(detail.value.id, row.id, payload)
     if (!result.success || !result.record) throw new Error(result.message || '保存失败')
-    applyDetail(result.record); itemEditorVisible.value = false; ElMessage.success('合同项下信息已保存')
-  } catch (error) { ElMessage.error(error instanceof Error ? error.message : '保存失败') }
-  finally { itemSaving.value = false }
+    applyDetail(result.record)
+    ElMessage.success('债项资产明细已更新')
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '保存失败')
+  } finally {
+    itemSaving.value = false
+  }
 }
-const removeItem = async (row: OrderContractItem) => {
-  if (!detail.value) return
-  try { await ElMessageBox.confirm(`确认删除“${row.productName}”吗？`, '操作确认', { type: 'warning' }) } catch { return }
-  try {
-    const result = await deleteOrderContractItem(detail.value.id, row.id)
-    if (!result.success || !result.record) throw new Error(result.message || '删除失败')
-    applyDetail(result.record); ElMessage.success('合同项下信息已删除')
-  } catch (error) { ElMessage.error(error instanceof Error ? error.message : '删除失败') }
+const toggleItemEdit = (row: OrderContractItem) => {
+  if (editingItemId.value === row.id) saveInlineItem(row)
+  else startItemEdit(row)
 }
-const mockExcel = (action: string) => ElMessage.info(`${action}功能为 Mock 演示，可在此接入实际文件服务`)
+const viewContractImage = (row: OrderContractModificationDetail) =>
+  ElMessage.info(`正在查看订单/合同“${row.orderContractNo}”的影像资料（Mock）`)
+const viewItemImage = (row: OrderContractItem) =>
+  ElMessage.info(`正在查看债项资产“${row.productName}”的影像资料（Mock）`)
 const goBack = () => {
-  const query = Object.fromEntries(Object.entries(route.query).filter(([key]) => !['view', 'id', 'mode'].includes(key)))
+  const query = Object.fromEntries(
+    Object.entries(route.query).filter(([key]) => !['view', 'id', 'mode'].includes(key))
+  )
   router.push({ path: route.path, query })
 }
 watch([() => route.query.id, node], loadDetail, { immediate: true })
 </script>
 
 <style scoped lang="scss">
-.order-contract-detail-page { min-width: 0; min-height: 100%; padding: 12px 16px 20px; background: #f2f3f5; }
-.detail-page-toolbar { display: flex; align-items: center; min-height: 52px; margin-bottom: 12px; padding: 8px 20px; background: #fff; gap: 24px; }
-.application-summary { display: flex; align-items: center; color: #606266; font-size: 13px; gap: 28px; }
-.record-alert { margin-bottom: 12px; }
-.system-detail-collapse { border: 0; background: transparent; }
-:deep(.system-detail-collapse .el-collapse-item) { margin-bottom: 12px; }
-:deep(.system-detail-collapse .el-collapse-item__header) { height: 52px; padding: 0 20px; border-bottom: 0; background: #fff; color: #303133; }
-:deep(.system-detail-collapse .el-collapse-item__wrap) { border-bottom: 0; background: #fff; }
-:deep(.system-detail-collapse .el-collapse-item__content) { padding-bottom: 0; color: #606266; }
-.collapse-title { font-size: 16px; font-weight: 600; }
-.collapse-content { min-width: 0; padding: 4px 20px 20px; }
-.detail-form { padding: 4px 20px 0; }
-.detail-form :deep(.el-form-item) { margin-bottom: 14px; }
-.detail-form :deep(.el-form-item__label) { color: #606266; font-weight: 400; }
-.detail-form :deep(.el-input.is-disabled .el-input__wrapper) { background: #f5f7fa; }
-.section-actions { display: flex; align-items: center; padding: 4px 20px 0 160px; gap: 10px; }
-.action-tip { color: #909399; font-size: 12px; }
-.section-toolbar { display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin-bottom: 10px; color: #909399; font-size: 13px; gap: 20px; }
-.item-total { flex: 0 0 auto; color: #606266; white-space: nowrap; }
-.item-total strong { color: #f56c6c; font-size: 16px; font-weight: 600; }
-.item-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+.order-contract-detail-page {
+  min-width: 0;
+  min-height: 100%;
+  padding: 12px 16px 20px;
+  background: #f2f3f5;
+}
+.detail-page-toolbar {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  margin-bottom: 12px;
+  padding: 8px 20px;
+  background: #fff;
+  gap: 24px;
+}
+.application-summary {
+  display: flex;
+  align-items: center;
+  color: #606266;
+  font-size: 13px;
+  gap: 28px;
+}
+.record-alert {
+  margin-bottom: 12px;
+}
+.system-detail-collapse {
+  border: 0;
+  background: transparent;
+}
+:deep(.system-detail-collapse .el-collapse-item) {
+  margin-bottom: 12px;
+}
+:deep(.system-detail-collapse .el-collapse-item__header) {
+  height: 52px;
+  padding: 0 20px;
+  border-bottom: 0;
+  background: #fff;
+  color: #303133;
+}
+:deep(.system-detail-collapse .el-collapse-item__wrap) {
+  border-bottom: 0;
+  background: #fff;
+}
+:deep(.system-detail-collapse .el-collapse-item__content) {
+  padding-bottom: 0;
+  color: #606266;
+}
+.collapse-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.collapse-content {
+  min-width: 0;
+  padding: 4px 20px 20px;
+}
+.detail-form {
+  padding: 4px 20px 0;
+}
+.detail-form :deep(.el-form-item) {
+  margin-bottom: 14px;
+}
+.detail-form :deep(.el-form-item__label) {
+  color: #606266;
+  font-weight: 400;
+}
+.detail-form :deep(.el-input.is-disabled .el-input__wrapper) {
+  background: #f5f7fa;
+}
+.section-actions {
+  display: flex;
+  align-items: center;
+  padding: 4px 20px 0 160px;
+  gap: 10px;
+}
+.action-tip {
+  color: #909399;
+  font-size: 12px;
+}
+.section-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  margin-bottom: 10px;
+  color: #909399;
+  font-size: 13px;
+  gap: 20px;
+}
+.item-total {
+  flex: 0 0 auto;
+  color: #606266;
+  white-space: nowrap;
+}
+.item-total strong {
+  color: #f56c6c;
+  font-size: 16px;
+  font-weight: 600;
+}
+.item-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+}
+:deep(.contract-table .el-table__body tr:first-child td.el-table__cell) {
+  background: #ecf5ff;
+}
+.editable-category-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  gap: 6px;
+}
+.editable-category-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.origin-panel {
+  width: 100%;
+  margin-top: 16px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+}
+:deep(.el-table .el-input-number) {
+  width: 128px;
+}
+:deep(.el-table .el-date-editor) {
+  width: 142px;
+}
 @media (max-width: 900px) {
-  .detail-page-toolbar, .application-summary, .section-toolbar { flex-wrap: wrap; }
-  .item-form-grid { grid-template-columns: 1fr; }
-  :deep(.detail-form .el-col-12) { max-width: 100%; flex: 0 0 100%; }
+  .detail-page-toolbar,
+  .application-summary,
+  .section-toolbar {
+    flex-wrap: wrap;
+  }
+  .item-form-grid {
+    grid-template-columns: 1fr;
+  }
+  :deep(.detail-form .el-col-12) {
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
 }
 </style>

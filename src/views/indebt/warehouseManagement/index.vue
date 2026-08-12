@@ -1,5 +1,7 @@
 <template>
+  <WarehouseManagementDetail v-if="showDetail" />
   <dynamicContainer
+    v-else
     :active-menu="activeMenu"
     :comp-modules="modules"
     :menu-list="menuList"
@@ -10,10 +12,12 @@
 <script setup lang="ts">
 import dynamicContainer from '@/components/dynamicContainer/index.vue'
 import { warehouseApplicationMenus, warehouseApprovalMenus } from './common'
+import WarehouseManagementDetail from './detail/index.vue'
 
 defineOptions({ name: 'WarehouseManagement' })
 
 const route = useRoute()
+const showDetail = computed(() => route.query.view === 'detail' && Boolean(route.query.id))
 const isApprovalEntry = computed(() => String(route.path).includes('warehouseApproval'))
 const menuList = computed(() =>
   isApprovalEntry.value ? warehouseApprovalMenus : warehouseApplicationMenus
@@ -28,4 +32,3 @@ const handleMenuSelect = (menu: { phase: string; category?: string; isApproval?:
   isApproval: menu.isApproval
 })
 </script>
-

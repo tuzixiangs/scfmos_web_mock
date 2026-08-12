@@ -1,5 +1,5 @@
 <template>
-  <ContentWrap v-if="!detailVisible" class="asset-risk-ledger-page">
+  <ContentWrap v-if="!detailVisible && !ledgerDialogVisible" class="asset-risk-ledger-page">
     <Search
       :schema="projectSchemas.searchSchema"
       :model="projectQuery"
@@ -22,7 +22,7 @@
     </Table>
   </ContentWrap>
 
-  <ContentWrap v-else class="asset-risk-ledger-detail">
+  <ContentWrap v-else-if="!ledgerDialogVisible" class="asset-risk-ledger-detail">
     <div class="detail-header">
       <el-button link type="primary" @click="backToProjects"><Icon icon="ep:arrow-left" class="mr-4px" />返回项目列表</el-button>
       <span class="detail-title">{{ currentProject?.projectName }} - 债项资产风险台账查询</span>
@@ -56,7 +56,8 @@
     </Table>
   </ContentWrap>
 
-  <el-dialog v-model="ledgerDialogVisible" :title="ledgerDialogTitle" width="760px" destroy-on-close>
+  <ContentWrap v-else class="asset-risk-ledger-record-detail">
+    <div class="detail-header"><el-button link type="primary" @click="ledgerDialogVisible = false"><Icon icon="ep:arrow-left" class="mr-4px" />返回风险台账列表</el-button><span class="detail-title">{{ ledgerDialogTitle }}</span></div>
     <el-descriptions v-if="selectedLedger" :column="2" border>
       <el-descriptions-item label="客户名称">{{ selectedLedger.customerName }}</el-descriptions-item>
       <el-descriptions-item label="核心客户编号">{{ selectedLedger.coreCustomerNo }}</el-descriptions-item>
@@ -66,7 +67,7 @@
       <el-descriptions-item v-if="'outgoingFlowNo' in selectedLedger" label="出账流水号">{{ selectedLedger.outgoingFlowNo }}</el-descriptions-item>
     </el-descriptions>
     <div class="ledger-placeholder"><Icon icon="ep:document" /> {{ ledgerDialogTitle }} 明细（Mock）已生成，可作为后续关联页面入口。</div>
-  </el-dialog>
+  </ContentWrap>
 </template>
 
 <script setup lang="ts">

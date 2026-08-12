@@ -346,6 +346,9 @@ import * as AssetArrivalApi from '@/api/indebt/assetArrivalManagement'
 
 defineOptions({ name: 'AssetArrivalApplicationWorkList' })
 
+const route = useRoute()
+const router = useRouter()
+
 type AssetArrivalApplicationPhase = 'pending' | 'reviewing' | 'approved'
 
 interface AssetArrivalOpinion {
@@ -867,20 +870,13 @@ const applyConfirmationForm = (record: AssetArrivalRecord) => {
   })
 }
 
-const openDetail = async () => {
+const openDetail = () => {
   const record = requireCurrentRecord()
   if (!record) return
-  try {
-    const detail = await getDetail(record)
-    if (!detail) return
-    detailRecord.value = detail
-    detailActiveTab.value = 'contract'
-    applyConfirmationForm(detail)
-    confirmationFormRef.value?.clearValidate()
-    detailVisible.value = true
-  } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '获取债项资产到港确认详情失败')
-  }
+  router.push({
+    path: route.path,
+    query: { ...route.query, view: 'detail', id: String(record.id), phase: currentPhase.value }
+  })
 }
 
 const handleSaveConfirmation = async () => {

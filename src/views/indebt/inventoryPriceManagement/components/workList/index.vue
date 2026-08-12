@@ -414,6 +414,9 @@ import * as InventoryPriceApi from '@/api/indebt/inventoryPriceManagement'
 
 defineOptions({ name: 'InventoryPriceApplicationWorkList' })
 
+const route = useRoute()
+const router = useRouter()
+
 type PriceApplicationPhase = 'pending' | 'reviewing' | 'rejected' | 'approved'
 
 interface PriceOpinion {
@@ -918,20 +921,13 @@ const getDetail = async (record: InventoryPriceRecord) => {
   return resultRecord(result)
 }
 
-const openDetail = async () => {
+const openDetail = () => {
   const record = requireCurrentRecord()
   if (!record) return
-  detailLoading.value = true
-  try {
-    const detail = await getDetail(record)
-    if (!detail) return
-    detailRecord.value = detail
-    detailVisible.value = true
-  } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '获取价格盯市申请详情失败')
-  } finally {
-    detailLoading.value = false
-  }
+  router.push({
+    path: route.path,
+    query: { ...route.query, view: 'detail', id: String(record.id), phase: currentPhase.value }
+  })
 }
 
 const handleSavePriceItems = async () => {

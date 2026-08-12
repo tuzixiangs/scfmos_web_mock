@@ -23,6 +23,7 @@ import {
   signWarehouseApplicationOpinionRecord,
   signWarehouseInspectionOpinionRecord,
   submitWarehouseApplicationRecord,
+  updateWarehouseApplicationRecord,
   submitWarehouseInspectionRecord,
   warehouseApplicationRecords,
   warehouseInspectionRecords,
@@ -1149,6 +1150,12 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     data = warehouseApplicationPageData(config)
   } else if (/\/system\/indebt\/warehouse-applications\/create$/.test(url)) {
     data = cloneMockData(createWarehouseApplicationRecord(parseMockPayload(config.data)))
+  } else if (/\/system\/indebt\/warehouse-applications\/update$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const record = updateWarehouseApplicationRecord(payload.id || payload.applicationId, payload)
+    data = record
+      ? { success: true, record: cloneMockData(record) }
+      : { success: false, message: '仅待提交的仓库建立申请可以修改' }
   } else if (/\/system\/indebt\/warehouse-applications\/submit$/.test(url)) {
     const payload = parseMockPayload(config.data)
     const record = submitWarehouseApplicationRecord(payload.id || payload.applicationId)

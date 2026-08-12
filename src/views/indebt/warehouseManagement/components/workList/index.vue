@@ -217,6 +217,9 @@ import * as WarehouseManagementApi from '@/api/indebt/warehouseManagement'
 
 defineOptions({ name: 'WarehouseApplicationWorkList' })
 
+const route = useRoute()
+const router = useRouter()
+
 type WarehouseApplicationPhase = WarehouseManagementApi.WarehouseApplicationPhase
 type WarehouseApplicationRecord = WarehouseManagementApi.WarehouseApplicationRecord
 type WarehouseApplicationCreateForm = WarehouseManagementApi.WarehouseApplicationCreateForm
@@ -464,13 +467,13 @@ const getDetail = async (record: WarehouseApplicationRecord) => {
   return result as WarehouseApplicationRecord
 }
 
-const openDetail = async () => {
+const openDetail = () => {
   const record = requireCurrentRecord()
   if (!record) return
-  const detail = await getDetail(record)
-  if (!detail) return
-  detailRecord.value = detail
-  detailVisible.value = true
+  router.push({
+    path: route.path,
+    query: { ...route.query, view: 'detail', id: String(record.id), phase: currentPhase.value }
+  })
 }
 
 const openImage = (record: WarehouseApplicationRecord) => {

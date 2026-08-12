@@ -1,5 +1,5 @@
 <template>
-  <ContentWrap v-if="!detailVisible" class="order-contract-ledger-query">
+  <ContentWrap v-if="!detailVisible && !ledgerDetailVisible && !assetVisible" class="order-contract-ledger-query">
     <Search
       :schema="projectSchemas.searchSchema"
       :model="projectQuery"
@@ -23,7 +23,7 @@
     </Table>
   </ContentWrap>
 
-  <ContentWrap v-else class="order-contract-ledger-detail-page">
+  <ContentWrap v-else-if="!ledgerDetailVisible && !assetVisible" class="order-contract-ledger-detail-page">
     <div class="detail-page-header">
       <el-button class="back-button" link @click="goBackToProjects">
         <Icon icon="ep:arrow-left" class="mr-4px" />返回项目列表
@@ -78,7 +78,11 @@
     </Table>
   </ContentWrap>
 
-  <el-dialog v-model="ledgerDetailVisible" title="订单/合同台账详情" width="980px" destroy-on-close>
+  <ContentWrap v-else-if="ledgerDetailVisible" class="order-contract-ledger-record-detail">
+    <div class="detail-page-header">
+      <el-button class="back-button" link @click="ledgerDetailVisible = false"><Icon icon="ep:arrow-left" class="mr-4px" />返回台账列表</el-button>
+      <div class="detail-page-title"><span>订单/合同台账详情</span><el-tag :type="currentLedgerStatus === 'valid' ? 'success' : 'danger'" effect="plain">{{ currentLedgerStatus === 'valid' ? '有效' : '失效' }}</el-tag></div>
+    </div>
     <el-descriptions v-if="ledgerDetailRecord" :column="3" border>
       <el-descriptions-item label="订单/合同流水号">{{ ledgerDetailRecord.orderContractFlowNo }}</el-descriptions-item>
       <el-descriptions-item label="订单/合同编号">{{ ledgerDetailRecord.orderContractNo }}</el-descriptions-item>
@@ -105,9 +109,13 @@
         {{ ledgerDetailRecord.invalidDate }}
       </el-descriptions-item>
     </el-descriptions>
-  </el-dialog>
+  </ContentWrap>
 
-  <el-dialog v-model="assetVisible" title="项下资产明细" width="920px" destroy-on-close>
+  <ContentWrap v-else class="order-contract-ledger-asset-detail">
+    <div class="detail-page-header">
+      <el-button class="back-button" link @click="assetVisible = false"><Icon icon="ep:arrow-left" class="mr-4px" />返回台账列表</el-button>
+      <div class="detail-page-title"><span>项下资产明细</span><el-tag effect="plain">{{ imageRecord?.orderContractNo || ledgerCurrentRow?.orderContractNo }}</el-tag></div>
+    </div>
     <el-table :data="assetItems" border size="small">
       <el-table-column prop="productCode" label="商品编码" min-width="145" />
       <el-table-column prop="productName" label="商品名称" min-width="145" />
@@ -124,7 +132,7 @@
         <template #default="{ row }">{{ formatAmount(row.latestInventoryValue) }}</template>
       </el-table-column>
     </el-table>
-  </el-dialog>
+  </ContentWrap>
 
   <el-dialog v-model="imageVisible" title="订单/合同影像" width="720px" destroy-on-close>
     <el-alert
