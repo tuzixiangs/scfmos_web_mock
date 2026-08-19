@@ -149,7 +149,7 @@
         <el-form-item label="入库类型" prop="inboundType">
           <el-select v-model="createForm.inboundType" class="w-full" placeholder="请选择入库类型">
             <el-option label="部分入库" value="部分入库" />
-            <el-option label="已完成入库" value="已完成入库" />
+            <el-option label="全部入库" value="全部入库" />
           </el-select>
         </el-form-item>
       </div>
@@ -174,33 +174,66 @@
           <section class="detail-section">
             <div class="detail-section-title">业务合同基本信息</div>
             <el-descriptions :column="3" border>
-              <el-descriptions-item label="申请编号">{{ detailRecord.applicationNo }}</el-descriptions-item>
+              <el-descriptions-item label="申请编号">{{
+                detailRecord.applicationNo
+              }}</el-descriptions-item>
               <el-descriptions-item label="申请状态">
                 <el-tag :type="statusTagType(detailRecord.phase)" effect="light">
                   {{ detailRecord.status }}
                 </el-tag>
               </el-descriptions-item>
-              <el-descriptions-item label="申请日期">{{ detailRecord.applicationDate || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="项目名称">{{ detailRecord.projectName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="项目编号">{{ detailRecord.projectNo || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="客户名称">{{ detailRecord.customerName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="核心客户编号">{{ detailRecord.coreCustomerNo || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="链属客户名称">{{ detailRecord.linkedCustomerName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="授信编号">{{ detailRecord.creditNo || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="产品方案">{{ detailRecord.productPlan || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="关联业务合同编号">{{ detailRecord.businessContractNo || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="申请日期">{{
+                detailRecord.applicationDate || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="项目名称">{{
+                detailRecord.projectName || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="项目编号">{{
+                detailRecord.projectNo || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="客户名称">{{
+                detailRecord.customerName || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="核心客户编号">{{
+                detailRecord.coreCustomerNo || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="链属客户名称">{{
+                detailRecord.linkedCustomerName || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="授信编号">{{
+                detailRecord.creditNo || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="产品方案">{{
+                detailRecord.productPlan || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="关联业务合同编号">{{
+                detailRecord.businessContractNo || '-'
+              }}</el-descriptions-item>
               <el-descriptions-item label="业务合同金额">
-                {{ formatAmount(detailRecord.businessContractAmount) }} {{ detailRecord.currency || '' }}
+                {{ formatAmount(detailRecord.businessContractAmount) }}
+                {{ detailRecord.currency || '' }}
               </el-descriptions-item>
-              <el-descriptions-item label="合同起始日">{{ detailRecord.contractStartDate || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="合同到期日">{{ detailRecord.contractEndDate || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="合同起始日">{{
+                detailRecord.contractStartDate || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="合同到期日">{{
+                detailRecord.contractEndDate || '-'
+              }}</el-descriptions-item>
               <el-descriptions-item label="出账金额">
                 {{ formatAmount(detailRecord.outboundAmount) }} {{ detailRecord.currency || '' }}
               </el-descriptions-item>
-              <el-descriptions-item label="出账日期">{{ detailRecord.billingDate || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="到港截止日期">{{ detailRecord.arrivalDeadline || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="当前阶段">{{ detailRecord.currentStage || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="完成时间">{{ detailRecord.completedAt || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="出账日期">{{
+                detailRecord.billingDate || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="到港截止日期">{{
+                detailRecord.arrivalDeadline || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="当前阶段">{{
+                detailRecord.currentStage || '-'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="完成时间">{{
+                detailRecord.completedAt || '-'
+              }}</el-descriptions-item>
             </el-descriptions>
           </section>
         </el-tab-pane>
@@ -225,9 +258,13 @@
             >
               <div class="arrival-form-grid">
                 <el-form-item label="入库类型" prop="inboundType">
-                  <el-select v-model="confirmationForm.inboundType" class="w-full" placeholder="请选择入库类型">
+                  <el-select
+                    v-model="confirmationForm.inboundType"
+                    class="w-full"
+                    placeholder="请选择入库类型"
+                  >
                     <el-option label="部分入库" value="部分入库" />
-                    <el-option label="已完成入库" value="已完成入库" />
+                    <el-option label="全部入库" value="全部入库" />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="入库货值" prop="inboundValue">
@@ -282,7 +319,9 @@
     />
     <template #footer>
       <el-button @click="batchSubmitVisible = false">取 消</el-button>
-      <el-button type="primary" :loading="batchSubmitting" @click="handleBatchSubmit">确认提交</el-button>
+      <el-button type="primary" :loading="batchSubmitting" @click="handleBatchSubmit"
+        >确认提交</el-button
+      >
     </template>
   </el-dialog>
 
@@ -329,7 +368,11 @@
           <strong>{{ image.name }}</strong>
           <p>{{ image.description }}</p>
         </div>
-        <el-button link type="primary" @click="ElMessage.info('当前为 Mock 演示影像，可在此接入实际影像系统')">
+        <el-button
+          link
+          type="primary"
+          @click="ElMessage.info('当前为 Mock 演示影像，可在此接入实际影像系统')"
+        >
           预览
         </el-button>
       </div>
@@ -422,11 +465,11 @@ interface CreateForm {
   creditNo: string
   productPlan: string
   businessContractNo: string
-  inboundType: '部分入库' | '已完成入库' | ''
+  inboundType: '部分入库' | '全部入库' | ''
 }
 
 interface ConfirmationForm {
-  inboundType: '部分入库' | '已完成入库' | ''
+  inboundType: '部分入库' | '全部入库' | ''
   inboundValue: number
   currency: string
   arrivalDeadline: string
@@ -465,7 +508,9 @@ const callApi = async <T,>(names: string | string[], ...args: unknown[]): Promis
 }
 
 const toObject = (value: unknown): Record<string, unknown> =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
 const unwrapData = (value: unknown): unknown => {
   const result = toObject(value)
   return result.data === undefined ? value : result.data
@@ -529,7 +574,9 @@ const normalizeRecord = (
     phase,
     status: toText(record.status ?? record.applicationStatus) || phaseLabel(phase),
     applicationNo: toText(record.applicationNo ?? record.applyNo ?? record.applicationNumber),
-    customerName: toText(record.customerName ?? record.chainCustomerName ?? record.linkedCustomerName),
+    customerName: toText(
+      record.customerName ?? record.chainCustomerName ?? record.linkedCustomerName
+    ),
     coreCustomerNo: toText(record.coreCustomerNo ?? record.coreCustomerId ?? record.customerNo),
     linkedCustomerName: toText(
       record.linkedCustomerName ?? record.chainCustomerName ?? record.customerName
@@ -546,14 +593,22 @@ const normalizeRecord = (
     ),
     businessContractAmount: toNumber(record.businessContractAmount ?? record.contractAmount),
     outboundAmount: toNumber(
-      record.outboundAmount ?? record.billingAmount ?? record.drawdownAmount ?? record.disbursementAmount
+      record.outboundAmount ??
+        record.billingAmount ??
+        record.drawdownAmount ??
+        record.disbursementAmount
     ),
     billingDate: toText(
       record.billingDate ?? record.outboundDate ?? record.drawdownDate ?? record.disbursementDate
     ),
-    arrivalDeadline: toText(record.arrivalDeadline ?? record.arrivalDeadlineDate ?? record.arrivalLimitDate),
+    arrivalDeadline: toText(
+      record.arrivalDeadline ?? record.arrivalDeadlineDate ?? record.arrivalLimitDate
+    ),
     inboundValue: toNumber(
-      record.inboundValue ?? record.inboundTotalValue ?? record.storageValue ?? record.inboundGoodsValue
+      record.inboundValue ??
+        record.inboundTotalValue ??
+        record.storageValue ??
+        record.inboundGoodsValue
     ),
     currency: toText(record.currency ?? record.currencyName),
     applicationDate: toText(record.applicationDate ?? record.applyDate),
@@ -573,10 +628,14 @@ const normalizeProject = (value: unknown): AvailableProject => {
     id: (project.id ?? project.projectId ?? 0) as number | string,
     projectName: toText(project.projectName),
     projectNo: toText(project.projectNo ?? project.projectCode),
-    linkedCustomerName: toText(project.linkedCustomerName ?? project.chainCustomerName ?? project.customerName),
+    linkedCustomerName: toText(
+      project.linkedCustomerName ?? project.chainCustomerName ?? project.customerName
+    ),
     creditNo: toText(project.creditNo ?? project.creditNumber ?? project.creditApplyNo),
     productPlan: toText(project.productPlan ?? project.productPlanName ?? project.productScheme),
-    businessContractNo: toText(project.businessContractNo ?? project.contractNo ?? project.businessAgreementNo)
+    businessContractNo: toText(
+      project.businessContractNo ?? project.contractNo ?? project.businessAgreementNo
+    )
   }
 }
 
@@ -660,15 +719,17 @@ const reviewingAndApprovedFields = new Set([
 const { allSchemas } = useCrudSchemas(crudSchemas)
 const tableColumns = computed(() =>
   allSchemas.tableColumns.filter((column) =>
-    (currentPhase.value === 'pending' ? pendingFields : reviewingAndApprovedFields).has(column.field)
+    (currentPhase.value === 'pending' ? pendingFields : reviewingAndApprovedFields).has(
+      column.field
+    )
   )
 )
 
 const getCurrentPage = async (params: Recordable): Promise<AssetArrivalPageResult> => {
-  const result = await callApi<unknown>(
-    ['getAssetArrivalApplicationPage', 'getAssetArrivalPage'],
-    { ...params, phase: currentPhase.value }
-  )
+  const result = await callApi<unknown>(['getAssetArrivalApplicationPage', 'getAssetArrivalPage'], {
+    ...params,
+    phase: currentPhase.value
+  })
   const page = toObject(unwrapData(result))
   const rows = getArray(page.list ?? page.records ?? page.rows).map((item) =>
     normalizeRecord(item, currentPhase.value)
@@ -738,7 +799,13 @@ const confirmationForm = reactive<ConfirmationForm>(initialConfirmationForm())
 const confirmationRules: FormRules<ConfirmationForm> = {
   inboundType: [{ required: true, message: '请选择入库类型', trigger: 'change' }],
   inboundValue: [
-    { required: true, type: 'number', min: 0.01, message: '请输入大于 0 的入库货值', trigger: 'blur' }
+    {
+      required: true,
+      type: 'number',
+      min: 0.01,
+      message: '请输入大于 0 的入库货值',
+      trigger: 'blur'
+    }
   ],
   arrivalDeadline: [{ required: true, message: '请选择到港截止日期', trigger: 'change' }]
 }
@@ -863,7 +930,7 @@ const getDetail = async (record: AssetArrivalRecord) => {
 
 const applyConfirmationForm = (record: AssetArrivalRecord) => {
   Object.assign(confirmationForm, {
-    inboundType: record.inboundType === '已完成入库' ? '已完成入库' : '部分入库',
+    inboundType: record.inboundType === '全部入库' ? '全部入库' : '部分入库',
     inboundValue: record.inboundValue,
     currency: record.currency || '人民币',
     arrivalDeadline: record.arrivalDeadline
@@ -890,7 +957,11 @@ const handleSaveConfirmation = async () => {
   detailSaving.value = true
   try {
     const result = await callApi<unknown>(
-      ['updateAssetArrivalConfirmation', 'saveAssetArrivalConfirmation', 'updateAssetArrivalApplication'],
+      [
+        'updateAssetArrivalConfirmation',
+        'saveAssetArrivalConfirmation',
+        'updateAssetArrivalApplication'
+      ],
       detailRecord.value.id,
       {
         inboundGoodsValue: confirmationForm.inboundValue,
@@ -1033,7 +1104,9 @@ const normalizeImage = (value: unknown, index: number): ImageFile => {
   return {
     id: (image.id ?? image.fileId ?? index) as number | string,
     name: toText(image.name ?? image.fileName ?? `到港影像${index + 1}`),
-    description: toText(image.description ?? image.uploadedAt ?? image.createTime ?? '债项资产到港确认影像材料'),
+    description: toText(
+      image.description ?? image.uploadedAt ?? image.createTime ?? '债项资产到港确认影像材料'
+    ),
     icon: toText(image.icon) || 'ep:document'
   }
 }
@@ -1047,7 +1120,9 @@ const openImage = async (record: AssetArrivalRecord) => {
     const result = await callApi<unknown>('getAssetArrivalApplicationImages', record.id)
     const source = unwrapData(result)
     const resultObject = toObject(source)
-    const rows = Array.isArray(source) ? source : getArray(resultObject.list ?? resultObject.records)
+    const rows = Array.isArray(source)
+      ? source
+      : getArray(resultObject.list ?? resultObject.records)
     if (rows.length) imageItems.value = rows.map(normalizeImage)
   } catch {
     // 影像接口缺失时保留结构化 Mock 影像，页面仍可正常演示。

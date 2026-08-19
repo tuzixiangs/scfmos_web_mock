@@ -14,7 +14,7 @@
     <el-collapse v-if="detail" v-model="activeSections" class="system-detail-collapse">
       <el-collapse-item name="contract">
         <template #title>
-          <span class="collapse-title">业务合同基本信息</span>
+          <span class="collapse-title">放款及业务合同基本信息</span>
         </template>
         <div class="collapse-content">
           <el-form
@@ -23,6 +23,35 @@
             size="small"
             class="readonly-detail-form"
           >
+            <el-row :gutter="48">
+              <el-col :span="12">
+                <el-form-item label="放款流水号">
+                  <el-input :model-value="detail.disbursementFlowNo || '-'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="放款金额">
+                  <el-input :model-value="formatAmount(detail.disbursementAmount)" disabled>
+                    <template #append>{{ detail.currency }}</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="48">
+              <el-col :span="12">
+                <el-form-item label="放款日期">
+                  <el-input :model-value="detail.disbursementDate || '-'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="产品方案">
+                  <el-input
+                    :model-value="detail.productPlan || detail.productScheme || '-'"
+                    disabled
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-row :gutter="48">
               <el-col :span="12">
                 <el-form-item label="业务合同编号">

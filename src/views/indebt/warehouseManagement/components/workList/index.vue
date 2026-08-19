@@ -50,16 +50,38 @@
     <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="110px">
       <div class="warehouse-form-grid">
         <el-form-item label="项目名称" prop="projectName">
-          <el-input v-model.trim="createForm.projectName" placeholder="请输入项目名称" />
+          <el-select
+            v-model="selectedProjectId"
+            class="w-full"
+            filterable
+            :loading="projectsLoading"
+            placeholder="请选择有效项目"
+            @change="handleProjectChange"
+          >
+            <el-option
+              v-for="project in effectiveProjects"
+              :key="project.id"
+              :label="`${project.projectName}（${project.projectNo}）`"
+              :value="project.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="项目编号" prop="projectNo">
-          <el-input v-model.trim="createForm.projectNo" placeholder="请输入项目编号" />
+          <el-input v-model.trim="createForm.projectNo" disabled placeholder="选择项目后自动反显" />
         </el-form-item>
         <el-form-item label="核心企业名称" prop="coreEnterpriseName">
-          <el-input v-model.trim="createForm.coreEnterpriseName" placeholder="请输入核心企业名称" />
+          <el-input
+            v-model.trim="createForm.coreEnterpriseName"
+            disabled
+            placeholder="选择项目后自动反显"
+          />
         </el-form-item>
         <el-form-item label="核心客户编号" prop="coreCustomerNo">
-          <el-input v-model.trim="createForm.coreCustomerNo" placeholder="请输入核心客户编号" />
+          <el-input
+            v-model.trim="createForm.coreCustomerNo"
+            disabled
+            placeholder="选择项目后自动反显"
+          />
         </el-form-item>
         <el-form-item label="监管方企业名称" prop="regulatorEnterpriseName">
           <el-input
@@ -111,18 +133,32 @@
           {{ detailRecord.status }}
         </el-tag>
       </el-descriptions-item>
-      <el-descriptions-item label="核心企业名称">{{ detailRecord.coreEnterpriseName }}</el-descriptions-item>
-      <el-descriptions-item label="核心客户编号">{{ detailRecord.coreCustomerNo }}</el-descriptions-item>
+      <el-descriptions-item label="核心企业名称">{{
+        detailRecord.coreEnterpriseName
+      }}</el-descriptions-item>
+      <el-descriptions-item label="核心客户编号">{{
+        detailRecord.coreCustomerNo
+      }}</el-descriptions-item>
       <el-descriptions-item label="项目名称">{{ detailRecord.projectName }}</el-descriptions-item>
       <el-descriptions-item label="项目编号">{{ detailRecord.projectNo }}</el-descriptions-item>
-      <el-descriptions-item label="监管方企业名称">{{ detailRecord.regulatorEnterpriseName }}</el-descriptions-item>
+      <el-descriptions-item label="监管方企业名称">{{
+        detailRecord.regulatorEnterpriseName
+      }}</el-descriptions-item>
       <el-descriptions-item label="仓库名称">{{ detailRecord.warehouseName }}</el-descriptions-item>
       <el-descriptions-item label="仓库代码">{{ detailRecord.warehouseCode }}</el-descriptions-item>
       <el-descriptions-item label="仓库类型">{{ detailRecord.warehouseType }}</el-descriptions-item>
-      <el-descriptions-item label="保险到期日">{{ detailRecord.insuranceExpiryDate || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="申请日期">{{ detailRecord.applicationDate }}</el-descriptions-item>
-      <el-descriptions-item label="当前阶段">{{ detailRecord.currentStage || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="完成时间">{{ detailRecord.completedAt || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="保险到期日">{{
+        detailRecord.insuranceExpiryDate || '-'
+      }}</el-descriptions-item>
+      <el-descriptions-item label="申请日期">{{
+        detailRecord.applicationDate
+      }}</el-descriptions-item>
+      <el-descriptions-item label="当前阶段">{{
+        detailRecord.currentStage || '-'
+      }}</el-descriptions-item>
+      <el-descriptions-item label="完成时间">{{
+        detailRecord.completedAt || '-'
+      }}</el-descriptions-item>
     </el-descriptions>
   </el-dialog>
 
@@ -144,7 +180,9 @@
     </el-form>
     <template #footer>
       <el-button @click="signOpinionVisible = false">取 消</el-button>
-      <el-button type="primary" :loading="signOpinionLoading" @click="handleSignOpinion">确 定</el-button>
+      <el-button type="primary" :loading="signOpinionLoading" @click="handleSignOpinion"
+        >确 定</el-button
+      >
     </template>
   </el-dialog>
 
@@ -200,7 +238,11 @@
           <strong>{{ image.name }}</strong>
           <p>{{ image.description }}</p>
         </div>
-        <el-button link type="primary" @click="ElMessage.info('当前为 Mock 演示影像，可在详情页接入实际影像系统')">
+        <el-button
+          link
+          type="primary"
+          @click="ElMessage.info('当前为 Mock 演示影像，可在详情页接入实际影像系统')"
+        >
           预览
         </el-button>
       </div>
@@ -347,6 +389,9 @@ const { getList, setSearchParams } = tableMethods
 const createVisible = ref(false)
 const createLoading = ref(false)
 const createFormRef = ref<FormInstance>()
+const selectedProjectId = ref<number | string | ''>('')
+const projectsLoading = ref(false)
+const effectiveProjects = ref<WarehouseManagementApi.EffectiveSupplyChainProject[]>([])
 const detailVisible = ref(false)
 const detailRecord = ref<WarehouseApplicationRecord>()
 const signOpinionVisible = ref(false)
@@ -374,10 +419,10 @@ const initialCreateForm = (): WarehouseApplicationCreateForm => ({
 
 const createForm = reactive<WarehouseApplicationCreateForm>(initialCreateForm())
 const createRules: FormRules<WarehouseApplicationCreateForm> = {
-  projectName: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
-  projectNo: [{ required: true, message: '请输入项目编号', trigger: 'blur' }],
-  coreEnterpriseName: [{ required: true, message: '请输入核心企业名称', trigger: 'blur' }],
-  coreCustomerNo: [{ required: true, message: '请输入核心客户编号', trigger: 'blur' }],
+  projectName: [{ required: true, message: '请选择有效项目', trigger: 'change' }],
+  projectNo: [{ required: true, message: '请选择有效项目', trigger: 'change' }],
+  coreEnterpriseName: [{ required: true, message: '请选择有效项目', trigger: 'change' }],
+  coreCustomerNo: [{ required: true, message: '请选择有效项目', trigger: 'change' }],
   regulatorEnterpriseName: [{ required: true, message: '请输入监管方企业名称', trigger: 'blur' }],
   warehouseName: [{ required: true, message: '请输入仓库名称', trigger: 'blur' }],
   warehouseCode: [{ required: true, message: '请输入仓库代码', trigger: 'blur' }],
@@ -430,8 +475,35 @@ const handleSearch = (params: Recordable) => {
   setSearchParams({ ...params, phase: currentPhase.value })
 }
 
-const openCreate = () => {
+const handleProjectChange = (id: number | string) => {
+  const project = effectiveProjects.value.find((item) => String(item.id) === String(id))
+  if (!project) return
+  Object.assign(createForm, {
+    projectName: project.projectName,
+    projectNo: project.projectNo,
+    coreEnterpriseName: project.coreEnterpriseName,
+    coreCustomerNo: project.coreCustomerNo
+  })
+  createFormRef.value?.clearValidate([
+    'projectName',
+    'projectNo',
+    'coreEnterpriseName',
+    'coreCustomerNo'
+  ])
+}
+
+const openCreate = async () => {
   Object.assign(createForm, initialCreateForm())
+  selectedProjectId.value = ''
+  projectsLoading.value = true
+  try {
+    effectiveProjects.value = await WarehouseManagementApi.getEffectiveSupplyChainProjects()
+  } catch {
+    effectiveProjects.value = []
+    ElMessage.error('获取有效项目失败')
+  } finally {
+    projectsLoading.value = false
+  }
   createFormRef.value?.clearValidate()
   createVisible.value = true
 }
@@ -440,7 +512,10 @@ const isFailedResult = (result: unknown): result is { success: false; message?: 
   typeof result === 'object' && result !== null && 'success' in result && result.success === false
 
 const handleCreate = async () => {
-  const valid = await createFormRef.value?.validate().then(() => true).catch(() => false)
+  const valid = await createFormRef.value
+    ?.validate()
+    .then(() => true)
+    .catch(() => false)
   if (!valid) return
 
   createLoading.value = true

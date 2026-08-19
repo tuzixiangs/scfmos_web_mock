@@ -1,6 +1,10 @@
 import request from '@/config/axios'
 
-export type DebtRulePageType = 'supplementApply' | 'supplementApproval' | 'ruleMaintenance' | 'ruleLibrary'
+export type DebtRulePageType =
+  | 'supplementApply'
+  | 'supplementApproval'
+  | 'ruleMaintenance'
+  | 'ruleLibrary'
 
 export interface DebtRuleRecord {
   id: number
@@ -26,10 +30,17 @@ export interface DebtRuleRecord {
   warningHandlingPlan?: string
   ruleRequirement?: string
   factorModificationControl?: string
+  priceDecayCycle?: string
+  priceDecayRate?: string
+  priceDecayFormula?: string
+  priceDecayEnabled?: string
   ruleStatus?: string
   updatedBy?: string
   updatedAt?: string
 }
 
-export const getDebtRuleRecords = (params: { type: DebtRulePageType; status?: string; productPlan?: string }) =>
-  request.get<DebtRuleRecord[]>({ url: '/system/indebt/debt-rules/page', params })
+export const getDebtRuleRecords = (params: {
+  type: DebtRulePageType
+  status?: string
+  productPlan?: string
+}) => request.get<DebtRuleRecord[]>({ url: '/system/indebt/debt-rules/page', params })

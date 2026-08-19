@@ -1,6 +1,6 @@
 import request from '@/config/axios'
 
-/** 页面左侧的两个业务节点：待修改合同与已提交的修改记录。 */
+/** 页面左侧的两个业务节点：待提交债项数据与已提交的修改记录。 */
 export type OrderContractModificationNode = 'active' | 'records'
 
 export type OrderContractStatus = '有效' | '失效'
@@ -87,7 +87,11 @@ export interface OrderContractModificationRecord {
   coreCustomerNo: string
   projectName: string
   projectNo: string
+  creditNo?: string
   businessContractNo: string
+  disbursementFlowNo?: string
+  disbursementAmount?: number
+  disbursementDate?: string
   modifier?: string
   modifiedAt?: string
   submittedAt?: string
@@ -111,7 +115,11 @@ export interface OrderContractModificationQuery {
   orderContractNo?: string
   customerName?: string
   coreCustomerNo?: string
+  projectName?: string
+  projectNo?: string
+  creditNo?: string
   businessContractNo?: string
+  disbursementFlowNo?: string
   contractStatus?: OrderContractStatus
   modificationStatus?: OrderContractModificationStatus
 }
@@ -125,10 +133,12 @@ export interface OrderContractModificationPageResult {
 }
 
 /**
- * “新增”时优先传入 sourceContractId，从当前有效合同复制基础数据；其余字段可作为预填后的覆盖值。
+ * “新增”时传入已完成放款记录，系统复制项目、授信、合同和债项数据。
  */
 export interface OrderContractModificationCreateForm {
   sourceContractId?: number
+  sourceDisbursementId?: number
+  disbursementFlowNo?: string
   orderContractNo?: string
   partyOne?: string
   partyTwo?: string
@@ -181,21 +191,21 @@ export interface OrderContractBatchSubmitResult {
   message?: string
 }
 
-/** 待修改订单/合同信息列表。 */
+/** 待提交债项数据修改列表。 */
 export const getOrderContractModificationPage = (params: OrderContractModificationQuery) =>
   request.get<OrderContractModificationPageResult>({
     url: '/system/indebt/order-contract-modifications/page',
     params: { ...params, node: 'active' }
   })
 
-/** 已提交后的订单/合同信息修改记录列表。 */
+/** 已提交后的债项数据修改记录列表。 */
 export const getOrderContractModificationRecordPage = (params: OrderContractModificationQuery) =>
   request.get<OrderContractModificationPageResult>({
     url: '/system/indebt/order-contract-modifications/records/page',
     params: { ...params, node: 'records' }
   })
 
-/** 供“新增”弹窗选择当前有效订单/合同。 */
+/** 供“新增”弹窗选择已完成放款记录。 */
 export const getAvailableOrderContracts = () =>
   request.get<OrderContractModificationRecord[]>({
     url: '/system/indebt/order-contract-modifications/available-contracts'
@@ -210,13 +220,19 @@ export const createOrderContractModification = (data: OrderContractModificationC
     data
   })
 
-export const getOrderContractModificationDetail = (id: number, node: OrderContractModificationNode = 'active') =>
+export const getOrderContractModificationDetail = (
+  id: number,
+  node: OrderContractModificationNode = 'active'
+) =>
   request.get<OrderContractModificationDetail>({
     url: '/system/indebt/order-contract-modifications/detail',
     params: { id, node }
   })
 
-export const updateOrderContractModification = (id: number, data: OrderContractModificationUpdateForm) =>
+export const updateOrderContractModification = (
+  id: number,
+  data: OrderContractModificationUpdateForm
+) =>
   request.put<OrderContractModificationMutationResult>({
     url: '/system/indebt/order-contract-modifications/update',
     data: { id, ...data }
@@ -242,14 +258,21 @@ export const createOrderContractItem = (modificationId: number, data: OrderContr
     data: { modificationId, ...data }
   })
 
-export const updateOrderContractItem = (modificationId: number, itemId: number, data: Partial<OrderContractItemForm>) =>
+export const updateOrderContractItem = (
+  modificationId: number,
+  itemId: number,
+  data: Partial<OrderContractItemForm>
+) =>
   request.put<OrderContractItemMutationResult>({
     url: '/system/indebt/order-contract-modifications/item/update',
     data: { modificationId, itemId, ...data }
   })
 
 /** 明细编辑表格一次性保存时使用；服务端会重新计算每条明细的总金额。 */
-export const updateOrderContractModificationItems = (modificationId: number, items: OrderContractItemForm[]) =>
+export const updateOrderContractModificationItems = (
+  modificationId: number,
+  items: OrderContractItemForm[]
+) =>
   request.put<OrderContractItemMutationResult>({
     url: '/system/indebt/order-contract-modifications/items/update',
     data: { modificationId, items }
@@ -261,7 +284,10 @@ export const deleteOrderContractItem = (modificationId: number, itemId: number) 
     data: { modificationId, itemId }
   })
 
-export const getOrderContractModificationImages = (modificationId: number, node: OrderContractModificationNode = 'active') =>
+export const getOrderContractModificationImages = (
+  modificationId: number,
+  node: OrderContractModificationNode = 'active'
+) =>
   request.get<OrderContractModificationImage[]>({
     url: '/system/indebt/order-contract-modifications/images',
     params: { modificationId, node }

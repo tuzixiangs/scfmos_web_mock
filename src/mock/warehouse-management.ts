@@ -92,7 +92,7 @@ export const warehouseApplicationRecords: WarehouseApplicationRecord[] = [
     applicationDate: '2026-07-18',
     phase: 'reviewing',
     status: '审查审批中',
-    currentStage: '运营管理部审查',
+    currentStage: '分行债项管理岗审批',
     opinions: [
       {
         id: 1,
@@ -117,7 +117,7 @@ export const warehouseApplicationRecords: WarehouseApplicationRecord[] = [
     applicationDate: '2026-07-16',
     phase: 'reviewing',
     status: '审查审批中',
-    currentStage: '授信审批委员会审批',
+    currentStage: '分行债项管理岗审批',
     opinions: [
       {
         id: 2,
@@ -220,7 +220,7 @@ export const submitWarehouseApplicationRecord = (id: number | string) => {
 
   record.status = '审查审批中'
   record.phase = 'reviewing'
-  record.currentStage = '运营管理部审查'
+  record.currentStage = '分行债项管理岗审批'
   record.completedAt = undefined
   return record
 }
@@ -247,8 +247,14 @@ export const updateWarehouseApplicationRecord = (
   const record = getWarehouseApplicationRecord(id)
   if (!record || record.phase !== 'pending') return undefined
   const fields: (keyof WarehouseApplicationCreatePayload)[] = [
-    'coreEnterpriseName', 'coreCustomerNo', 'projectName', 'projectNo',
-    'regulatorEnterpriseName', 'warehouseName', 'warehouseCode', 'warehouseType',
+    'coreEnterpriseName',
+    'coreCustomerNo',
+    'projectName',
+    'projectNo',
+    'regulatorEnterpriseName',
+    'warehouseName',
+    'warehouseCode',
+    'warehouseType',
     'insuranceExpiryDate'
   ]
   fields.forEach((field) => {

@@ -98,6 +98,8 @@ export interface InventoryPriceApplicationQuery {
   applicationNo?: string
   projectNo?: string
   projectName?: string
+  coreEnterpriseName?: string
+  coreCustomerNo?: string
   smallCategory?: string
   origin?: string
 }
@@ -204,7 +206,10 @@ export const getInventoryPriceApplicationDetail = (id: number) =>
   })
 
 /** 保存详情中可编辑的“本次盯市单价”和“盯市来源”。 */
-export const updateInventoryPriceApplication = (id: number, data: InventoryPriceApplicationUpdateForm) =>
+export const updateInventoryPriceApplication = (
+  id: number,
+  data: InventoryPriceApplicationUpdateForm
+) =>
   request.put<InventoryPriceMutationResult>({
     url: '/system/indebt/inventory-price-applications/update',
     data: { id, ...data }

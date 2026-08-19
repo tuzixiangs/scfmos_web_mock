@@ -66,12 +66,24 @@
       class="create-project-form"
     >
       <div class="arrival-form-grid">
-        <el-form-item label="项目名称" prop="projectId">
+        <el-form-item label="入库类型" prop="inboundType">
+          <el-select
+            v-model="createForm.inboundType"
+            class="w-full"
+            placeholder="请先选择入库类型"
+            @change="handleInboundTypeChange"
+          >
+            <el-option label="部分入库" value="部分入库" />
+            <el-option label="全部入库" value="全部入库" />
+            <el-option label="动态补货" value="动态补货" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="放款流水号" prop="disbursementFlowNo">
           <el-input
-            v-model="createForm.projectName"
+            v-model="createForm.disbursementFlowNo"
             readonly
             class="project-picker-input"
-            placeholder="请选择项目"
+            placeholder="点击选择已完成放款记录"
             @click="openProjectPicker"
           >
             <template #suffix>
@@ -79,40 +91,39 @@
             </template>
           </el-input>
         </el-form-item>
+        <el-form-item label="项目名称" prop="projectId">
+          <el-input
+            v-model="createForm.projectName"
+            readonly
+            placeholder="选择放款流水后自动反显"
+          />
+        </el-form-item>
         <el-form-item label="项目编号" prop="projectNo">
-          <el-input v-model="createForm.projectNo" readonly placeholder="选择项目后自动反显" />
+          <el-input v-model="createForm.projectNo" readonly placeholder="选择放款流水后自动反显" />
         </el-form-item>
         <el-form-item label="链属客户名称" prop="linkedCustomerName">
           <el-input
             v-model="createForm.linkedCustomerName"
             readonly
-            placeholder="选择项目后自动反显"
+            placeholder="选择放款流水后自动反显"
           />
         </el-form-item>
         <el-form-item label="授信编号" prop="creditNo">
-          <el-input v-model="createForm.creditNo" readonly placeholder="选择项目后自动反显" />
+          <el-input v-model="createForm.creditNo" readonly placeholder="选择放款流水后自动反显" />
         </el-form-item>
         <el-form-item label="产品方案" prop="productPlan">
-          <el-input v-model="createForm.productPlan" readonly placeholder="选择项目后自动反显" />
+          <el-input
+            v-model="createForm.productPlan"
+            readonly
+            placeholder="选择放款流水后自动反显"
+          />
         </el-form-item>
         <el-form-item label="业务合同编号" prop="businessContractNo">
           <el-input
             v-model="createForm.businessContractNo"
             readonly
-            class="contract-picker-input"
-            placeholder="请选择业务合同编号"
-            @click="openBusinessContractPicker"
-          >
-            <template #suffix>
-              <Icon icon="ep:search" />
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item label="入库类型" prop="inboundType">
-          <el-select v-model="createForm.inboundType" class="w-full" placeholder="请选择入库类型">
-            <el-option label="部分入库" value="部分入库" />
-            <el-option label="已完成入库" value="已完成入库" />
-          </el-select>
+            placeholder="选择放款流水后自动反显"
+          />
         </el-form-item>
       </div>
     </el-form>
@@ -123,50 +134,8 @@
   </el-dialog>
 
   <el-dialog
-    v-model="businessContractPickerVisible"
-    title="选择业务合同编号"
-    width="860px"
-    append-to-body
-    destroy-on-close
-    :close-on-click-modal="false"
-  >
-    <el-alert
-      :title="`当前项目：${createForm.projectName || '-'}。点击合同所在行后，仅反显业务合同编号。`"
-      type="info"
-      :closable="false"
-      class="mb-16px"
-    />
-    <div class="contract-query-row mb-16px">
-      <el-input v-model.trim="businessContractKeyword" clearable placeholder="请输入业务合同编号" />
-      <el-button @click="filterBusinessContracts">
-        <Icon icon="ep:search" class="mr-4px" />查询合同
-      </el-button>
-    </div>
-    <el-table
-      :data="filteredBusinessContracts"
-      border
-      highlight-current-row
-      max-height="420"
-      @row-click="selectBusinessContract"
-    >
-      <el-table-column prop="businessContractNo" label="业务合同编号" min-width="190" />
-      <el-table-column label="合同金额" min-width="155" align="right">
-        <template #default="{ row }">{{ formatAmount(row.contractAmount) }}</template>
-      </el-table-column>
-      <el-table-column prop="contractStartDate" label="合同起始日" min-width="135" />
-      <el-table-column prop="contractEndDate" label="合同到期日" min-width="135" />
-      <el-table-column prop="inboundType" label="入库类型" min-width="115" />
-    </el-table>
-    <el-empty
-      v-if="!filteredBusinessContracts.length"
-      :image-size="72"
-      description="未找到符合条件的业务合同"
-    />
-  </el-dialog>
-
-  <el-dialog
     v-model="projectPickerVisible"
-    title="选择有效项目"
+    title="选择已完成放款记录"
     width="1080px"
     top="8vh"
     append-to-body
@@ -174,7 +143,11 @@
     :close-on-click-modal="false"
   >
     <el-alert
-      title="请选择仍有待确认资产且未存在在途入库申请的有效项目。"
+      :title="
+        createForm.inboundType === '动态补货'
+          ? '仅展示已完成全部入库且债项规则采用动态控制的放款记录。'
+          : '仅展示尚未标记全部入库、且不存在在途入库申请的放款记录。'
+      "
       type="info"
       :closable="false"
       class="mb-16px"
@@ -193,7 +166,7 @@
         @keyup.enter="loadAvailableProjects"
       />
       <el-button :loading="projectsLoading" @click="loadAvailableProjects">
-        <Icon icon="ep:search" class="mr-4px" />查询项目
+        <Icon icon="ep:search" class="mr-4px" />查询放款
       </el-button>
     </div>
     <div class="project-picker" v-loading="projectsLoading">
@@ -216,6 +189,7 @@
             </el-radio>
           </template>
         </el-table-column>
+        <el-table-column prop="disbursementFlowNo" label="放款流水号" min-width="175" />
         <el-table-column prop="projectName" label="项目名称" min-width="155" />
         <el-table-column prop="projectNo" label="项目编号" min-width="155" />
         <el-table-column prop="linkedCustomerName" label="链属客户名称" min-width="170" />
@@ -226,7 +200,7 @@
       <el-empty
         v-if="!projectsLoading && !availableProjects.length"
         :image-size="72"
-        description="未找到可新增入库申请的有效项目"
+        description="未找到符合当前入库类型的放款记录"
       />
     </div>
     <template #footer>
@@ -350,6 +324,7 @@ interface AssetManagementRecord {
   projectName: string
   projectNo: string
   creditNo: string
+  disbursementFlowNo: string
   productPlan: string
   businessContractNo: string
   businessContractAmount: number
@@ -374,6 +349,7 @@ interface AvailableProject {
   projectNo: string
   linkedCustomerName: string
   creditNo: string
+  disbursementFlowNo: string
   productPlan: string
   businessContractNo: string
   contractAmount: number
@@ -387,7 +363,7 @@ interface BusinessContractOption {
   contractAmount: number
   contractStartDate: string
   contractEndDate: string
-  inboundType: '部分入库' | '已完成入库'
+  inboundType: '部分入库' | '全部入库' | '动态补货'
 }
 
 interface AssetManagementPageResult {
@@ -406,7 +382,8 @@ interface CreateForm {
   creditNo: string
   productPlan: string
   businessContractNo: string
-  inboundType: '部分入库' | '已完成入库' | ''
+  disbursementFlowNo: string
+  inboundType: '部分入库' | '全部入库' | '动态补货' | ''
 }
 
 interface ImageFile {
@@ -523,6 +500,7 @@ const normalizeRecord = (
     projectName: toText(record.projectName),
     projectNo: toText(record.projectNo ?? record.projectCode),
     creditNo: toText(record.creditNo ?? record.creditNumber ?? record.creditApplyNo),
+    disbursementFlowNo: toText(record.disbursementFlowNo ?? record.loanFlowNo ?? record.drawdownNo),
     productPlan: toText(record.productPlan ?? record.productPlanName ?? record.productScheme),
     businessContractNo: toText(
       record.businessContractNo ??
@@ -571,6 +549,9 @@ const normalizeProject = (value: unknown): AvailableProject => {
       project.linkedCustomerName ?? project.chainCustomerName ?? project.customerName
     ),
     creditNo: toText(project.creditNo ?? project.creditNumber ?? project.creditApplyNo),
+    disbursementFlowNo: toText(
+      project.disbursementFlowNo ?? project.loanFlowNo ?? project.drawdownNo
+    ),
     productPlan: toText(project.productPlan ?? project.productPlanName ?? project.productScheme),
     businessContractNo: toText(
       project.businessContractNo ?? project.contractNo ?? project.businessAgreementNo
@@ -619,11 +600,18 @@ const crudSchemas = reactive<CrudSchema[]>([
     search: { componentProps: { placeholder: '请输入核心客户编号' } }
   },
   { label: '产品方案', field: 'productPlan', minWidth: 145 },
+  {
+    label: '放款流水号',
+    field: 'disbursementFlowNo',
+    minWidth: 180,
+    isSearch: true,
+    search: { componentProps: { placeholder: '请输入放款流水号' } }
+  },
   { label: '关联业务合同编号', field: 'businessContractNo', minWidth: 180 },
-  { label: '出账金额', field: 'outboundAmount', minWidth: 140 },
-  { label: '出账日期', field: 'billingDate', minWidth: 130 },
+  { label: '放款金额', field: 'outboundAmount', minWidth: 140 },
+  { label: '放款日期', field: 'billingDate', minWidth: 130 },
   { label: '入库截止日期', field: 'arrivalDeadline', minWidth: 145 },
-  { label: '入库货值', field: 'inboundValue', minWidth: 135 },
+  { label: '初始认定总价值', field: 'inboundValue', minWidth: 155 },
   { label: '币种', field: 'currency', minWidth: 105 },
   { label: '申请日期', field: 'applicationDate', minWidth: 130 },
   { label: '入库类型', field: 'inboundType', minWidth: 125 },
@@ -637,6 +625,7 @@ const pendingFields = new Set([
   'customerName',
   'coreCustomerNo',
   'productPlan',
+  'disbursementFlowNo',
   'businessContractNo',
   'outboundAmount',
   'billingDate',
@@ -648,6 +637,7 @@ const reviewingAndApprovedFields = new Set([
   'customerName',
   'coreCustomerNo',
   'productPlan',
+  'disbursementFlowNo',
   'businessContractNo',
   'inboundValue',
   'currency',
@@ -724,12 +714,13 @@ const initialCreateForm = (): CreateForm => ({
   creditNo: '',
   productPlan: '',
   businessContractNo: '',
-  inboundType: '部分入库'
+  disbursementFlowNo: '',
+  inboundType: ''
 })
 const createForm = reactive<CreateForm>(initialCreateForm())
 const createRules: FormRules<CreateForm> = {
-  projectId: [{ required: true, message: '请选择一个有效项目', trigger: 'change' }],
-  businessContractNo: [{ required: true, message: '请选择业务合同编号', trigger: 'change' }],
+  projectId: [{ required: true, message: '请选择一笔已完成放款记录', trigger: 'change' }],
+  disbursementFlowNo: [{ required: true, message: '请选择放款流水号', trigger: 'change' }],
   inboundType: [{ required: true, message: '请选择入库类型', trigger: 'change' }]
 }
 
@@ -775,7 +766,8 @@ const loadAvailableProjects = async () => {
       {
         projectName: projectKeyword.value.trim() || undefined,
         linkedCustomerName: linkedCustomerKeyword.value.trim() || undefined,
-        customerName: linkedCustomerKeyword.value.trim() || undefined
+        customerName: linkedCustomerKeyword.value.trim() || undefined,
+        inboundType: createForm.inboundType || undefined
       }
     )
     const source = unwrapData(result)
@@ -797,7 +789,7 @@ const selectProjectCandidate = (project: AvailableProject) => {
 const confirmProjectSelection = () => {
   const project = selectedProject.value
   if (!project) {
-    ElMessage.warning('请先选择一个有效项目')
+    ElMessage.warning('请先选择一笔放款记录')
     return
   }
   Object.assign(createForm, {
@@ -806,11 +798,13 @@ const confirmProjectSelection = () => {
     projectNo: project.projectNo,
     linkedCustomerName: project.linkedCustomerName,
     creditNo: project.creditNo,
+    disbursementFlowNo: project.disbursementFlowNo,
     productPlan: project.productPlan,
     businessContractNo: project.businessContractNo
   })
   projectPickerVisible.value = false
   createFormRef.value?.validateField('projectId')
+  createFormRef.value?.validateField('disbursementFlowNo')
 }
 
 const buildBusinessContractOptions = (project: AvailableProject): BusinessContractOption[] => {
@@ -830,7 +824,7 @@ const buildBusinessContractOptions = (project: AvailableProject): BusinessContra
       contractAmount: Number((project.contractAmount - firstAmount).toFixed(2)),
       contractStartDate: project.contractStartDate,
       contractEndDate: project.contractEndDate,
-      inboundType: '已完成入库'
+      inboundType: '全部入库'
     }
   ]
 }
@@ -860,6 +854,10 @@ const selectBusinessContract = (contract: BusinessContractOption) => {
 }
 
 const openProjectPicker = async () => {
+  if (!createForm.inboundType) {
+    ElMessage.warning('请先选择入库类型')
+    return
+  }
   selectedProject.value = createForm.projectId
     ? {
         id: createForm.projectId,
@@ -867,6 +865,7 @@ const openProjectPicker = async () => {
         projectNo: createForm.projectNo,
         linkedCustomerName: createForm.linkedCustomerName,
         creditNo: createForm.creditNo,
+        disbursementFlowNo: createForm.disbursementFlowNo,
         productPlan: createForm.productPlan,
         businessContractNo: createForm.businessContractNo,
         contractAmount: selectedProject.value?.contractAmount || 0,
@@ -894,6 +893,21 @@ const openCreate = () => {
   createVisible.value = true
 }
 
+const handleInboundTypeChange = () => {
+  Object.assign(createForm, {
+    projectId: '',
+    projectName: '',
+    projectNo: '',
+    linkedCustomerName: '',
+    creditNo: '',
+    productPlan: '',
+    businessContractNo: '',
+    disbursementFlowNo: ''
+  })
+  selectedProject.value = undefined
+  availableProjects.value = []
+}
+
 const handleCreate = async () => {
   const valid = await createFormRef.value
     ?.validate()
@@ -906,6 +920,7 @@ const handleCreate = async () => {
     const result = await callApi<unknown>('createAssetManagementApplication', {
       projectId: Number(createForm.projectId),
       inboundType: createForm.inboundType,
+      disbursementFlowNo: createForm.disbursementFlowNo,
       businessContractNo: createForm.businessContractNo
     })
     if (isFailedResult(result)) {

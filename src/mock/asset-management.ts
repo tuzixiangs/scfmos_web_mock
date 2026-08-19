@@ -5,7 +5,7 @@ export type AssetManagementApplicationStatus =
   | '审查审批中'
   | '被否决'
   | '审批通过'
-export type AssetManagementInboundType = '部分入库' | '已完成入库'
+export type AssetManagementInboundType = '部分入库' | '全部入库' | '动态补货'
 export type AssetManagementCurrency = '人民币' | '美元' | '欧元'
 
 export interface AssetManagementApplicationImage {
@@ -84,6 +84,7 @@ export interface AssetManagementProject {
   productScheme: string
   productPlan?: string
   creditNo: string
+  disbursementFlowNo?: string
   businessContractNo: string
   businessContractName: string
   contractAmount: number
@@ -100,6 +101,8 @@ export interface AssetManagementProject {
   arrivalDate?: string
   inboundDate?: string
   isEffective: boolean
+  allInboundCompleted?: boolean
+  dynamicControlEnabled?: boolean
 }
 
 export interface AssetManagementApplicationRecord {
@@ -114,6 +117,7 @@ export interface AssetManagementApplicationRecord {
   productScheme: string
   productPlan: string
   creditNo: string
+  disbursementFlowNo: string
   relatedBusinessContractNo: string
   businessContractNo: string
   businessContractName: string
@@ -149,6 +153,7 @@ export interface AssetManagementApplicationRecord {
 export interface AssetManagementApplicationCreatePayload {
   projectId?: number | string
   inboundType?: AssetManagementInboundType
+  disbursementFlowNo?: string
   businessContractNo?: string
 }
 
@@ -195,6 +200,11 @@ const numberValue = (value: unknown, fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 const amount = (value: unknown, fallback = 0) => Number(numberValue(value, fallback).toFixed(2))
+const projectDisbursementFlowNo = (
+  project: Pick<AssetManagementProject, 'id' | 'disbursementDate' | 'disbursementFlowNo'>
+) =>
+  project.disbursementFlowNo ||
+  `FK${project.disbursementDate.replaceAll('-', '')}${String(project.id).padStart(4, '0')}`
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const now = () => new Date().toLocaleString('sv-SE').replace('T', ' ')
 const today = () => now().slice(0, 10)
@@ -420,7 +430,9 @@ export const assetManagementAvailableProjects: AssetManagementProject[] = [
     disbursementAmount: 5600000,
     disbursementDate: '2026-07-20',
     arrivalDeadline: '2026-07-30',
-    isEffective: true
+    isEffective: true,
+    allInboundCompleted: true,
+    dynamicControlEnabled: true
   },
   {
     id: 7,
@@ -580,6 +592,7 @@ const fromProject = (
     productScheme: project.productScheme,
     productPlan: project.productPlan || project.productScheme,
     creditNo: project.creditNo,
+    disbursementFlowNo: projectDisbursementFlowNo(project),
     relatedBusinessContractNo: project.businessContractNo,
     businessContractNo: project.businessContractNo,
     businessContractName: project.businessContractName,
@@ -620,6 +633,7 @@ export const withAssetManagementProjectAliases = (
   ...project,
   linkedCustomerName: project.linkedCustomerName || project.customerName,
   productPlan: project.productPlan || project.productScheme,
+  disbursementFlowNo: projectDisbursementFlowNo(project),
   businessContractAmount: project.businessContractAmount || project.contractAmount,
   outboundAmount: project.outboundAmount || project.disbursementAmount,
   billingDate: project.billingDate || project.disbursementDate,
@@ -658,7 +672,7 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
     applicationNo: 'AMA202607200002',
     inboundGoodsValue: 12000000,
     applicationDate: '2026-07-20',
-    inboundType: '已完成入库',
+    inboundType: '全部入库',
     phase: 'rejected',
     status: '被否决',
     currentStage: '已退回',
@@ -685,7 +699,7 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
       flow(2, '客户经理', '提交申请', '李敏', '2026-07-20 16:00:00'),
       flow(
         3,
-        '运营管理部审查',
+        '经营单位负责人审批',
         '审批否决',
         '运营管理部',
         '2026-07-21 10:25:00',
@@ -698,10 +712,10 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
     applicationNo: 'AMA202607180003',
     inboundGoodsValue: 7600000,
     applicationDate: '2026-07-18',
-    inboundType: '已完成入库',
+    inboundType: '全部入库',
     phase: 'reviewing',
     status: '审查审批中',
-    currentStage: '运营管理部审查',
+    currentStage: '经营单位负责人审批',
     images: [
       {
         id: 1,
@@ -724,7 +738,7 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
       flow(2, '客户经理', '提交申请', '王磊', '2026-07-18 11:00:00'),
       flow(
         3,
-        '运营管理部审查',
+        '经营单位负责人审批',
         '签署意见',
         '运营管理部',
         '2026-07-19 11:20:00',
@@ -740,7 +754,7 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
     inboundType: '部分入库',
     phase: 'reviewing',
     status: '审查审批中',
-    currentStage: '授信审批委员会审批',
+    currentStage: '贷后管理岗审批',
     images: [],
     opinions: [
       {
@@ -768,7 +782,7 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
     applicationNo: 'AMA202607120005',
     inboundGoodsValue: 5000000,
     applicationDate: '2026-07-12',
-    inboundType: '已完成入库',
+    inboundType: '全部入库',
     phase: 'approved',
     status: '审批通过',
     currentStage: '审批完成',
@@ -786,7 +800,7 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
       {
         id: 1,
         content: '入库货值与实际出账金额匹配，同意入库。',
-        signer: '授信审批委员会',
+        signer: '贷后管理岗',
         signedAt: '2026-07-15 16:30:00'
       }
     ],
@@ -795,9 +809,9 @@ export const assetManagementApplicationRecords: AssetManagementApplicationRecord
       flow(2, '客户经理', '提交申请', '周毅', '2026-07-12 10:15:00'),
       flow(
         3,
-        '授信审批委员会',
+        '贷后管理岗',
         '审批通过',
-        '授信审批委员会',
+        '贷后管理岗',
         '2026-07-15 16:30:00',
         '入库货值与实际出账金额匹配，同意入库。'
       )
@@ -918,7 +932,25 @@ export const createAssetManagementApplicationRecord = (
   const project = assetManagementAvailableProjects.find(
     (item) => item.id === projectId && item.isEffective
   )
-  if (!project) return mutationFailure('请选择仍有效且可办理入库申请的项目')
+  if (!project) return mutationFailure('请选择符合条件的已完成放款记录')
+
+  const inboundType: AssetManagementInboundType = ['部分入库', '全部入库', '动态补货'].includes(
+    String(payload.inboundType)
+  )
+    ? (payload.inboundType as AssetManagementInboundType)
+    : '部分入库'
+  if (inboundType === '动态补货') {
+    if (!project.allInboundCompleted || !project.dynamicControlEnabled) {
+      return mutationFailure('动态补货仅支持已完成全部入库且采用动态控制的放款记录')
+    }
+  } else if (project.allInboundCompleted) {
+    return mutationFailure('该放款记录已完成全部入库，请选择动态补货')
+  }
+
+  const disbursementFlowNo = projectDisbursementFlowNo(project)
+  if (payload.disbursementFlowNo && trim(payload.disbursementFlowNo) !== disbursementFlowNo) {
+    return mutationFailure('所选放款流水与项目不匹配，请重新选择')
+  }
 
   const hasInProgressApplication = assetManagementApplicationRecords.some(
     (item) =>
@@ -933,14 +965,15 @@ export const createAssetManagementApplicationRecord = (
     return mutationFailure('请选择当前项目下的有效业务合同')
 
   const id = nextId()
-  const inboundType = payload.inboundType === '已完成入库' ? '已完成入库' : '部分入库'
   const record = fromProject(project, {
     id,
     applicationNo: `AMA${today().replaceAll('-', '')}${String(id).padStart(4, '0')}`,
     inboundGoodsValue:
-      inboundType === '已完成入库'
+      inboundType === '全部入库'
         ? project.disbursementAmount
-        : amount(project.disbursementAmount * 0.8),
+        : inboundType === '动态补货'
+          ? amount(project.disbursementAmount * 0.2)
+          : amount(project.disbursementAmount * 0.8),
     applicationDate: today(),
     inboundType,
     phase: 'pending',
@@ -972,8 +1005,8 @@ export const updateAssetManagementConfirmationRecord = (
     record.inboundGoodsValue = inboundGoodsValue
     record.inboundValue = inboundGoodsValue
   }
-  if (payload.inboundType === '部分入库' || payload.inboundType === '已完成入库') {
-    record.inboundType = payload.inboundType
+  if (['部分入库', '全部入库', '动态补货'].includes(String(payload.inboundType))) {
+    record.inboundType = payload.inboundType as AssetManagementInboundType
   }
   if (payload.arrivalDeadline !== undefined && trim(payload.arrivalDeadline)) {
     record.arrivalDeadline = trim(payload.arrivalDeadline)
@@ -1006,7 +1039,7 @@ export const submitAssetManagementApplicationRecord = (
 
   record.phase = 'reviewing'
   record.status = '审查审批中'
-  record.currentStage = '运营管理部审查'
+  record.currentStage = '经营单位负责人审批'
   record.completedAt = undefined
   appendFlow(record, '客户经理', '提交申请')
   return mutationSuccess(record, '已提交至审查审批流程')
@@ -1067,13 +1100,15 @@ export const approveAssetManagementApplicationRecord = (
   if (!record || record.phase !== 'reviewing')
     return mutationFailure('仅审查审批中的债项资产入库申请可审批通过')
 
-  const content = trim(opinion) || '入库货值与关联业务合同匹配，同意审批通过。'
-  const signedOpinion = appendOpinion(record, content, '授信审批委员会')
+  const content = trim(opinion) || '放款流水、入库货值及债项资产明细核验一致，同意审批通过。'
+  appendFlow(record, '经营单位负责人', '审批通过', '经营单位负责人', content)
+  appendFlow(record, '债项管理岗', '审批通过', '债项管理岗', content)
+  const signedOpinion = appendOpinion(record, content, '贷后管理岗')
   record.phase = 'approved'
   record.status = '审批通过'
   record.currentStage = '审批完成'
   record.completedAt = now()
-  appendFlow(record, '授信审批委员会', '审批通过', '授信审批委员会', content)
+  appendFlow(record, '贷后管理岗', '审批通过', '贷后管理岗', content)
   return {
     ...mutationSuccess(record, '审批通过，已完成债项资产入库确认'),
     opinion: clone(signedOpinion)

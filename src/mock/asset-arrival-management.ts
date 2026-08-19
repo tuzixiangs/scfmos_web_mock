@@ -1,6 +1,6 @@
 export type AssetArrivalApplicationPhase = 'pending' | 'reviewing' | 'approved'
 export type AssetArrivalApplicationStatus = '待处理' | '审查审批中' | '审批通过'
-export type AssetArrivalInboundType = '部分入库' | '已完成入库'
+export type AssetArrivalInboundType = '部分入库' | '全部入库'
 export type AssetArrivalCurrency = '人民币' | '美元' | '欧元'
 
 export interface AssetArrivalApplicationImage {
@@ -363,7 +363,9 @@ const fromProject = (
 })
 
 /** 为内网页面常用的同义字段补齐值，供“选择有效项目”弹窗直接使用。 */
-export const withAssetArrivalProjectAliases = (project: AssetArrivalProject): AssetArrivalProject => ({
+export const withAssetArrivalProjectAliases = (
+  project: AssetArrivalProject
+): AssetArrivalProject => ({
   ...project,
   linkedCustomerName: project.linkedCustomerName || project.customerName,
   productPlan: project.productPlan || project.productScheme,
@@ -396,14 +398,16 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
       }
     ],
     opinions: [],
-    flowRecords: [flow(1, '到港确认', '创建申请', '张晨', '2026-07-21 09:15:00', '待核实本批货物到港情况')]
+    flowRecords: [
+      flow(1, '到港确认', '创建申请', '张晨', '2026-07-21 09:15:00', '待核实本批货物到港情况')
+    ]
   }),
   fromProject(assetArrivalAvailableProjects[4], {
     id: 2,
     applicationNo: 'ARA202607200002',
     inboundGoodsValue: 12000000,
     applicationDate: '2026-07-20',
-    inboundType: '已完成入库',
+    inboundType: '全部入库',
     phase: 'pending',
     status: '待处理',
     images: [
@@ -425,7 +429,14 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     ],
     flowRecords: [
       flow(1, '到港确认', '创建申请', '李敏', '2026-07-20 15:35:00'),
-      flow(2, '到港确认', '签署意见', '李敏', '2026-07-20 16:00:00', '货物已到监管仓，请在提交前核对出账金额与入库货值。')
+      flow(
+        2,
+        '到港确认',
+        '签署意见',
+        '李敏',
+        '2026-07-20 16:00:00',
+        '货物已到监管仓，请在提交前核对出账金额与入库货值。'
+      )
     ]
   }),
   fromProject(assetArrivalAvailableProjects[1], {
@@ -433,7 +444,7 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     applicationNo: 'ARA202607180003',
     inboundGoodsValue: 7600000,
     applicationDate: '2026-07-18',
-    inboundType: '已完成入库',
+    inboundType: '全部入库',
     phase: 'reviewing',
     status: '审查审批中',
     currentStage: '运营管理部审查',
@@ -457,7 +468,14 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     flowRecords: [
       flow(1, '到港确认', '创建申请', '王磊', '2026-07-18 10:30:00'),
       flow(2, '客户经理', '提交申请', '王磊', '2026-07-18 11:00:00'),
-      flow(3, '运营管理部审查', '签署意见', '运营管理部', '2026-07-19 11:20:00', '请重点核验仓单数量和合同约定数量的一致性。')
+      flow(
+        3,
+        '运营管理部审查',
+        '签署意见',
+        '运营管理部',
+        '2026-07-19 11:20:00',
+        '请重点核验仓单数量和合同约定数量的一致性。'
+      )
     ]
   }),
   fromProject(assetArrivalAvailableProjects[2], {
@@ -481,7 +499,14 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     flowRecords: [
       flow(1, '到港确认', '创建申请', '陈芳', '2026-07-16 09:15:00'),
       flow(2, '客户经理', '提交申请', '陈芳', '2026-07-16 10:10:00'),
-      flow(3, '风险管理部', '签署意见', '风险管理部', '2026-07-17 14:35:00', '建议补充监管方入库巡检记录后完成审批。')
+      flow(
+        3,
+        '风险管理部',
+        '签署意见',
+        '风险管理部',
+        '2026-07-17 14:35:00',
+        '建议补充监管方入库巡检记录后完成审批。'
+      )
     ]
   }),
   fromProject(assetArrivalAvailableProjects[3], {
@@ -489,7 +514,7 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     applicationNo: 'ARA202607120005',
     inboundGoodsValue: 5000000,
     applicationDate: '2026-07-12',
-    inboundType: '已完成入库',
+    inboundType: '全部入库',
     phase: 'approved',
     status: '审批通过',
     currentStage: '审批完成',
@@ -514,7 +539,14 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     flowRecords: [
       flow(1, '到港确认', '创建申请', '周毅', '2026-07-12 09:00:00'),
       flow(2, '客户经理', '提交申请', '周毅', '2026-07-12 10:15:00'),
-      flow(3, '授信审批委员会', '审批通过', '授信审批委员会', '2026-07-15 16:30:00', '入库货值与实际出账金额匹配，同意入库。')
+      flow(
+        3,
+        '授信审批委员会',
+        '审批通过',
+        '授信审批委员会',
+        '2026-07-15 16:30:00',
+        '入库货值与实际出账金额匹配，同意入库。'
+      )
     ]
   })
 ]
@@ -528,10 +560,14 @@ const mutationSuccess = (
   record: clone(record)
 })
 
-const mutationFailure = (message: string): AssetArrivalApplicationMutationResult => ({ success: false, message })
+const mutationFailure = (message: string): AssetArrivalApplicationMutationResult => ({
+  success: false,
+  message
+})
 
 const nextId = () => Math.max(0, ...assetArrivalApplicationRecords.map((item) => item.id)) + 1
-const nextChildId = (items: Array<{ id: number }>) => Math.max(0, ...items.map((item) => item.id)) + 1
+const nextChildId = (items: Array<{ id: number }>) =>
+  Math.max(0, ...items.map((item) => item.id)) + 1
 
 const appendFlow = (
   record: AssetArrivalApplicationRecord,
@@ -540,10 +576,16 @@ const appendFlow = (
   operator = '本地演示用户',
   comment?: string
 ) => {
-  record.flowRecords.push(flow(nextChildId(record.flowRecords), node, action, operator, now(), comment))
+  record.flowRecords.push(
+    flow(nextChildId(record.flowRecords), node, action, operator, now(), comment)
+  )
 }
 
-const appendOpinion = (record: AssetArrivalApplicationRecord, content: string, signer = '本地演示用户') => {
+const appendOpinion = (
+  record: AssetArrivalApplicationRecord,
+  content: string,
+  signer = '本地演示用户'
+) => {
   const opinion: AssetArrivalApplicationOpinion = {
     id: nextChildId(record.opinions),
     content,
@@ -563,21 +605,27 @@ export const createAssetArrivalApplicationRecord = (
   payload: AssetArrivalApplicationCreatePayload
 ): AssetArrivalApplicationMutationResult => {
   const projectId = Number(payload.projectId)
-  const project = assetArrivalAvailableProjects.find((item) => item.id === projectId && item.isEffective)
+  const project = assetArrivalAvailableProjects.find(
+    (item) => item.id === projectId && item.isEffective
+  )
   if (!project) return mutationFailure('请选择仍有效且可办理到港确认的项目')
 
   const hasInProgressApplication = assetArrivalApplicationRecords.some(
-    (item) => item.projectId === project.id && (item.phase === 'pending' || item.phase === 'reviewing')
+    (item) =>
+      item.projectId === project.id && (item.phase === 'pending' || item.phase === 'reviewing')
   )
-  if (hasInProgressApplication) return mutationFailure('该项目已有待处理或审查审批中的到港申请，不能重复新增')
+  if (hasInProgressApplication)
+    return mutationFailure('该项目已有待处理或审查审批中的到港申请，不能重复新增')
 
   const id = nextId()
-  const inboundType = payload.inboundType === '已完成入库' ? '已完成入库' : '部分入库'
+  const inboundType = payload.inboundType === '全部入库' ? '全部入库' : '部分入库'
   const record = fromProject(project, {
     id,
     applicationNo: `ARA${today().replaceAll('-', '')}${String(id).padStart(4, '0')}`,
     inboundGoodsValue:
-      inboundType === '已完成入库' ? project.disbursementAmount : amount(project.disbursementAmount * 0.8),
+      inboundType === '全部入库'
+        ? project.disbursementAmount
+        : amount(project.disbursementAmount * 0.8),
     applicationDate: today(),
     inboundType,
     phase: 'pending',
@@ -607,7 +655,7 @@ export const updateAssetArrivalConfirmationRecord = (
     record.inboundGoodsValue = inboundGoodsValue
     record.inboundValue = inboundGoodsValue
   }
-  if (payload.inboundType === '部分入库' || payload.inboundType === '已完成入库') {
+  if (payload.inboundType === '部分入库' || payload.inboundType === '全部入库') {
     record.inboundType = payload.inboundType
   }
   if (payload.arrivalDeadline !== undefined && trim(payload.arrivalDeadline)) {
@@ -628,9 +676,12 @@ export const signAssetArrivalApplicationOpinionRecord = (id: number | string, op
   return { ...mutationSuccess(record, '签署意见已保存'), opinion: clone(signedOpinion) }
 }
 
-export const submitAssetArrivalApplicationRecord = (id: number | string): AssetArrivalApplicationMutationResult => {
+export const submitAssetArrivalApplicationRecord = (
+  id: number | string
+): AssetArrivalApplicationMutationResult => {
   const record = getAssetArrivalApplicationRecord(id)
-  if (!record || record.phase !== 'pending') return mutationFailure('仅待处理的债项资产到港确认可提交')
+  if (!record || record.phase !== 'pending')
+    return mutationFailure('仅待处理的债项资产到港确认可提交')
   if (record.inboundGoodsValue < 0) return mutationFailure('请填写正确的入库货值后再提交')
 
   record.phase = 'reviewing'
@@ -645,7 +696,9 @@ export const batchSubmitAssetArrivalApplicationRecords = (
   ids: Array<number | string>,
   opinion?: unknown
 ): AssetArrivalBatchSubmitResult => {
-  const uniqueIds = Array.from(new Set(ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))))
+  const uniqueIds = Array.from(
+    new Set(ids.map((id) => Number(id)).filter((id) => Number.isFinite(id)))
+  )
   const failedIds: number[] = []
   let submitted = 0
   uniqueIds.forEach((id) => {
@@ -664,13 +717,18 @@ export const batchSubmitAssetArrivalApplicationRecords = (
     success: failedIds.length === 0,
     submitted,
     failedIds,
-    message: failedIds.length ? `已提交 ${submitted} 条，${failedIds.length} 条无法提交` : `已提交 ${submitted} 条到港申请`
+    message: failedIds.length
+      ? `已提交 ${submitted} 条，${failedIds.length} 条无法提交`
+      : `已提交 ${submitted} 条到港申请`
   }
 }
 
-export const withdrawAssetArrivalApplicationRecord = (id: number | string): AssetArrivalApplicationMutationResult => {
+export const withdrawAssetArrivalApplicationRecord = (
+  id: number | string
+): AssetArrivalApplicationMutationResult => {
   const record = getAssetArrivalApplicationRecord(id)
-  if (!record || record.phase !== 'reviewing') return mutationFailure('仅审查审批中的债项资产入库申请可收回')
+  if (!record || record.phase !== 'reviewing')
+    return mutationFailure('仅审查审批中的债项资产入库申请可收回')
 
   record.phase = 'pending'
   record.status = '待处理'
@@ -686,7 +744,8 @@ export const approveAssetArrivalApplicationRecord = (
   opinion?: unknown
 ): AssetArrivalApplicationMutationResult => {
   const record = getAssetArrivalApplicationRecord(id)
-  if (!record || record.phase !== 'reviewing') return mutationFailure('仅审查审批中的债项资产入库申请可审批通过')
+  if (!record || record.phase !== 'reviewing')
+    return mutationFailure('仅审查审批中的债项资产入库申请可审批通过')
 
   const content = trim(opinion) || '入库货值与关联业务合同匹配，同意审批通过。'
   const signedOpinion = appendOpinion(record, content, '授信审批委员会')
@@ -695,7 +754,10 @@ export const approveAssetArrivalApplicationRecord = (
   record.currentStage = '审批完成'
   record.completedAt = now()
   appendFlow(record, '授信审批委员会', '审批通过', '授信审批委员会', content)
-  return { ...mutationSuccess(record, '审批通过，已完成债项资产入库确认'), opinion: clone(signedOpinion) }
+  return {
+    ...mutationSuccess(record, '审批通过，已完成债项资产入库确认'),
+    opinion: clone(signedOpinion)
+  }
 }
 
 export const getAssetArrivalApplicationImages = (id: number | string) => {

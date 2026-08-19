@@ -30,6 +30,9 @@
       <template #remainingAvailableAmount="{ row }">
         {{ formatAmount(row.remainingAvailableAmount) }}
       </template>
+      <template #disbursementAmount="{ row }">
+        {{ formatAmount(row.disbursementAmount) }}
+      </template>
       <template #contractStatus="{ row }">
         <el-tag :type="row.contractStatus === '有效' ? 'success' : 'info'" effect="light">
           {{ row.contractStatus }}
@@ -46,37 +49,38 @@
 
   <el-dialog
     v-model="createVisible"
-    title="新增订单/合同信息修改"
+    title="新增债项数据修改"
     width="780px"
     destroy-on-close
     :close-on-click-modal="false"
   >
     <el-alert
-      title="请选择一份当前有效的订单/合同，系统会自动带入合同基础信息并生成一条待提交的修改申请。"
+      title="请选择一笔已完成放款的记录，系统自动带入项目、授信、产品方案及合同信息，并生成一条待提交债项数据修改。"
       type="info"
       :closable="false"
       class="mb-16px"
     />
     <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="122px">
-      <el-form-item label="当前有效合同" prop="contractId">
+      <el-form-item label="放款流水号" prop="contractId">
         <el-select
           v-model="createForm.contractId"
           class="w-full"
           filterable
           :loading="effectiveContractsLoading"
-          placeholder="请选择当前有效的订单/合同"
+          placeholder="请选择已完成放款记录"
           @change="handleEffectiveContractChange"
         >
           <el-option
             v-for="contract in effectiveContracts"
             :key="contract.id"
-            :label="`${contract.contractNo} · ${contract.partyOne}`"
+            :label="`${contract.disbursementFlowNo || contract.contractSerialNo} · ${contract.projectName || contract.partyOne}`"
             :value="contract.id"
           >
             <div class="contract-select-option">
-              <strong>{{ contract.contractNo }}</strong>
+              <strong>{{ contract.disbursementFlowNo || contract.contractSerialNo }}</strong>
               <span
-                >{{ contract.partyOne }} / {{ formatAmount(contract.contractTotalAmount) }}
+                >{{ contract.projectName || contract.partyOne }} /
+                {{ formatAmount(contract.disbursementAmount || contract.currentUsageAmount) }}
                 {{ contract.currency }}</span
               >
             </div>
@@ -85,70 +89,45 @@
       </el-form-item>
       <div v-if="selectedEffectiveContract" class="create-contract-preview">
         <div
-          ><span>签约方 1</span><strong>{{ selectedEffectiveContract.partyOne }}</strong></div
+          ><span>项目名称</span
+          ><strong>{{ selectedEffectiveContract.projectName || '-' }}</strong></div
         >
         <div
-          ><span>签约方 2</span><strong>{{ selectedEffectiveContract.partyTwo }}</strong></div
+          ><span>链属客户</span
+          ><strong>{{ selectedEffectiveContract.customerName || '-' }}</strong></div
         >
         <div
-          ><span>合同金额</span
+          ><span>放款金额</span
           ><strong
-            >{{ formatAmount(selectedEffectiveContract.contractTotalAmount) }}
+            >{{
+              formatAmount(
+                selectedEffectiveContract.disbursementAmount ||
+                  selectedEffectiveContract.currentUsageAmount
+              )
+            }}
             {{ selectedEffectiveContract.currency }}</strong
           ></div
         >
         <div
-          ><span>合同有效期</span
-          ><strong
-            >{{ selectedEffectiveContract.contractStartDate }} 至
-            {{ selectedEffectiveContract.contractEndDate }}</strong
-          ></div
+          ><span>业务合同编号</span
+          ><strong>{{ selectedEffectiveContract.businessContractNo || '-' }}</strong></div
         >
       </div>
       <div v-if="selectedEffectiveContract" class="detail-form-grid">
-        <el-form-item label="订单/合同编号" prop="orderContractNo">
-          <el-input v-model.trim="createForm.orderContractNo" placeholder="请输入订单/合同编号" />
+        <el-form-item label="项目编号">
+          <el-input :model-value="selectedEffectiveContract.projectNo || '-'" disabled />
         </el-form-item>
-        <el-form-item label="签约方 1" prop="partyOne">
-          <el-input v-model.trim="createForm.partyOne" placeholder="请输入签约方 1" />
+        <el-form-item label="授信编号">
+          <el-input :model-value="selectedEffectiveContract.creditNo || '-'" disabled />
         </el-form-item>
-        <el-form-item label="签约方 2" prop="partyTwo">
-          <el-input v-model.trim="createForm.partyTwo" placeholder="请输入签约方 2" />
+        <el-form-item label="产品方案">
+          <el-input :model-value="selectedEffectiveContract.productPlan || '-'" disabled />
         </el-form-item>
-        <el-form-item label="签约方 3" prop="partyThree">
-          <el-input v-model.trim="createForm.partyThree" placeholder="请输入签约方 3（选填）" />
+        <el-form-item label="订单/合同编号">
+          <el-input v-model.trim="createForm.orderContractNo" disabled />
         </el-form-item>
-        <el-form-item label="订单/合同总金额" prop="contractTotalAmount">
-          <el-input-number
-            v-model="createForm.contractTotalAmount"
-            class="w-full"
-            :min="0"
-            :precision="2"
-            :controls="false"
-          />
-        </el-form-item>
-        <el-form-item label="币种" prop="currency">
-          <el-select v-model="createForm.currency" class="w-full" placeholder="请选择币种">
-            <el-option label="人民币" value="人民币" />
-            <el-option label="美元" value="美元" />
-            <el-option label="欧元" value="欧元" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="合同起始日" prop="contractStartDate">
-          <el-date-picker
-            v-model="createForm.contractStartDate"
-            type="date"
-            value-format="YYYY-MM-DD"
-            class="w-full"
-          />
-        </el-form-item>
-        <el-form-item label="合同到期日" prop="contractEndDate">
-          <el-date-picker
-            v-model="createForm.contractEndDate"
-            type="date"
-            value-format="YYYY-MM-DD"
-            class="w-full"
-          />
+        <el-form-item label="放款日期">
+          <el-input :model-value="selectedEffectiveContract.disbursementDate || '-'" disabled />
         </el-form-item>
       </div>
       <el-form-item label="申请说明" prop="remark">
@@ -553,7 +532,7 @@
 
   <el-dialog
     v-model="batchSubmitVisible"
-    title="批量提交订单/合同信息修改"
+    title="批量提交债项数据修改"
     width="620px"
     destroy-on-close
   >
@@ -686,8 +665,14 @@ interface OrderContractRecord {
   dataSource?: string
   customerName?: string
   coreCustomerNo?: string
+  projectName?: string
+  projectNo?: string
+  creditNo?: string
   businessContractNo?: string
   productPlan?: string
+  disbursementFlowNo?: string
+  disbursementAmount?: number
+  disbursementDate?: string
   remark?: string
   opinions?: ContractOpinion[]
   contractItems?: ContractItem[]
@@ -707,6 +692,7 @@ interface EffectiveContract extends OrderContractRecord {
 
 interface CreateForm {
   contractId: number | string | ''
+  disbursementFlowNo: string
   orderContractNo: string
   partyOne: string
   partyTwo: string
@@ -762,7 +748,7 @@ const api = OrderContractModificationApi as unknown as Record<string, ApiFunctio
 const callApi = async <T,>(name: string, ...args: any[]): Promise<T> => {
   const fn = api[name]
   if (typeof fn !== 'function') {
-    throw new Error(`订单/合同信息修改 Mock 未提供 ${name} 接口`)
+    throw new Error(`债项数据维护 Mock 未提供 ${name} 接口`)
   }
   return fn(...args) as Promise<T>
 }
@@ -774,24 +760,30 @@ const crudSchemas = reactive<CrudSchema[]>([
     fixed: 'left',
     minWidth: 180,
     isSearch: true,
-    search: { componentProps: { placeholder: '请输入订单/合同流水号' } }
+    search: { componentProps: { placeholder: '请输入申请流水号' } }
   },
   {
-    label: '订单/合同编号',
-    field: 'contractNo',
+    label: '项目名称',
+    field: 'projectName',
+    minWidth: 190,
+    isSearch: true,
+    search: { componentProps: { placeholder: '请输入项目名称' } }
+  },
+  { label: '项目编号', field: 'projectNo', minWidth: 165 },
+  { label: '链属客户名称', field: 'customerName', minWidth: 200 },
+  { label: '核心客户编号', field: 'coreCustomerNo', minWidth: 175 },
+  { label: '授信编号', field: 'creditNo', minWidth: 170 },
+  { label: '产品方案', field: 'productPlan', minWidth: 190 },
+  { label: '业务合同编号', field: 'businessContractNo', minWidth: 180 },
+  {
+    label: '放款流水号',
+    field: 'disbursementFlowNo',
     minWidth: 180,
     isSearch: true,
-    search: { componentProps: { placeholder: '请输入订单/合同编号' } }
+    search: { componentProps: { placeholder: '请输入放款流水号' } }
   },
-  { label: '签约方 1', field: 'partyOne', minWidth: 180 },
-  { label: '签约方 2', field: 'partyTwo', minWidth: 180 },
-  { label: '签约方 3', field: 'partyThree', minWidth: 160 },
-  { label: '订单/合同总金额', field: 'contractTotalAmount', minWidth: 165 },
-  { label: '剩余可用金额', field: 'remainingAvailableAmount', minWidth: 150 },
-  { label: '币种', field: 'currency', minWidth: 100 },
-  { label: '合同起始日', field: 'contractStartDate', minWidth: 130 },
-  { label: '合同到期日', field: 'contractEndDate', minWidth: 130 },
-  { label: '订单/合同状态', field: 'contractStatus', minWidth: 125 },
+  { label: '放款金额', field: 'disbursementAmount', minWidth: 145 },
+  { label: '放款日期', field: 'disbursementDate', minWidth: 130 },
   { label: '申请日期', field: 'applicationDate', minWidth: 130 },
   { label: '修改人', field: 'modifier', minWidth: 120 },
   { label: '修改时间', field: 'modifiedAt', minWidth: 170 },
@@ -861,6 +853,7 @@ const batchSubmitOpinion = ref('')
 
 const initialCreateForm = (): CreateForm => ({
   contractId: '',
+  disbursementFlowNo: '',
   orderContractNo: '',
   partyOne: '',
   partyTwo: '',
@@ -873,7 +866,7 @@ const initialCreateForm = (): CreateForm => ({
 })
 const createForm = reactive<CreateForm>(initialCreateForm())
 const createRules: FormRules<CreateForm> = {
-  contractId: [{ required: true, message: '请选择当前有效的订单/合同', trigger: 'change' }],
+  contractId: [{ required: true, message: '请选择已完成放款记录', trigger: 'change' }],
   orderContractNo: [{ required: true, message: '请输入订单/合同编号', trigger: 'blur' }],
   partyOne: [{ required: true, message: '请输入签约方 1', trigger: 'blur' }],
   partyTwo: [{ required: true, message: '请输入签约方 2', trigger: 'blur' }],
@@ -979,7 +972,7 @@ const selectedEffectiveContract = computed(() =>
 )
 const currentRecord = computed(() => tableObject.currentRow || undefined)
 const detailTitle = computed(() =>
-  isRecordMode.value ? '订单/合同信息修改记录详情' : '订单/合同信息修改详情'
+  isRecordMode.value ? '债项数据修改记录详情' : '待提交债项数据修改详情'
 )
 const itemEditorTitle = computed(() =>
   editingItemIndex.value === undefined ? '新增合同项下信息' : '编辑合同项下信息'
@@ -1089,8 +1082,16 @@ const normalizeOrderContractRecord = (value: unknown): OrderContractRecord => {
     dataSource: toText(record.dataSource),
     customerName: toText(record.customerName),
     coreCustomerNo: toText(record.coreCustomerNo),
+    projectName: toText(record.projectName),
+    projectNo: toText(record.projectNo),
+    creditNo: toText(record.creditNo),
     businessContractNo: toText(record.businessContractNo),
     productPlan: toText(record.productPlan || record.productScheme),
+    disbursementFlowNo: toText(record.disbursementFlowNo || record.loanFlowNo || record.drawdownNo),
+    disbursementAmount: toNumber(record.disbursementAmount ?? record.currentUsedAmount),
+    disbursementDate: toText(
+      record.disbursementDate || record.drawdownDate || record.applicationDate
+    ),
     remark: toText(record.remark),
     opinions: rawOpinions as ContractOpinion[],
     contractItems: rawItems.map(normalizeContractItem)
@@ -1141,7 +1142,7 @@ const handleSelectionChange = (records: OrderContractRecord[]) => {
 
 const requireCurrentRecord = (): OrderContractRecord | undefined => {
   if (!currentRecord.value) {
-    ElMessage.warning('请先点击选择一条订单/合同信息')
+    ElMessage.warning('请先点击选择一条债项数据')
     return undefined
   }
   return currentRecord.value
@@ -1184,6 +1185,8 @@ const handleEffectiveContractChange = () => {
     return
   }
   Object.assign(createForm, {
+    disbursementFlowNo:
+      selectedContract.disbursementFlowNo || selectedContract.contractSerialNo || '',
     orderContractNo: selectedContract.contractNo,
     partyOne: selectedContract.partyOne,
     partyTwo: selectedContract.partyTwo,
@@ -1206,6 +1209,8 @@ const handleCreate = async () => {
   try {
     const result = await callApi<unknown>('createOrderContractModification', {
       sourceContractId: createForm.contractId,
+      sourceDisbursementId: createForm.contractId,
+      disbursementFlowNo: createForm.disbursementFlowNo,
       orderContractNo: createForm.orderContractNo,
       partyOne: createForm.partyOne,
       partyTwo: createForm.partyTwo,
@@ -1216,14 +1221,14 @@ const handleCreate = async () => {
       contractEndDate: createForm.contractEndDate
     })
     if (isFailedResult(result)) {
-      ElMessage.error(result.message || '新增订单/合同信息修改失败')
+      ElMessage.error(result.message || '新增债项数据修改失败')
       return
     }
-    ElMessage.success('新增成功，修改申请已进入“订单/合同信息修改”节点')
+    ElMessage.success('新增成功，申请已进入“待提交债项数据修改”节点')
     createVisible.value = false
     if (!isRecordMode.value) await refreshList()
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '新增订单/合同信息修改失败')
+    ElMessage.error(error instanceof Error ? error.message : '新增债项数据修改失败')
   } finally {
     createLoading.value = false
   }
@@ -1535,7 +1540,7 @@ const handleTransition = async (type: 'submit' | 'delete') => {
   const label = isSubmit ? '提交' : '删除'
   try {
     await ElMessageBox.confirm(
-      `确认${label}订单/合同信息修改申请“${record.applicationNo}”吗？`,
+      `确认${label}债项数据修改申请“${record.applicationNo}”吗？`,
       '提示',
       { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
     )
@@ -1564,7 +1569,7 @@ const handleTransition = async (type: 'submit' | 'delete') => {
 
 const openBatchSubmit = () => {
   if (!selectedRecords.value.length) {
-    ElMessage.warning('请先勾选需要提交的订单/合同信息修改申请')
+    ElMessage.warning('请先勾选需要提交的债项数据修改申请')
     return
   }
   batchSubmitOpinion.value = ''
@@ -1582,7 +1587,7 @@ const handleBatchSubmit = async () => {
     .map((record) => Number(record.id))
     .filter((id) => Number.isFinite(id))
   if (!ids.length) {
-    ElMessage.warning('未找到可提交的订单/合同信息修改申请')
+    ElMessage.warning('未找到可提交的债项数据修改申请')
     return
   }
 
@@ -1604,7 +1609,7 @@ const handleBatchSubmit = async () => {
       )
     } else {
       ElMessage.success(
-        result.message || `已提交 ${result.submitted || ids.length} 条订单/合同信息修改申请`
+        result.message || `已提交 ${result.submitted || ids.length} 条债项数据修改申请`
       )
     }
     batchSubmitVisible.value = false

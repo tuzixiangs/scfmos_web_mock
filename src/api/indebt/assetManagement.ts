@@ -9,7 +9,7 @@ export type AssetManagementApplicationStatus =
   | '审查审批中'
   | '被否决'
   | '审批通过'
-export type AssetManagementInboundType = '部分入库' | '已完成入库'
+export type AssetManagementInboundType = '部分入库' | '全部入库' | '动态补货'
 export type AssetManagementCurrency = '人民币' | '美元' | '欧元'
 
 export interface AssetManagementApplicationImage {
@@ -93,6 +93,8 @@ export interface AssetManagementProject {
   productScheme: string
   productPlan?: string
   creditNo: string
+  /** 当前项目下已完成的放款流水，是入库申请的业务主键。 */
+  disbursementFlowNo?: string
   businessContractNo: string
   businessContractName?: string
   contractAmount: number
@@ -109,6 +111,10 @@ export interface AssetManagementProject {
   arrivalDate?: string
   inboundDate?: string
   isEffective?: boolean
+  /** 是否已完成全部入库；动态补货只能选择该类放款记录。 */
+  allInboundCompleted?: boolean
+  /** 债项规则是否采用动态控制。 */
+  dynamicControlEnabled?: boolean
 }
 
 /** 列表、详情共用的债项资产入库/入库申请信息。 */
@@ -124,6 +130,7 @@ export interface AssetManagementApplicationRecord {
   productScheme: string
   productPlan?: string
   creditNo: string
+  disbursementFlowNo: string
   relatedBusinessContractNo: string
   businessContractNo?: string
   businessContractName?: string
@@ -173,6 +180,8 @@ export interface AssetManagementApplicationQuery {
   projectName?: string
   projectNo?: string
   relatedBusinessContractNo?: string
+  disbursementFlowNo?: string
+  inboundType?: AssetManagementInboundType
 }
 
 export interface AssetManagementApplicationPageResult {
@@ -190,14 +199,17 @@ export interface AssetManagementProjectQuery {
   linkedCustomerName?: string
   coreCustomerNo?: string
   businessContractNo?: string
+  disbursementFlowNo?: string
+  inboundType?: AssetManagementInboundType
 }
 
 /**
- * 新增时项目基础信息、出账信息和关联业务合同由有效项目带入，页面仅需选择项目及入库类型。
+ * 新增时先选择入库类型，再选择符合条件的已完成放款流水。
  */
 export interface AssetManagementApplicationCreateForm {
   projectId: number
   inboundType?: AssetManagementInboundType
+  disbursementFlowNo?: string
   businessContractNo?: string
 }
 

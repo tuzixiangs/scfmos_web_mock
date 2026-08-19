@@ -409,7 +409,7 @@ export const inventoryPriceApplicationRecords: InventoryPriceApplicationRecord[]
     applicationDate: '2026-07-18',
     phase: 'reviewing',
     status: '审查审批中',
-    currentStage: '运营管理部审查',
+    currentStage: '分行债项管理岗审批',
     opinions: [
       {
         id: 3,
@@ -431,7 +431,7 @@ export const inventoryPriceApplicationRecords: InventoryPriceApplicationRecord[]
     applicationDate: '2026-07-16',
     phase: 'reviewing',
     status: '审查审批中',
-    currentStage: '授信审批委员会审批',
+    currentStage: '分行债项管理岗审批',
     opinions: [],
     items: clone(projectItems[4])
   }),
@@ -728,7 +728,7 @@ export const submitInventoryPriceApplicationRecord = (
 
   application.phase = 'reviewing'
   application.status = '审查审批中'
-  application.currentStage = '运营管理部审查'
+  application.currentStage = '分行债项管理岗审批'
   application.completedAt = undefined
   return { success: true, message: '价格盯市申请已提交至审查审批流程', record: application }
 }

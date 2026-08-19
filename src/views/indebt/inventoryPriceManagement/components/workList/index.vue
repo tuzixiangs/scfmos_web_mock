@@ -449,6 +449,7 @@ interface InventoryPriceRecord {
   projectName: string
   coreEnterpriseName: string
   coreCustomerNo: string
+  itemCount: number
   largeCategory: string
   middleCategory: string
   smallCategory: string
@@ -551,26 +552,22 @@ const crudSchemas = reactive<CrudSchema[]>([
     isSearch: true,
     search: { componentProps: { placeholder: '请输入项目名称' } }
   },
-  { label: '商品大类', field: 'largeCategory', minWidth: 125 },
-  { label: '商品中类', field: 'middleCategory', minWidth: 125 },
   {
-    label: '商品小类',
-    field: 'smallCategory',
-    minWidth: 125,
+    label: '核心企业名称',
+    field: 'coreEnterpriseName',
+    minWidth: 190,
     isSearch: true,
-    search: { componentProps: { placeholder: '请输入商品小类' } }
+    search: { componentProps: { placeholder: '请输入核心企业名称' } }
   },
   {
-    label: '产地',
-    field: 'origin',
-    minWidth: 160,
+    label: '核心客户编号',
+    field: 'coreCustomerNo',
+    minWidth: 165,
     isSearch: true,
-    search: { componentProps: { placeholder: '请输入产地' } }
+    search: { componentProps: { placeholder: '请输入核心客户编号' } }
   },
-  { label: '入库单价', field: 'inboundUnitPrice', minWidth: 116 },
-  { label: '最新单价', field: 'latestUnitPrice', minWidth: 116 },
-  { label: '本次盯市单价', field: 'monitoringUnitPrice', minWidth: 140 },
-  { label: '盯市来源', field: 'monitoringSource', minWidth: 140 },
+  { label: '商品数量', field: 'itemCount', minWidth: 105 },
+  { label: '申请状态', field: 'status', minWidth: 120 },
   { label: '申请日期', field: 'applicationDate', minWidth: 130 },
   { label: '当前阶段', field: 'currentStage', minWidth: 170 },
   { label: '完成时间', field: 'completedAt', minWidth: 170 },
@@ -724,6 +721,7 @@ const normalizePriceRecord = (
     projectName: toText(record.projectName),
     coreEnterpriseName: toText(record.coreEnterpriseName),
     coreCustomerNo: toText(record.coreCustomerNo ?? record.coreCustomerId),
+    itemCount: rawItems.length,
     largeCategory: toText(
       record.largeCategory ?? record.largeCategoryName ?? rawItems[0]?.largeCategory
     ),
@@ -1194,7 +1192,7 @@ const defaultImages = (record: InventoryPriceRecord): ImageFile[] => [
   {
     id: 'warehouse-document',
     name: '入库单据',
-    description: `项目 ${record.projectNo || '-'} 的入库价格依据`,
+    description: `项目 ${record.projectNo || '-'} 的初始认定价格依据`,
     icon: 'ep:files'
   },
   {

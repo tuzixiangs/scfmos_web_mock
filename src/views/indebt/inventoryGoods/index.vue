@@ -26,7 +26,12 @@
         </el-tag>
       </template>
       <template #action="{ row }">
-        <el-button link type="primary" title="基于当前品类新增" @click.stop="openCreateFromReference(row)">
+        <el-button
+          link
+          type="primary"
+          title="基于当前品类新增"
+          @click.stop="openCreateFromReference(row)"
+        >
           <Icon icon="ep:plus" class="mr-3px" />
           新增
         </el-button>
@@ -41,7 +46,12 @@
     destroy-on-close
     :close-on-click-modal="false"
   >
-    <el-steps :active="createStep" finish-status="success" align-center class="category-create-steps">
+    <el-steps
+      :active="createStep"
+      finish-status="success"
+      align-center
+      class="category-create-steps"
+    >
       <el-step title="商品大类" description="填写大类名称" />
       <el-step title="商品中类" description="填写中类名称" />
       <el-step title="商品小类" description="填写小类并保存" />
@@ -119,11 +129,18 @@
       <el-button @click="formVisible = false">取 消</el-button>
       <el-button v-if="createStep > 0" @click="createStep -= 1">上一步</el-button>
       <el-button v-if="createStep < 2" type="primary" @click="nextCreateStep">下一步</el-button>
-      <el-button v-else type="primary" :loading="saveLoading" @click="handleCreate">保 存</el-button>
+      <el-button v-else type="primary" :loading="saveLoading" @click="handleCreate"
+        >保 存</el-button
+      >
     </template>
   </el-dialog>
 
-  <el-dialog v-model="categoryViewVisible" title="有效商品品类视图" width="90%" destroy-on-close>
+  <el-dialog
+    v-model="categoryViewVisible"
+    :title="`有效商品品类视图${currentRow ? ` - ${currentRow.largeCategoryName}` : ''}`"
+    width="90%"
+    destroy-on-close
+  >
     <div v-loading="categoryViewLoading" class="category-mind-map">
       <div v-if="categoryMindMap.length" class="mind-map-content">
         <div class="mind-map-root">
@@ -169,6 +186,53 @@
       </div>
       <el-empty v-else-if="!categoryViewLoading" description="暂无有效商品分类" />
     </div>
+  </el-dialog>
+
+  <el-dialog
+    v-model="customerConfigVisible"
+    title="客户经理商品配置申请"
+    width="680px"
+    destroy-on-close
+    :close-on-click-modal="false"
+  >
+    <el-alert
+      title="客户经理提交商品范围配置后进入审批；具体审批路径按最终确认结果接入。"
+      type="info"
+      :closable="false"
+      class="mb-16px"
+    />
+    <el-form label-width="130px">
+      <el-form-item label="客户经理" required>
+        <el-input v-model.trim="customerConfigForm.managerName" placeholder="请输入客户经理姓名" />
+      </el-form-item>
+      <el-form-item label="所属机构" required>
+        <el-input v-model.trim="customerConfigForm.branchName" placeholder="请输入所属机构" />
+      </el-form-item>
+      <el-form-item label="可维护商品大类" required>
+        <el-select
+          v-model="customerConfigForm.largeCategories"
+          multiple
+          filterable
+          class="w-full"
+          placeholder="请选择商品大类"
+        >
+          <el-option v-for="item in largeCategoryOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="配置说明">
+        <el-input
+          v-model="customerConfigForm.remark"
+          type="textarea"
+          :rows="3"
+          maxlength="200"
+          show-word-limit
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="customerConfigVisible = false">取 消</el-button>
+      <el-button type="primary" @click="submitCustomerConfig">提交申请</el-button>
+    </template>
   </el-dialog>
 </template>
 
@@ -253,6 +317,18 @@ const saveLoading = ref(false)
 const formRef = ref<FormInstance>()
 const categoryMindMap = ref<CategoryMindMapNode[]>([])
 const activeCategoryCount = ref(0)
+const customerConfigVisible = ref(false)
+const customerConfigForm = reactive({
+  managerName: '',
+  branchName: '',
+  largeCategories: [] as string[],
+  remark: ''
+})
+const largeCategoryOptions = computed(() =>
+  Array.from(new Set(tableObject.tableList.map((record) => record.largeCategoryName))).filter(
+    Boolean
+  )
+)
 
 const initialFormData = (): InventoryGoodsApi.InventoryGoodsForm => ({
   largeCategoryName: '',
@@ -277,7 +353,9 @@ const codePreview = computed(() => {
   const source = referenceRecord.value
   const existingRecords = tableObject.tableList
   const reuseLargeCategory =
-    createMode.value === 'based' && !!source && formData.largeCategoryName === source.largeCategoryName
+    createMode.value === 'based' &&
+    !!source &&
+    formData.largeCategoryName === source.largeCategoryName
   const largeCategoryCode = reuseLargeCategory
     ? source!.largeCategoryCode
     : createUniqueCategoryCode(
@@ -372,6 +450,35 @@ const buttons = ref<ActionButton[]>([
     icon: 'ep:share',
     plain: true,
     onClick: () => openCategoryView()
+  },
+  {
+    key: 'import',
+    label: '导入',
+    icon: 'ep:upload',
+    plain: true,
+    onClick: () => ElMessage.success('已模拟导入商品分类数据，正式接口可接入 Excel 校验结果')
+  },
+  {
+    key: 'export',
+    label: '导出',
+    icon: 'ep:download',
+    plain: true,
+    onClick: () => ElMessage.success('已生成当前商品分类查询结果的导出任务')
+  },
+  {
+    key: 'customer-config',
+    label: '客户经理商品配置',
+    icon: 'ep:user',
+    plain: true,
+    onClick: () => {
+      customerConfigForm.managerName = ''
+      customerConfigForm.branchName = ''
+      customerConfigForm.largeCategories = currentRow.value
+        ? [currentRow.value.largeCategoryName]
+        : []
+      customerConfigForm.remark = ''
+      customerConfigVisible.value = true
+    }
   }
 ])
 
@@ -396,15 +503,35 @@ const handleSearch = (params: Recordable) => {
 }
 
 const openCategoryView = async () => {
+  if (!currentRow.value) {
+    ElMessage.warning('请先点击选择一条商品品类，品类视图将展示该商品大类范围')
+    return
+  }
   categoryViewVisible.value = true
   categoryViewLoading.value = true
   try {
     const activeRecords = await InventoryGoodsApi.getActiveInventoryGoods()
-    categoryMindMap.value = buildCategoryMindMap(activeRecords)
-    activeCategoryCount.value = activeRecords.length
+    const scopedRecords = activeRecords.filter(
+      (record) => record.largeCategoryCode === currentRow.value?.largeCategoryCode
+    )
+    categoryMindMap.value = buildCategoryMindMap(scopedRecords)
+    activeCategoryCount.value = scopedRecords.length
   } finally {
     categoryViewLoading.value = false
   }
+}
+
+const submitCustomerConfig = () => {
+  if (!customerConfigForm.managerName || !customerConfigForm.branchName) {
+    ElMessage.warning('请填写客户经理及所属机构')
+    return
+  }
+  if (!customerConfigForm.largeCategories.length) {
+    ElMessage.warning('请至少选择一个可维护商品大类')
+    return
+  }
+  customerConfigVisible.value = false
+  ElMessage.success('客户经理商品配置申请已提交（审批路径待最终确认）')
 }
 
 const openCreate = (
@@ -443,7 +570,10 @@ const openCreateFromReference = (row: InventoryGoodsApi.InventoryGoodsRecord) =>
 
 const nextCreateStep = async () => {
   const fields = createStep.value === 0 ? ['largeCategoryName'] : ['middleCategoryName']
-  const valid = await formRef.value?.validateField(fields).then(() => true).catch(() => false)
+  const valid = await formRef.value
+    ?.validateField(fields)
+    .then(() => true)
+    .catch(() => false)
   if (valid) createStep.value += 1
 }
 
@@ -693,5 +823,4 @@ onMounted(refreshList)
   font-size: 12px;
   white-space: nowrap;
 }
-
 </style>

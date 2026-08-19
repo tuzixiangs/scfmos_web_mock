@@ -358,6 +358,8 @@ const inventoryPriceApplicationPageData = (config: AxiosRequestConfig) => {
   const applicationNo = String(query.applicationNo || query.applyNo || query.serialNo || '').trim()
   const projectNo = String(query.projectNo || '').trim()
   const projectName = String(query.projectName || '').trim()
+  const coreEnterpriseName = String(query.coreEnterpriseName || '').trim()
+  const coreCustomerNo = String(query.coreCustomerNo || '').trim()
   const smallCategory = String(query.smallCategory || '').trim()
   const origin = String(query.origin || '').trim()
   const filtered = inventoryPriceApplicationRecords.filter((record) => {
@@ -366,6 +368,9 @@ const inventoryPriceApplicationPageData = (config: AxiosRequestConfig) => {
     const matchesApplicationNo = !applicationNo || record.applicationNo.includes(applicationNo)
     const matchesProjectNo = !projectNo || record.projectNo.includes(projectNo)
     const matchesProjectName = !projectName || record.projectName.includes(projectName)
+    const matchesCoreEnterpriseName =
+      !coreEnterpriseName || record.coreEnterpriseName.includes(coreEnterpriseName)
+    const matchesCoreCustomerNo = !coreCustomerNo || record.coreCustomerNo.includes(coreCustomerNo)
     const matchesSmallCategory = !smallCategory || record.smallCategory.includes(smallCategory)
     const matchesOrigin = !origin || record.origin.includes(origin)
     return (
@@ -374,6 +379,8 @@ const inventoryPriceApplicationPageData = (config: AxiosRequestConfig) => {
       matchesApplicationNo &&
       matchesProjectNo &&
       matchesProjectName &&
+      matchesCoreEnterpriseName &&
+      matchesCoreCustomerNo &&
       matchesSmallCategory &&
       matchesOrigin
     )
@@ -394,6 +401,8 @@ const assetArrivalApplicationPageData = (config: AxiosRequestConfig) => {
   const coreCustomerNo = String(query.coreCustomerNo || query.customerNo || '').trim()
   const projectName = String(query.projectName || '').trim()
   const projectNo = String(query.projectNo || '').trim()
+  const disbursementFlowNo = String(query.disbursementFlowNo || query.loanFlowNo || '').trim()
+  const inboundType = String(query.inboundType || '').trim()
   const relatedBusinessContractNo = String(
     query.relatedBusinessContractNo || query.businessContractNo || query.contractNo || ''
   ).trim()
@@ -405,6 +414,9 @@ const assetArrivalApplicationPageData = (config: AxiosRequestConfig) => {
     const matchesCoreCustomerNo = !coreCustomerNo || record.coreCustomerNo.includes(coreCustomerNo)
     const matchesProjectName = !projectName || record.projectName.includes(projectName)
     const matchesProjectNo = !projectNo || record.projectNo.includes(projectNo)
+    const matchesDisbursementFlowNo =
+      !disbursementFlowNo || record.disbursementFlowNo.includes(disbursementFlowNo)
+    const matchesInboundType = !inboundType || record.inboundType === inboundType
     const matchesBusinessContract =
       !relatedBusinessContractNo ||
       record.relatedBusinessContractNo.includes(relatedBusinessContractNo)
@@ -416,6 +428,8 @@ const assetArrivalApplicationPageData = (config: AxiosRequestConfig) => {
       matchesCoreCustomerNo &&
       matchesProjectName &&
       matchesProjectNo &&
+      matchesDisbursementFlowNo &&
+      matchesInboundType &&
       matchesBusinessContract
     )
   })
@@ -435,6 +449,8 @@ const assetManagementApplicationPageData = (config: AxiosRequestConfig) => {
   const coreCustomerNo = String(query.coreCustomerNo || query.customerNo || '').trim()
   const projectName = String(query.projectName || '').trim()
   const projectNo = String(query.projectNo || '').trim()
+  const disbursementFlowNo = String(query.disbursementFlowNo || query.loanFlowNo || '').trim()
+  const inboundType = String(query.inboundType || '').trim()
   const relatedBusinessContractNo = String(
     query.relatedBusinessContractNo || query.businessContractNo || query.contractNo || ''
   ).trim()
@@ -446,6 +462,9 @@ const assetManagementApplicationPageData = (config: AxiosRequestConfig) => {
     const matchesCoreCustomerNo = !coreCustomerNo || record.coreCustomerNo.includes(coreCustomerNo)
     const matchesProjectName = !projectName || record.projectName.includes(projectName)
     const matchesProjectNo = !projectNo || record.projectNo.includes(projectNo)
+    const matchesDisbursementFlowNo =
+      !disbursementFlowNo || record.disbursementFlowNo.includes(disbursementFlowNo)
+    const matchesInboundType = !inboundType || record.inboundType === inboundType
     const matchesBusinessContract =
       !relatedBusinessContractNo ||
       record.relatedBusinessContractNo.includes(relatedBusinessContractNo)
@@ -457,6 +476,8 @@ const assetManagementApplicationPageData = (config: AxiosRequestConfig) => {
       matchesCoreCustomerNo &&
       matchesProjectName &&
       matchesProjectNo &&
+      matchesDisbursementFlowNo &&
+      matchesInboundType &&
       matchesBusinessContract
     )
   })
@@ -586,7 +607,11 @@ const orderContractModificationPageData = (
   const orderContractNo = String(query.orderContractNo || query.contractNo || '').trim()
   const customerName = String(query.customerName || '').trim()
   const coreCustomerNo = String(query.coreCustomerNo || query.customerNo || '').trim()
+  const projectName = String(query.projectName || '').trim()
+  const projectNo = String(query.projectNo || '').trim()
+  const creditNo = String(query.creditNo || '').trim()
   const businessContractNo = String(query.businessContractNo || '').trim()
+  const disbursementFlowNo = String(query.disbursementFlowNo || query.loanFlowNo || '').trim()
   const contractStatus = String(query.contractStatus || '').trim()
   const modificationStatus = String(query.modificationStatus || '').trim()
   const source =
@@ -596,8 +621,13 @@ const orderContractModificationPageData = (
     const matchesContractNo = !orderContractNo || record.orderContractNo.includes(orderContractNo)
     const matchesCustomerName = !customerName || record.customerName.includes(customerName)
     const matchesCoreCustomerNo = !coreCustomerNo || record.coreCustomerNo.includes(coreCustomerNo)
+    const matchesProjectName = !projectName || record.projectName.includes(projectName)
+    const matchesProjectNo = !projectNo || record.projectNo.includes(projectNo)
+    const matchesCreditNo = !creditNo || String(record.creditNo || '').includes(creditNo)
     const matchesBusinessContractNo =
       !businessContractNo || record.businessContractNo.includes(businessContractNo)
+    const matchesDisbursementFlowNo =
+      !disbursementFlowNo || String(record.disbursementFlowNo || '').includes(disbursementFlowNo)
     const matchesContractStatus = !contractStatus || record.contractStatus === contractStatus
     const matchesModificationStatus =
       !modificationStatus || record.modificationStatus === modificationStatus
@@ -606,7 +636,11 @@ const orderContractModificationPageData = (
       matchesContractNo &&
       matchesCustomerName &&
       matchesCoreCustomerNo &&
+      matchesProjectName &&
+      matchesProjectNo &&
+      matchesCreditNo &&
       matchesBusinessContractNo &&
+      matchesDisbursementFlowNo &&
       matchesContractStatus &&
       matchesModificationStatus
     )
@@ -1331,6 +1365,8 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     const businessContractNo = String(
       query.businessContractNo || query.relatedBusinessContractNo || ''
     ).trim()
+    const disbursementFlowNo = String(query.disbursementFlowNo || query.loanFlowNo || '').trim()
+    const inboundType = String(query.inboundType || '').trim()
     data = cloneMockData(
       assetArrivalAvailableProjects
         .filter((project) => {
@@ -1341,6 +1377,13 @@ export const mockAdapter: AxiosAdapter = async (config) => {
             !coreCustomerNo || project.coreCustomerNo.includes(coreCustomerNo)
           const matchesBusinessContract =
             !businessContractNo || project.businessContractNo.includes(businessContractNo)
+          const projectFlowNo = withAssetManagementProjectAliases(project).disbursementFlowNo || ''
+          const matchesDisbursementFlow =
+            !disbursementFlowNo || projectFlowNo.includes(disbursementFlowNo)
+          const matchesInboundScope =
+            inboundType === '动态补货'
+              ? Boolean(project.allInboundCompleted && project.dynamicControlEnabled)
+              : !project.allInboundCompleted
           const hasInProgressApplication = assetArrivalApplicationRecords.some(
             (record) =>
               record.projectId === project.id &&
@@ -1353,6 +1396,8 @@ export const mockAdapter: AxiosAdapter = async (config) => {
             matchesCustomerName &&
             matchesCoreCustomerNo &&
             matchesBusinessContract &&
+            matchesDisbursementFlow &&
+            matchesInboundScope &&
             !hasInProgressApplication
           )
         })
@@ -1643,7 +1688,10 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     data = cloneMockData(createOfflineLedgerApplicationRecord(parseMockPayload(config.data)))
   } else if (/\/system\/indebt\/offline-ledger-updates\/update$/.test(url)) {
     const payload = parseMockPayload(config.data)
-    const record = updateOfflineLedgerApplicationRecord(payload.id || payload.applicationId, payload)
+    const record = updateOfflineLedgerApplicationRecord(
+      payload.id || payload.applicationId,
+      payload
+    )
     data = record
       ? { success: true, record: cloneMockData(record) }
       : { success: false, message: '仅待提交的线下台账更新申请可以修改' }
@@ -1840,9 +1888,7 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     const node = query.node === 'records' ? 'records' : 'active'
     const record = getOrderContractModificationByNode(query.id || query.modificationId, node)
-    data = record
-      ? cloneMockData(record)
-      : { success: false, message: '订单/合同信息修改申请不存在' }
+    data = record ? cloneMockData(record) : { success: false, message: '债项数据修改申请不存在' }
   } else if (/\/system\/indebt\/order-contract-modifications\/items\/update$/.test(url)) {
     const payload = parseMockPayload(config.data)
     data = cloneMockData(

@@ -79,7 +79,11 @@ export interface OrderContractModificationRecord {
   coreCustomerNo: string
   projectName: string
   projectNo: string
+  creditNo?: string
   businessContractNo: string
+  disbursementFlowNo?: string
+  disbursementAmount?: number
+  disbursementDate?: string
   modifier?: string
   modifiedAt?: string
   submittedAt?: string
@@ -97,6 +101,8 @@ export interface OrderContractModificationDetail extends OrderContractModificati
 
 export interface OrderContractModificationCreatePayload {
   sourceContractId?: number | string
+  sourceDisbursementId?: number | string
+  disbursementFlowNo?: string
   orderContractNo?: string
   partyOne?: string
   partyTwo?: string
@@ -150,7 +156,11 @@ const now = () => new Date().toLocaleString('sv-SE').replace('T', ' ')
 const today = () => now().slice(0, 10)
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-const item = (data: Omit<OrderContractItem, 'id' | 'sequence' | 'totalAmount'>, id: number, sequence: number) => ({
+const item = (
+  data: Omit<OrderContractItem, 'id' | 'sequence' | 'totalAmount'>,
+  id: number,
+  sequence: number
+) => ({
   ...data,
   id,
   sequence,
@@ -165,14 +175,20 @@ const detail = (
   }
 ): OrderContractModificationDetail => ({
   ...data,
+  creditNo: data.creditNo || `CR${data.projectNo.replace(/\D/g, '').slice(-12)}`,
+  disbursementFlowNo:
+    data.disbursementFlowNo ||
+    `FK${data.applicationDate.replaceAll('-', '')}${String(data.id).padStart(4, '0')}`,
+  disbursementAmount: data.disbursementAmount ?? data.currentUsedAmount,
+  disbursementDate: data.disbursementDate || data.applicationDate,
   images: data.images || [],
   items: data.items || [],
   opinions: data.opinions || []
 })
 
 /**
- * 债项管理 - 订单/合同信息修改的唯一 Mock 数据源。
- * active 对应可继续编辑的订单/合同；records 保存提交后的修改记录，二者均保留在内存中以展示完整操作流。
+ * 债项管理 - 债项数据维护的唯一 Mock 数据源。
+ * active 对应可继续编辑的债项数据；records 保存提交后的修改记录，二者均保留在内存中以展示完整操作流。
  */
 export const orderContractModificationRecords: OrderContractModificationDetail[] = [
   detail({
@@ -455,7 +471,7 @@ export const availableOrderContractRecords: OrderContractModificationDetail[] = 
   })
 ]
 
-/** 已提交的订单/合同信息修改记录。提交操作会从 active 复制一份到本数组。 */
+/** 已提交的债项数据修改记录。提交操作会从 active 复制一份到本数组。 */
 export const orderContractModificationHistoryRecords: OrderContractModificationDetail[] = [
   detail({
     id: 91,
@@ -580,12 +596,17 @@ export const orderContractModificationHistoryRecords: OrderContractModificationD
   })
 ]
 
-const allRecords = () => [...orderContractModificationRecords, ...orderContractModificationHistoryRecords]
+const allRecords = () => [
+  ...orderContractModificationRecords,
+  ...orderContractModificationHistoryRecords
+]
 const nextId = () => Math.max(0, ...allRecords().map((record) => record.id)) + 1
 const nextItemId = () =>
   Math.max(
     0,
-    ...[...allRecords(), ...availableOrderContractRecords].flatMap((record) => record.items.map((entry) => entry.id))
+    ...[...allRecords(), ...availableOrderContractRecords].flatMap((record) =>
+      record.items.map((entry) => entry.id)
+    )
   ) + 1
 const nextImageId = () =>
   Math.max(0, ...allRecords().flatMap((record) => record.images.map((entry) => entry.id))) + 1
@@ -598,19 +619,28 @@ const changeMeta = (record: OrderContractModificationDetail) => {
 }
 
 const ensureDraft = (record: OrderContractModificationDetail | undefined): string | undefined => {
-  if (!record) return '订单/合同信息修改申请不存在'
+  if (!record) return '债项数据修改申请不存在'
   if (record.modificationStatus !== '草稿') return '已提交的修改记录不可继续编辑'
   return undefined
 }
 
-const generateProductCode = (largeCategory: string, middleCategory: string, smallCategory: string, id: number) => {
+const generateProductCode = (
+  largeCategory: string,
+  middleCategory: string,
+  smallCategory: string,
+  id: number
+) => {
   const initials = [largeCategory, middleCategory, smallCategory]
     .map((value) => trim(value).slice(0, 2).toUpperCase() || 'XX')
     .join('-')
   return `${initials}-${String(id).padStart(4, '0')}`
 }
 
-const buildItem = (payload: OrderContractItemPayload, id: number, sequence: number): OrderContractItem => {
+const buildItem = (
+  payload: OrderContractItemPayload,
+  id: number,
+  sequence: number
+): OrderContractItem => {
   const quantityOrWeight = amount(payload.quantityOrWeight, 0)
   const unitPrice = amount(payload.unitPrice, 0)
   const largeCategory = trim(payload.largeCategory) || '未分类商品'
@@ -646,7 +676,10 @@ export const getOrderContractModificationRecord = (id: number | string) =>
 export const getOrderContractModificationHistoryRecord = (id: number | string) =>
   orderContractModificationHistoryRecords.find((record) => record.id === Number(id))
 
-export const getOrderContractModificationByNode = (id: number | string, node: OrderContractModificationNode) =>
+export const getOrderContractModificationByNode = (
+  id: number | string,
+  node: OrderContractModificationNode
+) =>
   node === 'records'
     ? getOrderContractModificationHistoryRecord(id)
     : getOrderContractModificationRecord(id)
@@ -654,18 +687,22 @@ export const getOrderContractModificationByNode = (id: number | string, node: Or
 export const createOrderContractModificationRecord = (
   payload: OrderContractModificationCreatePayload
 ): OrderContractMutationResult => {
-  const sourceId = Number(payload.sourceContractId)
+  const sourceId = Number(payload.sourceDisbursementId || payload.sourceContractId)
   const source = sourceId
-    ? availableOrderContractRecords.find((record) => record.id === sourceId && record.contractStatus === '有效')
+    ? availableOrderContractRecords.find(
+        (record) => record.id === sourceId && record.contractStatus === '有效'
+      )
     : undefined
-  if (payload.sourceContractId && !source) {
-    return { success: false, message: '请选择一份当前有效的订单/合同后再新增' }
+  if ((payload.sourceDisbursementId || payload.sourceContractId) && !source) {
+    return { success: false, message: '请选择一笔已完成放款记录后再新增' }
   }
 
   const nextRecordId = nextId()
   const defaultNo = `HT-MOCK-${today().replaceAll('-', '')}-${String(nextRecordId).padStart(4, '0')}`
   const orderContractNo = trim(payload.orderContractNo) || source?.orderContractNo || defaultNo
-  if (orderContractModificationRecords.some((record) => record.orderContractNo === orderContractNo)) {
+  if (
+    orderContractModificationRecords.some((record) => record.orderContractNo === orderContractNo)
+  ) {
     return { success: false, message: '该订单/合同已有待修改申请，请勿重复新增' }
   }
 
@@ -695,6 +732,10 @@ export const createOrderContractModificationRecord = (
     projectName: source?.projectName || '待填写项目名称',
     projectNo: source?.projectNo || '待填写项目编号',
     businessContractNo: source?.businessContractNo || `BUS-${defaultNo}`,
+    creditNo: source?.creditNo,
+    disbursementFlowNo: source?.disbursementFlowNo || trim(payload.disbursementFlowNo),
+    disbursementAmount: source?.disbursementAmount || currentUsedAmount,
+    disbursementDate: source?.disbursementDate || today(),
     currentUsedAmount,
     dataSource: source?.dataSource || '本地新增',
     productScheme: source?.productScheme || '待完善产品方案',
@@ -737,7 +778,8 @@ export const updateOrderContractModificationRecord = (
   if (
     nextOrderContractNo &&
     orderContractModificationRecords.some(
-      (itemRecord) => itemRecord.id !== record.id && itemRecord.orderContractNo === nextOrderContractNo
+      (itemRecord) =>
+        itemRecord.id !== record.id && itemRecord.orderContractNo === nextOrderContractNo
     )
   ) {
     return { success: false, message: '订单/合同编号已存在待修改申请，请修改后保存' }
@@ -748,7 +790,8 @@ export const updateOrderContractModificationRecord = (
   if (payload.partyTwo !== undefined) record.partyTwo = trim(payload.partyTwo)
   if (payload.partyThree !== undefined) record.partyThree = trim(payload.partyThree)
   if (payload.currency) record.currency = payload.currency
-  if (payload.contractStartDate !== undefined) record.contractStartDate = trim(payload.contractStartDate)
+  if (payload.contractStartDate !== undefined)
+    record.contractStartDate = trim(payload.contractStartDate)
   if (payload.contractEndDate !== undefined) record.contractEndDate = trim(payload.contractEndDate)
   if (payload.contractStatus) record.contractStatus = payload.contractStatus
   record.contractTotalAmount = nextAmount
@@ -758,7 +801,9 @@ export const updateOrderContractModificationRecord = (
   return { success: true, record }
 }
 
-export const invalidateOrderContractModificationRecord = (id: number | string): OrderContractMutationResult => {
+export const invalidateOrderContractModificationRecord = (
+  id: number | string
+): OrderContractMutationResult => {
   const record = getOrderContractModificationRecord(id)
   const draftError = ensureDraft(record)
   if (draftError || !record) return { success: false, message: draftError }
@@ -770,7 +815,9 @@ export const invalidateOrderContractModificationRecord = (id: number | string): 
   return { success: true, message: '订单/合同已置为失效', record }
 }
 
-export const deleteOrderContractModificationRecord = (id: number | string): OrderContractMutationResult => {
+export const deleteOrderContractModificationRecord = (
+  id: number | string
+): OrderContractMutationResult => {
   const targetId = Number(id)
   const index = orderContractModificationRecords.findIndex((record) => record.id === targetId)
   const record = orderContractModificationRecords[index]
@@ -780,7 +827,7 @@ export const deleteOrderContractModificationRecord = (id: number | string): Orde
     return { success: false, message: '该合同关联的业务合同尚未结清，不允许删除' }
   }
   orderContractModificationRecords.splice(index, 1)
-  return { success: true, message: '订单/合同信息修改申请已删除' }
+  return { success: true, message: '债项数据修改申请已删除' }
 }
 
 export const createOrderContractModificationItem = (
@@ -920,14 +967,16 @@ export const signOrderContractModificationOpinion = (
   return { success: true, record }
 }
 
-export const submitOrderContractModificationRecord = (id: number | string): OrderContractMutationResult => {
+export const submitOrderContractModificationRecord = (
+  id: number | string
+): OrderContractMutationResult => {
   const targetId = Number(id)
   const index = orderContractModificationRecords.findIndex((record) => record.id === targetId)
   const record = orderContractModificationRecords[index]
   const draftError = ensureDraft(record)
   if (draftError || !record) return { success: false, message: draftError }
   if (record.contractStatus !== '有效') {
-    return { success: false, message: '失效合同不允许提交订单/合同信息修改申请' }
+    return { success: false, message: '失效合同不允许提交债项数据修改申请' }
   }
 
   const archived = clone(record)
@@ -937,10 +986,13 @@ export const submitOrderContractModificationRecord = (id: number | string): Orde
   archived.modifiedAt = archived.modifiedAt || archived.submittedAt
   orderContractModificationRecords.splice(index, 1)
   orderContractModificationHistoryRecords.unshift(archived)
-  return { success: true, message: '订单/合同信息修改申请已提交', record: archived }
+  return { success: true, message: '债项数据修改申请已提交', record: archived }
 }
 
-export const batchSubmitOrderContractModificationRecords = (ids: Array<number | string>, opinion?: unknown) => {
+export const batchSubmitOrderContractModificationRecords = (
+  ids: Array<number | string>,
+  opinion?: unknown
+) => {
   const uniqueIds = [...new Set(ids.map((id) => Number(id)).filter((id) => Number.isFinite(id)))]
   const failedIds: number[] = []
   const sharedOpinion = trim(opinion)
@@ -966,6 +1018,6 @@ export const batchSubmitOrderContractModificationRecords = (ids: Array<number | 
     success: failedIds.length === 0,
     submitted,
     failedIds,
-    message: failedIds.length ? '部分订单/合同信息修改申请未能提交，请检查是否已置为失效' : '批量提交成功'
+    message: failedIds.length ? '部分债项数据修改申请未能提交，请检查合同状态' : '批量提交成功'
   }
 }

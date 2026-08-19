@@ -4,7 +4,7 @@ import request from '@/config/axios'
 export type AssetArrivalApplicationPhase = 'pending' | 'reviewing' | 'approved'
 
 export type AssetArrivalApplicationStatus = '待处理' | '审查审批中' | '审批通过'
-export type AssetArrivalInboundType = '部分入库' | '已完成入库'
+export type AssetArrivalInboundType = '部分入库' | '全部入库'
 export type AssetArrivalCurrency = '人民币' | '美元' | '欧元'
 
 export interface AssetArrivalApplicationImage {

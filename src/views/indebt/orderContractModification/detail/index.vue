@@ -22,9 +22,34 @@
 
     <el-collapse v-if="detail" v-model="activeSections" class="system-detail-collapse">
       <el-collapse-item name="application">
-        <template #title><span class="collapse-title">业务合同基本信息</span></template>
+        <template #title><span class="collapse-title">放款及业务合同基本信息</span></template>
         <div class="collapse-content">
           <el-form label-width="140px" label-position="left" size="small" class="detail-form">
+            <el-row :gutter="48">
+              <el-col :span="12"
+                ><el-form-item label="放款流水号"
+                  ><el-input
+                    :model-value="detail.disbursementFlowNo || '-'"
+                    disabled /></el-form-item
+              ></el-col>
+              <el-col :span="12"
+                ><el-form-item label="放款金额"
+                  ><el-input :model-value="formatAmount(detail.disbursementAmount)" disabled
+                    ><template #append>{{ detail.currency }}</template></el-input
+                  ></el-form-item
+                ></el-col
+              >
+            </el-row>
+            <el-row :gutter="48">
+              <el-col :span="12"
+                ><el-form-item label="放款日期"
+                  ><el-input :model-value="detail.disbursementDate || '-'" disabled /></el-form-item
+              ></el-col>
+              <el-col :span="12"
+                ><el-form-item label="授信编号"
+                  ><el-input :model-value="detail.creditNo || '-'" disabled /></el-form-item
+              ></el-col>
+            </el-row>
             <el-row :gutter="48">
               <el-col :span="12"
                 ><el-form-item label="业务合同编号"
