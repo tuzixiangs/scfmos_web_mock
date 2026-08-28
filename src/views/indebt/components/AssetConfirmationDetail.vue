@@ -63,7 +63,18 @@
       <el-collapse-item name="confirmation">
         <template #title><span class="collapse-title">{{ businessText }}确认信息</span></template>
         <div class="collapse-content">
-          <el-form ref="formRef" :model="form" :rules="rules" label-width="140px" label-position="left" size="small" class="detail-form" :disabled="!canEdit">
+          <el-form v-if="props.mode === 'arrival'" label-width="140px" label-position="left" size="small" class="detail-form">
+            <el-row :gutter="48">
+              <el-col :span="12"><el-form-item label="到港截止日期"><el-input :model-value="detail.arrivalDeadline || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="实际到港日期"><el-input :model-value="detail.arrivalDate || detail.inboundDate || detail.completedAt || '-'" disabled /></el-form-item></el-col>
+            </el-row>
+            <el-row :gutter="48">
+              <el-col :span="12"><el-form-item label="生成日期"><el-input :model-value="detail.applicationDate || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="更新人"><el-input :model-value="detail.updatedBy || '本地演示用户'" disabled /></el-form-item></el-col>
+            </el-row>
+            <el-row :gutter="48"><el-col :span="24"><el-form-item label="确认说明"><el-input :model-value="detail.confirmationRemark || '提交确认后，关联债项资产状态更新为“已到港”。'" type="textarea" :rows="3" disabled /></el-form-item></el-col></el-row>
+          </el-form>
+          <el-form v-else ref="formRef" :model="form" :rules="rules" label-width="140px" label-position="left" size="small" class="detail-form" :disabled="!canEdit">
             <el-row :gutter="48">
               <el-col :span="12"><el-form-item :label="`${businessText}类型`" prop="confirmationType"><el-select v-model="form.confirmationType" class="w-full"><el-option :label="`部分${businessText}`" :value="`部分${businessText}`" /><el-option :label="`已完成${businessText}`" :value="`已完成${businessText}`" /></el-select></el-form-item></el-col>
               <el-col :span="12"><el-form-item :label="`${businessText}货值`" prop="confirmationValue"><el-input-number v-model="form.confirmationValue" class="w-full" :min="0" :precision="2" :controls="false" /></el-form-item></el-col>
@@ -106,6 +117,7 @@ interface AssetConfirmationRecord {
   outboundAmount?: number; disbursementAmount: number; billingDate?: string; disbursementDate: string;
   arrivalDeadline: string; inboundType?: string; outboundType?: string; inboundValue?: number;
   inboundGoodsValue?: number; outboundValue?: number; outboundGoodsValue?: number; confirmationRemark?: string;
+  arrivalDate?: string; inboundDate?: string; updatedBy?: string;
   opinions?: DetailOpinion[]; flowRecords?: DetailFlow[]
 }
 
@@ -117,8 +129,8 @@ const saving = ref(false)
 const detail = ref<AssetConfirmationRecord>()
 const formRef = ref<FormInstance>()
 const activeSections = ref(['application', 'contract', 'confirmation', 'process'])
-const businessText = computed(() => props.mode === 'arrival' ? '入库' : '出库')
-const canEdit = computed(() => detail.value?.phase === 'pending')
+const businessText = computed(() => props.mode === 'arrival' ? '到港' : '出库')
+const canEdit = computed(() => props.mode === 'outbound' && detail.value?.phase === 'pending')
 const statusTagType = computed(() => detail.value?.phase === 'approved' ? 'success' : detail.value?.phase === 'reviewing' ? 'warning' : detail.value?.phase === 'rejected' ? 'danger' : 'info')
 const form = reactive({ confirmationType: '', confirmationValue: 0, currency: '人民币', deadline: '', remark: '' })
 const rules: FormRules = {

@@ -71,6 +71,8 @@ export interface AssetManagementAssetDetail {
   goodsStartDate: string
   goodsEndDate: string
   goodsOwnership: string
+  remark1: string
+  remark2: string
   assetStatus: AssetManagementAssetStatus
 }
 
@@ -170,13 +172,18 @@ export interface AssetManagementAssetUpdatePayload {
   largeCategory?: unknown
   middleCategory?: unknown
   smallCategory?: unknown
+  batchNo?: unknown
+  containerNo?: unknown
   origin?: unknown
+  specification?: unknown
   warehouseName?: unknown
   goodsStartDate?: unknown
   goodsEndDate?: unknown
   inboundQuantity?: unknown
   initialRecognitionPrice?: unknown
   goodsOwnership?: unknown
+  remark1?: unknown
+  remark2?: unknown
 }
 
 export interface AssetManagementApplicationMutationResult {
@@ -555,6 +562,8 @@ const buildAssetDetails = (
       goodsStartDate: project.contractStartDate,
       goodsEndDate: project.contractEndDate,
       goodsOwnership: '核心企业',
+      remark1: '',
+      remark2: '',
       assetStatus
     }
   })
@@ -888,6 +897,12 @@ export const updateAssetManagementAssetDetailRecord = (
   if (!largeCategory || !middleCategory || !smallCategory)
     return mutationFailure('请选择完整的商品分类')
 
+  const batchNo = trim(payload.batchNo)
+  const containerNo = trim(payload.containerNo)
+  const specification = trim(payload.specification)
+  if (!batchNo || !containerNo || !specification)
+    return mutationFailure('请完整填写批次号、柜号和规格')
+
   const origin = trim(payload.origin)
   if (!origin) return mutationFailure('请选择产地')
 
@@ -906,14 +921,17 @@ export const updateAssetManagementAssetDetailRecord = (
   if (initialRecognitionPrice <= 0) return mutationFailure('初始认定价格必须大于0')
 
   const goodsOwnership = trim(payload.goodsOwnership)
-  if (!['核心企业', '借款人自己'].includes(goodsOwnership))
+  if (!['核心企业', '借款人'].includes(goodsOwnership))
     return mutationFailure('请选择货物所有权')
 
   asset.productName = productName
   asset.largeCategory = largeCategory
   asset.middleCategory = middleCategory
   asset.smallCategory = smallCategory
+  asset.batchNo = batchNo
+  asset.containerNo = containerNo
   asset.origin = origin
+  asset.specification = specification
   asset.warehouseName = warehouseName
   asset.goodsStartDate = goodsStartDate
   asset.goodsEndDate = goodsEndDate
@@ -921,6 +939,8 @@ export const updateAssetManagementAssetDetailRecord = (
   asset.initialRecognitionPrice = initialRecognitionPrice
   asset.initialRecognitionValue = amount(inboundQuantity * initialRecognitionPrice)
   asset.goodsOwnership = goodsOwnership
+  asset.remark1 = trim(payload.remark1)
+  asset.remark2 = trim(payload.remark2)
   return mutationSuccess(record, '债项资产明细已更新')
 }
 

@@ -375,10 +375,7 @@ export const withAssetArrivalProjectAliases = (
   arrivalPort: project.arrivalPort || '监管仓指定到货地'
 })
 
-/**
- * 待处理、审查审批中、审批通过三个节点均有可直接操作的样例。
- * 有效项目 6、7 尚未生成在途申请，专门保留给“新增”弹窗测试。
- */
+/** 出账后按到港规则自动生成待处理任务，提交后直接进入已完成节点。 */
 export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
   fromProject(assetArrivalAvailableProjects[0], {
     id: 1,
@@ -445,9 +442,9 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     inboundGoodsValue: 7600000,
     applicationDate: '2026-07-18',
     inboundType: '全部入库',
-    phase: 'reviewing',
-    status: '审查审批中',
-    currentStage: '运营管理部审查',
+    phase: 'pending',
+    status: '待处理',
+    currentStage: '客户经理到港确认',
     images: [
       {
         id: 1,
@@ -484,9 +481,10 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     inboundGoodsValue: 6250000,
     applicationDate: '2026-07-16',
     inboundType: '部分入库',
-    phase: 'reviewing',
-    status: '审查审批中',
-    currentStage: '授信审批委员会审批',
+    phase: 'approved',
+    status: '已完成',
+    currentStage: '到港确认完成',
+    completedAt: '2026-07-17 14:35:00',
     images: [],
     opinions: [
       {
@@ -516,8 +514,8 @@ export const assetArrivalApplicationRecords: AssetArrivalApplicationRecord[] = [
     applicationDate: '2026-07-12',
     inboundType: '全部入库',
     phase: 'approved',
-    status: '审批通过',
-    currentStage: '审批完成',
+    status: '已完成',
+    currentStage: '到港确认完成',
     completedAt: '2026-07-15 16:30:00',
     images: [
       {
@@ -682,14 +680,14 @@ export const submitAssetArrivalApplicationRecord = (
   const record = getAssetArrivalApplicationRecord(id)
   if (!record || record.phase !== 'pending')
     return mutationFailure('仅待处理的债项资产到港确认可提交')
-  if (record.inboundGoodsValue < 0) return mutationFailure('请填写正确的入库货值后再提交')
-
-  record.phase = 'reviewing'
-  record.status = '审查审批中'
-  record.currentStage = '运营管理部审查'
-  record.completedAt = undefined
-  appendFlow(record, '客户经理', '提交申请')
-  return mutationSuccess(record, '已提交至审查审批流程')
+  record.phase = 'approved'
+  record.status = '已完成'
+  record.currentStage = '到港确认完成'
+  record.completedAt = now()
+  record.arrivalDate = today()
+  record.inboundDate = today()
+  appendFlow(record, '客户经理', '确认到港')
+  return mutationSuccess(record, '到港确认已完成，关联债项资产状态已更新为“已到港”')
 }
 
 export const batchSubmitAssetArrivalApplicationRecords = (
@@ -719,7 +717,7 @@ export const batchSubmitAssetArrivalApplicationRecords = (
     failedIds,
     message: failedIds.length
       ? `已提交 ${submitted} 条，${failedIds.length} 条无法提交`
-      : `已提交 ${submitted} 条到港申请`
+      : `已完成 ${submitted} 条到港确认`
   }
 }
 

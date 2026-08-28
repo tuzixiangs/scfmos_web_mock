@@ -78,6 +78,8 @@ export interface AssetManagementAssetDetail {
   goodsStartDate: string
   goodsEndDate: string
   goodsOwnership: string
+  remark1: string
+  remark2: string
   assetStatus: AssetManagementAssetStatus
 }
 
@@ -228,13 +230,18 @@ export interface AssetManagementAssetUpdateForm {
   largeCategory: string
   middleCategory: string
   smallCategory: string
+  batchNo: string
+  containerNo: string
   origin: string
+  specification: string
   warehouseName: string
   goodsStartDate: string
   goodsEndDate: string
   inboundQuantity: number
   initialRecognitionPrice: number
-  goodsOwnership: '核心企业' | '借款人自己'
+  goodsOwnership: '核心企业' | '借款人'
+  remark1: string
+  remark2: string
 }
 
 export interface AssetManagementApplicationMutationResult {

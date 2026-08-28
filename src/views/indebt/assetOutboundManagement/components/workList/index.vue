@@ -1411,6 +1411,34 @@ const openImage = async (record: AssetOutboundManagementRecord) => {
   }
 }
 
+const generatePledgeTask = () => {
+  const record = requireCurrentRecord()
+  if (!record) return
+  ElMessage.success(`已生成动产质押变更待办：${record.applicationNo}（Mock）`)
+}
+
+const generatePickupNotice = () => {
+  const record = requireCurrentRecord()
+  if (!record) return
+  ElMessage.success(`已生成加签版提货通知书：${record.applicationNo}（Mock）`)
+}
+
+const deleteCurrentRecord = async () => {
+  const record = requireCurrentRecord()
+  if (!record) return
+  try {
+    await ElMessageBox.confirm(`确认删除出库申请“${record.applicationNo}”吗？`, '删除确认', {
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  tableObject.tableList = tableObject.tableList.filter((item) => item.id !== record.id)
+  tableObject.total = Math.max(0, tableObject.total - 1)
+  tableObject.currentRow = null
+  ElMessage.success('删除成功')
+}
+
 const visibleButtons = computed<ActionButton[]>(() => {
   const detailButton: ActionButton = {
     key: 'detail',
@@ -1445,6 +1473,13 @@ const visibleButtons = computed<ActionButton[]>(() => {
       },
       detailButton,
       {
+        key: 'sign-opinion',
+        label: '签署意见',
+        icon: 'ep:edit-pen',
+        plain: true,
+        onClick: handleSignOpinion
+      },
+      {
         key: 'submit',
         label: '提交',
         icon: 'ep:promotion',
@@ -1458,6 +1493,14 @@ const visibleButtons = computed<ActionButton[]>(() => {
         icon: 'ep:finished',
         plain: true,
         onClick: openBatchSubmit
+      },
+      {
+        key: 'delete',
+        label: '删除',
+        icon: 'ep:delete',
+        type: 'danger',
+        plain: true,
+        onClick: deleteCurrentRecord
       }
     ]
   }
@@ -1490,11 +1533,25 @@ const visibleButtons = computed<ActionButton[]>(() => {
         plain: true,
         loading: actionLoading.value === 'withdraw',
         onClick: () => handleTransition('withdraw')
+      },
+      {
+        key: 'generate-pledge',
+        label: '生成动产质押变更待办',
+        icon: 'ep:document-add',
+        plain: true,
+        onClick: generatePledgeTask
       }
     ]
   }
 
-  return [detailButton, opinionButton, historyButton]
+  return [
+    detailButton,
+    opinionButton,
+    historyButton,
+    ...(currentPhase.value === 'approved'
+      ? [{ key: 'pickup-notice', label: '生成提货通知书', icon: 'ep:document-checked', plain: true, onClick: generatePickupNotice }]
+      : [])
+  ]
 })
 
 watch(

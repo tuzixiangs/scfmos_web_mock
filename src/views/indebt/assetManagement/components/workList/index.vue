@@ -78,12 +78,12 @@
             <el-option label="动态补货" value="动态补货" />
           </el-select>
         </el-form-item>
-        <el-form-item label="放款流水号" prop="disbursementFlowNo">
+        <el-form-item label="出账流水号" prop="disbursementFlowNo">
           <el-input
             v-model="createForm.disbursementFlowNo"
             readonly
             class="project-picker-input"
-            placeholder="点击选择已完成放款记录"
+            placeholder="点击选择符合条件的出账流水"
             @click="openProjectPicker"
           >
             <template #suffix>
@@ -95,34 +95,34 @@
           <el-input
             v-model="createForm.projectName"
             readonly
-            placeholder="选择放款流水后自动反显"
+            placeholder="选择出账流水后自动反显"
           />
         </el-form-item>
         <el-form-item label="项目编号" prop="projectNo">
-          <el-input v-model="createForm.projectNo" readonly placeholder="选择放款流水后自动反显" />
+          <el-input v-model="createForm.projectNo" readonly placeholder="选择出账流水后自动反显" />
         </el-form-item>
         <el-form-item label="链属客户名称" prop="linkedCustomerName">
           <el-input
             v-model="createForm.linkedCustomerName"
             readonly
-            placeholder="选择放款流水后自动反显"
+            placeholder="选择出账流水后自动反显"
           />
         </el-form-item>
         <el-form-item label="授信编号" prop="creditNo">
-          <el-input v-model="createForm.creditNo" readonly placeholder="选择放款流水后自动反显" />
+          <el-input v-model="createForm.creditNo" readonly placeholder="选择出账流水后自动反显" />
         </el-form-item>
         <el-form-item label="产品方案" prop="productPlan">
           <el-input
             v-model="createForm.productPlan"
             readonly
-            placeholder="选择放款流水后自动反显"
+            placeholder="选择出账流水后自动反显"
           />
         </el-form-item>
         <el-form-item label="业务合同编号" prop="businessContractNo">
           <el-input
             v-model="createForm.businessContractNo"
             readonly
-            placeholder="选择放款流水后自动反显"
+            placeholder="选择出账流水后自动反显"
           />
         </el-form-item>
       </div>
@@ -135,7 +135,7 @@
 
   <el-dialog
     v-model="projectPickerVisible"
-    title="选择已完成放款记录"
+    title="选择出账流水号"
     width="1080px"
     top="8vh"
     append-to-body
@@ -145,8 +145,8 @@
     <el-alert
       :title="
         createForm.inboundType === '动态补货'
-          ? '仅展示已完成全部入库且债项规则采用动态控制的放款记录。'
-          : '仅展示尚未标记全部入库、且不存在在途入库申请的放款记录。'
+          ? '仅展示已完成全部入库且债项规则采用动态控制的出账记录。'
+          : '仅展示尚未标记全部入库、且不存在在途入库申请的出账记录。'
       "
       type="info"
       :closable="false"
@@ -166,7 +166,7 @@
         @keyup.enter="loadAvailableProjects"
       />
       <el-button :loading="projectsLoading" @click="loadAvailableProjects">
-        <Icon icon="ep:search" class="mr-4px" />查询放款
+        <Icon icon="ep:search" class="mr-4px" />查询出账
       </el-button>
     </div>
     <div class="project-picker" v-loading="projectsLoading">
@@ -189,7 +189,7 @@
             </el-radio>
           </template>
         </el-table-column>
-        <el-table-column prop="disbursementFlowNo" label="放款流水号" min-width="175" />
+        <el-table-column prop="disbursementFlowNo" label="出账流水号" min-width="175" />
         <el-table-column prop="projectName" label="项目名称" min-width="155" />
         <el-table-column prop="projectNo" label="项目编号" min-width="155" />
         <el-table-column prop="linkedCustomerName" label="链属客户名称" min-width="170" />
@@ -200,7 +200,7 @@
       <el-empty
         v-if="!projectsLoading && !availableProjects.length"
         :image-size="72"
-        description="未找到符合当前入库类型的放款记录"
+        description="未找到符合当前入库类型的出账流水"
       />
     </div>
     <template #footer>
@@ -601,15 +601,15 @@ const crudSchemas = reactive<CrudSchema[]>([
   },
   { label: '产品方案', field: 'productPlan', minWidth: 145 },
   {
-    label: '放款流水号',
+    label: '出账流水号',
     field: 'disbursementFlowNo',
     minWidth: 180,
     isSearch: true,
-    search: { componentProps: { placeholder: '请输入放款流水号' } }
+    search: { componentProps: { placeholder: '请输入出账流水号' } }
   },
   { label: '关联业务合同编号', field: 'businessContractNo', minWidth: 180 },
-  { label: '放款金额', field: 'outboundAmount', minWidth: 140 },
-  { label: '放款日期', field: 'billingDate', minWidth: 130 },
+  { label: '出账金额', field: 'outboundAmount', minWidth: 140 },
+  { label: '出账日期', field: 'billingDate', minWidth: 130 },
   { label: '入库截止日期', field: 'arrivalDeadline', minWidth: 145 },
   { label: '初始认定总价值', field: 'inboundValue', minWidth: 155 },
   { label: '币种', field: 'currency', minWidth: 105 },
@@ -719,8 +719,8 @@ const initialCreateForm = (): CreateForm => ({
 })
 const createForm = reactive<CreateForm>(initialCreateForm())
 const createRules: FormRules<CreateForm> = {
-  projectId: [{ required: true, message: '请选择一笔已完成放款记录', trigger: 'change' }],
-  disbursementFlowNo: [{ required: true, message: '请选择放款流水号', trigger: 'change' }],
+  projectId: [{ required: true, message: '请选择一笔已完成出账记录', trigger: 'change' }],
+  disbursementFlowNo: [{ required: true, message: '请选择出账流水号', trigger: 'change' }],
   inboundType: [{ required: true, message: '请选择入库类型', trigger: 'change' }]
 }
 
@@ -789,7 +789,7 @@ const selectProjectCandidate = (project: AvailableProject) => {
 const confirmProjectSelection = () => {
   const project = selectedProject.value
   if (!project) {
-    ElMessage.warning('请先选择一笔放款记录')
+    ElMessage.warning('请先选择一笔出账记录')
     return
   }
   Object.assign(createForm, {
@@ -1167,6 +1167,28 @@ const openImage = async (record: AssetManagementRecord) => {
   }
 }
 
+const generatePledgeTask = () => {
+  const record = requireCurrentRecord()
+  if (!record) return
+  ElMessage.success(`已生成动产质押变更待办：${record.applicationNo}（Mock）`)
+}
+
+const deleteCurrentRecord = async () => {
+  const record = requireCurrentRecord()
+  if (!record) return
+  try {
+    await ElMessageBox.confirm(`确认删除入库申请“${record.applicationNo}”吗？`, '删除确认', {
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  tableObject.tableList = tableObject.tableList.filter((item) => item.id !== record.id)
+  tableObject.total = Math.max(0, tableObject.total - 1)
+  tableObject.currentRow = null
+  ElMessage.success('删除成功')
+}
+
 const visibleButtons = computed<ActionButton[]>(() => {
   const detailButton: ActionButton = {
     key: 'detail',
@@ -1201,6 +1223,13 @@ const visibleButtons = computed<ActionButton[]>(() => {
       },
       detailButton,
       {
+        key: 'sign-opinion',
+        label: '签署意见',
+        icon: 'ep:edit-pen',
+        plain: true,
+        onClick: handleSignOpinion
+      },
+      {
         key: 'submit',
         label: '提交',
         icon: 'ep:promotion',
@@ -1214,6 +1243,14 @@ const visibleButtons = computed<ActionButton[]>(() => {
         icon: 'ep:finished',
         plain: true,
         onClick: openBatchSubmit
+      },
+      {
+        key: 'delete',
+        label: '删除',
+        icon: 'ep:delete',
+        type: 'danger',
+        plain: true,
+        onClick: deleteCurrentRecord
       }
     ]
   }
@@ -1246,6 +1283,13 @@ const visibleButtons = computed<ActionButton[]>(() => {
         plain: true,
         loading: actionLoading.value === 'withdraw',
         onClick: () => handleTransition('withdraw')
+      },
+      {
+        key: 'generate-pledge',
+        label: '生成动产质押变更待办',
+        icon: 'ep:document-add',
+        plain: true,
+        onClick: generatePledgeTask
       }
     ]
   }

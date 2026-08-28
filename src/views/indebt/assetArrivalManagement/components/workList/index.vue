@@ -15,7 +15,7 @@
       :data="tableObject.tableList"
       :loading="tableObject.loading"
       :pagination="{ total: tableObject.total }"
-      :selection="currentPhase === 'pending'"
+      :selection="false"
       highlight-current-row
       :show-overflow-tooltip="true"
       v-model:pageSize="tableObject.pageSize"
@@ -423,10 +423,14 @@ interface AssetArrivalRecord {
   creditNo: string
   productPlan: string
   businessContractNo: string
+  disbursementFlowNo: string
   businessContractAmount: number
   outboundAmount: number
   billingDate: string
   arrivalDeadline: string
+  actualArrivalDate: string
+  updatedBy: string
+  updatedOrg: string
   inboundValue: number
   currency: string
   applicationDate: string
@@ -528,7 +532,7 @@ const formatAmount = (value: unknown) => {
 }
 
 const phaseLabel = (phase: AssetArrivalApplicationPhase) => {
-  if (phase === 'approved') return '审批通过'
+  if (phase === 'approved') return '已完成'
   if (phase === 'reviewing') return '审查审批中'
   return '待处理'
 }
@@ -591,6 +595,9 @@ const normalizeRecord = (
         record.contractNo ??
         record.businessAgreementNo
     ),
+    disbursementFlowNo: toText(
+      record.disbursementFlowNo ?? record.outboundNo ?? record.drawdownNo ?? record.loanFlowNo
+    ) || `FK${toText(record.id ?? record.applicationId).padStart(12, '0')}`,
     businessContractAmount: toNumber(record.businessContractAmount ?? record.contractAmount),
     outboundAmount: toNumber(
       record.outboundAmount ??
@@ -604,6 +611,11 @@ const normalizeRecord = (
     arrivalDeadline: toText(
       record.arrivalDeadline ?? record.arrivalDeadlineDate ?? record.arrivalLimitDate
     ),
+    actualArrivalDate: toText(
+      record.actualArrivalDate ?? record.arrivalDate ?? record.inboundDate ?? record.completedAt
+    ),
+    updatedBy: toText(record.updatedBy ?? record.operatorName) || '本地演示用户',
+    updatedOrg: toText(record.updatedOrg ?? record.operatorOrg) || '宁波分行供应链金融部',
     inboundValue: toNumber(
       record.inboundValue ??
         record.inboundTotalValue ??
@@ -655,64 +667,76 @@ const recordFromResult = (value: unknown): AssetArrivalRecord | undefined => {
 
 const crudSchemas = reactive<CrudSchema[]>([
   {
-    label: '申请编号',
-    field: 'applicationNo',
+    label: '项目名称',
+    field: 'projectName',
     fixed: 'left',
     minWidth: 175,
     isSearch: true,
-    search: { componentProps: { placeholder: '请输入申请编号' } }
+    search: { componentProps: { placeholder: '请输入项目名称' } }
   },
   {
-    label: '客户名称',
-    field: 'customerName',
-    minWidth: 175,
-    isSearch: true,
-    search: { componentProps: { placeholder: '请输入客户名称' } }
-  },
-  {
-    label: '核心客户编号',
-    field: 'coreCustomerNo',
+    label: '项目编号',
+    field: 'projectNo',
     minWidth: 165,
     isSearch: true,
-    search: { componentProps: { placeholder: '请输入核心客户编号' } }
+    search: { componentProps: { placeholder: '请输入项目编号' } }
   },
+  {
+    label: '链属客户名称',
+    field: 'linkedCustomerName',
+    minWidth: 180,
+    isSearch: true,
+    search: { componentProps: { placeholder: '请输入链属客户名称' } }
+  },
+  { label: '授信编号', field: 'creditNo', minWidth: 165 },
   { label: '产品方案', field: 'productPlan', minWidth: 145 },
-  { label: '关联业务合同编号', field: 'businessContractNo', minWidth: 180 },
-  { label: '出账金额', field: 'outboundAmount', minWidth: 140 },
-  { label: '出账日期', field: 'billingDate', minWidth: 130 },
+  {
+    label: '业务合同编号',
+    field: 'businessContractNo',
+    minWidth: 180,
+    isSearch: true,
+    search: { componentProps: { placeholder: '请输入业务合同编号' } }
+  },
+  {
+    label: '出账编号',
+    field: 'disbursementFlowNo',
+    minWidth: 175,
+    isSearch: true,
+    search: { componentProps: { placeholder: '请输入出账编号' } }
+  },
+  { label: '生成日期', field: 'applicationDate', minWidth: 130 },
   { label: '到港截止日期', field: 'arrivalDeadline', minWidth: 145 },
-  { label: '入库货值', field: 'inboundValue', minWidth: 135 },
-  { label: '币种', field: 'currency', minWidth: 105 },
-  { label: '申请日期', field: 'applicationDate', minWidth: 130 },
-  { label: '入库类型', field: 'inboundType', minWidth: 125 },
-  { label: '当前阶段', field: 'currentStage', minWidth: 175 },
-  { label: '完成时间', field: 'completedAt', minWidth: 170 },
+  { label: '实际到港日期', field: 'actualArrivalDate', minWidth: 145 },
+  { label: '更新人', field: 'updatedBy', minWidth: 120 },
+  { label: '更新人机构', field: 'updatedOrg', minWidth: 175 },
   { label: '操作', field: 'action', fixed: 'right', width: 110 }
 ])
 
 const pendingFields = new Set([
-  'applicationNo',
-  'customerName',
-  'coreCustomerNo',
+  'projectName',
+  'projectNo',
+  'linkedCustomerName',
+  'creditNo',
   'productPlan',
   'businessContractNo',
-  'outboundAmount',
-  'billingDate',
+  'disbursementFlowNo',
+  'applicationDate',
   'arrivalDeadline',
   'action'
 ])
 const reviewingAndApprovedFields = new Set([
-  'applicationNo',
-  'customerName',
-  'coreCustomerNo',
+  'projectName',
+  'projectNo',
+  'linkedCustomerName',
+  'creditNo',
   'productPlan',
   'businessContractNo',
-  'inboundValue',
-  'currency',
+  'disbursementFlowNo',
   'applicationDate',
-  'inboundType',
-  'currentStage',
-  'completedAt',
+  'arrivalDeadline',
+  'actualArrivalDate',
+  'updatedBy',
+  'updatedOrg',
   'action'
 ])
 
@@ -1129,6 +1153,10 @@ const openImage = async (record: AssetArrivalRecord) => {
   }
 }
 
+const handleExport = () => {
+  ElMessage.success('已生成债项资产到港确认导出任务（Mock）')
+}
+
 const visibleButtons = computed<ActionButton[]>(() => {
   const detailButton: ActionButton = {
     key: 'detail',
@@ -1154,13 +1182,6 @@ const visibleButtons = computed<ActionButton[]>(() => {
 
   if (currentPhase.value === 'pending') {
     return [
-      {
-        key: 'create',
-        label: '新增',
-        icon: 'ep:plus',
-        plain: true,
-        onClick: openCreate
-      },
       detailButton,
       {
         key: 'submit',
@@ -1171,32 +1192,16 @@ const visibleButtons = computed<ActionButton[]>(() => {
         onClick: () => handleTransition('submit')
       },
       {
-        key: 'batch-submit',
-        label: '批量提交',
-        icon: 'ep:finished',
+        key: 'export',
+        label: '导出Excel',
+        icon: 'ep:download',
         plain: true,
-        onClick: openBatchSubmit
+        onClick: handleExport
       }
     ]
   }
 
-  if (currentPhase.value === 'reviewing') {
-    return [
-      detailButton,
-      opinionButton,
-      historyButton,
-      {
-        key: 'withdraw',
-        label: '收回',
-        icon: 'ep:back',
-        plain: true,
-        loading: actionLoading.value === 'withdraw',
-        onClick: () => handleTransition('withdraw')
-      }
-    ]
-  }
-
-  return [detailButton, opinionButton, historyButton]
+  return [detailButton]
 })
 
 watch(

@@ -37,3 +37,25 @@ export const inventoryPriceApplicationMenus = [
     phase: 'approved'
   }
 ]
+
+/** 债项管理岗使用的价格盯市审批工作台。 */
+export const inventoryPriceApprovalMenus = [
+  {
+    key: 'current',
+    value: './components/workList/index.vue',
+    title: '当前工作',
+    isLeaf: true,
+    id: 'current',
+    children: null,
+    phase: 'reviewing'
+  },
+  {
+    key: 'completed',
+    value: './components/workList/index.vue',
+    title: '已完成工作',
+    isLeaf: true,
+    id: 'completed',
+    children: null,
+    phase: 'approved'
+  }
+]

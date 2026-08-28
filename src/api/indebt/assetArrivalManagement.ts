@@ -1,9 +1,9 @@
 import request from '@/config/axios'
 
-/** 债项资产到港管理左侧工作台的三个稳定节点。 */
+/** 到港管理页面仅展示“待处理、已完成”两个业务节点。 */
 export type AssetArrivalApplicationPhase = 'pending' | 'reviewing' | 'approved'
 
-export type AssetArrivalApplicationStatus = '待处理' | '审查审批中' | '审批通过'
+export type AssetArrivalApplicationStatus = '待处理' | '审查审批中' | '审批通过' | '已完成'
 export type AssetArrivalInboundType = '部分入库' | '全部入库'
 export type AssetArrivalCurrency = '人民币' | '美元' | '欧元'
 
@@ -149,7 +149,7 @@ export interface AssetArrivalApplicationCreateForm {
   inboundType?: AssetArrivalInboundType
 }
 
-/** 待处理节点的详情允许确认入库货值、入库类型和到港截止日期。 */
+/** 保留兼容接口；最新版到港详情为只读，页面不再提供修改入口。 */
 export interface AssetArrivalConfirmationForm {
   inboundGoodsValue?: number
   /** 兼容内网页面的字段名称。 */
@@ -242,7 +242,7 @@ export const signAssetArrivalApplicationOpinion = (id: number, opinion: string) 
     data: { id, opinion }
   })
 
-/** 待处理到港确认提交后进入审查审批节点。 */
+/** 待处理到港确认提交后直接完成到港确认。 */
 export const submitAssetArrivalApplication = (id: number) =>
   request.post<AssetArrivalApplicationMutationResult>({
     url: '/system/indebt/asset-arrival-applications/submit',

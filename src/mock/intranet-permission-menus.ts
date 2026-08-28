@@ -1116,10 +1116,23 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
           {
             "id": 1238,
             "parentId": 1237,
-            "name": "提前还款申请复核",
-            "path": "PreReturnApprove",
-            "component": "toXd/index",
-            "componentName": "PreReturnApprove",
+            "name": "存货类业务提前还款申请",
+            "path": "InventoryPreReturnApplication",
+            "component": "indebt/earlyRepayment/index",
+            "componentName": "InventoryPreReturnApplication",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          },
+          {
+            "id": 1778,
+            "parentId": 1237,
+            "name": "存货类业务提前还款审核",
+            "path": "InventoryPreReturnApproval",
+            "component": "indebt/earlyRepayment/index",
+            "componentName": "InventoryPreReturnApproval",
             "icon": null,
             "visible": true,
             "keepAlive": true,
@@ -1251,14 +1264,41 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
         "id": 1729,
         "parentId": 1760,
         "name": "价格盯市",
-        "path": "inventoryPriceManagement",
-        "component": "indebt/inventoryPriceManagement/index",
-        "componentName": "InventoryPriceManagement",
+        "path": "",
+        "component": null,
+        "componentName": null,
         "icon": null,
         "visible": true,
         "keepAlive": true,
         "alwaysShow": true,
-        "children": null
+        "children": [
+          {
+            "id": 1770,
+            "parentId": 1729,
+            "name": "价格盯市申请",
+            "path": "inventoryPriceManagement",
+            "component": "indebt/inventoryPriceManagement/index",
+            "componentName": "InventoryPriceManagement",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          },
+          {
+            "id": 1771,
+            "parentId": 1729,
+            "name": "价格盯市审批",
+            "path": "inventoryPriceApproval",
+            "component": "indebt/inventoryPriceManagement/index",
+            "componentName": "InventoryPriceApproval",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          }
+        ]
       },
       {
         "id": 1730,
@@ -1404,6 +1444,19 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
             "children": null
           },
           {
+            "id": 1745,
+            "parentId": 1736,
+            "name": "价格盯市台账查询",
+            "path": "priceMonitoringLedgerQuery",
+            "component": "indebt/debtLedgerQuery/priceMonitoringLedgerQuery/index",
+            "componentName": "PriceMonitoringLedgerQuery",
+            "icon": null,
+            "visible": true,
+            "keepAlive": true,
+            "alwaysShow": true,
+            "children": null
+          },
+          {
             "id": 1747,
             "parentId": 1736,
             "name": "债项资产风险台账查询",
@@ -1417,6 +1470,37 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
             "children": null
           }
         ]
+      },
+      {
+        "id": 1772,
+        "parentId": 1760,
+        "name": "动产登记管理",
+        "path": "",
+        "component": null,
+        "componentName": null,
+        "icon": null,
+        "visible": true,
+        "keepAlive": true,
+        "alwaysShow": true,
+        "children": [
+          { "id": 1773, "parentId": 1772, "name": "动产登记申请", "path": "movableRegistrationApply", "component": "indebt/movablePropertyRegistration/index", "componentName": "MovableRegistrationApply", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1774, "parentId": 1772, "name": "动产登记复核", "path": "movableRegistrationReview", "component": "indebt/movablePropertyRegistration/index", "componentName": "MovableRegistrationReview", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1775, "parentId": 1772, "name": "动产注销申请", "path": "movableCancellationApply", "component": "indebt/movablePropertyRegistration/index", "componentName": "MovableCancellationApply", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null },
+          { "id": 1776, "parentId": 1772, "name": "动产注销复核", "path": "movableCancellationReview", "component": "indebt/movablePropertyRegistration/index", "componentName": "MovableCancellationReview", "icon": null, "visible": true, "keepAlive": true, "alwaysShow": true, "children": null }
+        ]
+      },
+      {
+        "id": 1777,
+        "parentId": 1760,
+        "name": "债项影像管理",
+        "path": "debtImageManagement",
+        "component": "indebt/debtImageManagement/index",
+        "componentName": "DebtImageManagement",
+        "icon": null,
+        "visible": true,
+        "keepAlive": true,
+        "alwaysShow": true,
+        "children": null
       },
       {
             "id": 1750,

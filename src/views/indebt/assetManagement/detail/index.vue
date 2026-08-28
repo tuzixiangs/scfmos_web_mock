@@ -14,7 +14,7 @@
     <el-collapse v-if="detail" v-model="activeSections" class="system-detail-collapse">
       <el-collapse-item name="contract">
         <template #title>
-          <span class="collapse-title">放款及业务合同基本信息</span>
+          <span class="collapse-title">出账及业务合同基本信息</span>
         </template>
         <div class="collapse-content">
           <el-form
@@ -25,12 +25,12 @@
           >
             <el-row :gutter="48">
               <el-col :span="12">
-                <el-form-item label="放款流水号">
+                <el-form-item label="出账流水号">
                   <el-input :model-value="detail.disbursementFlowNo || '-'" disabled />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="放款金额">
+                <el-form-item label="出账金额">
                   <el-input :model-value="formatAmount(detail.disbursementAmount)" disabled>
                     <template #append>{{ detail.currency }}</template>
                   </el-input>
@@ -39,7 +39,7 @@
             </el-row>
             <el-row :gutter="48">
               <el-col :span="12">
-                <el-form-item label="放款日期">
+                <el-form-item label="出账日期">
                   <el-input :model-value="detail.disbursementDate || '-'" disabled />
                 </el-form-item>
               </el-col>
@@ -186,12 +186,31 @@
           <div class="section-toolbar">
             <span>{{ selectedContractLabel }}，展示关联的待入库、已到港债项资产信息</span>
             <div class="asset-total">
-              拟入库资产总值：<strong
-                >{{ currencySymbol }}{{ formatAmount(plannedInboundValue) }}</strong
-              >
+              <span>拟入库资产总值：</span>
+              <el-input-number
+                v-model="plannedInboundValueInput"
+                :min="0"
+                :precision="2"
+                :controls="false"
+                size="small"
+              />
+              <strong>{{ currencySymbol }}</strong>
             </div>
           </div>
-          <el-table :data="selectedAssetRows" border empty-text="请先选择一条有效订单/合同">
+          <div class="asset-action-bar">
+            <el-button type="primary" plain @click="addAsset"><Icon icon="ep:plus" class="mr-4px" />新增</el-button>
+            <el-button plain @click="uploadAssetExcel"><Icon icon="ep:upload" class="mr-4px" />上传Excel</el-button>
+            <el-button plain @click="exportAssetTemplate"><Icon icon="ep:download" class="mr-4px" />导出模板</el-button>
+            <el-button type="danger" plain :disabled="!selectedAssets.length" @click="deleteAssets"><Icon icon="ep:delete" class="mr-4px" />删除</el-button>
+            <el-button type="primary" @click="saveAssetSection"><Icon icon="ep:check" class="mr-4px" />保存</el-button>
+          </div>
+          <el-table
+            :data="selectedAssetRows"
+            border
+            empty-text="请先选择一条有效订单/合同"
+            @selection-change="selectedAssets = $event"
+          >
+            <el-table-column type="selection" width="48" fixed="left" align="center" />
             <el-table-column type="index" label="序号" width="66" fixed="left" align="center" />
             <el-table-column prop="productCode" label="商品编号" min-width="135" fixed="left" />
             <el-table-column label="商品名称" min-width="180" fixed="left">
@@ -263,8 +282,12 @@
                 <span v-else>{{ row.smallCategory }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="batchNo" label="批次号" min-width="145" />
-            <el-table-column prop="containerNo" label="柜号" min-width="135" />
+            <el-table-column label="批次号" min-width="145">
+              <template #default="{ row }"><el-input v-if="editingAssetId === row.id" v-model="editingAssetFields.batchNo" size="small" /><span v-else>{{ row.batchNo }}</span></template>
+            </el-table-column>
+            <el-table-column label="柜号" min-width="135">
+              <template #default="{ row }"><el-input v-if="editingAssetId === row.id" v-model="editingAssetFields.containerNo" size="small" /><span v-else>{{ row.containerNo }}</span></template>
+            </el-table-column>
             <el-table-column label="产地" min-width="145">
               <template #default="{ row }">
                 <div v-if="editingAssetId === row.id" class="editable-category-cell">
@@ -283,7 +306,9 @@
                 <span v-else>{{ row.origin }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="specification" label="规格" min-width="105" />
+            <el-table-column label="规格" min-width="125">
+              <template #default="{ row }"><el-input v-if="editingAssetId === row.id" v-model="editingAssetFields.specification" size="small" /><span v-else>{{ row.specification }}</span></template>
+            </el-table-column>
             <el-table-column label="仓储地" min-width="185">
               <template #default="{ row }">
                 <div v-if="editingAssetId === row.id" class="editable-category-cell">
@@ -387,10 +412,16 @@
                   placeholder="请选择"
                 >
                   <el-option label="核心企业" value="核心企业" />
-                  <el-option label="借款人自己" value="借款人自己" />
+                  <el-option label="借款人" value="借款人" />
                 </el-select>
                 <span v-else>{{ row.goodsOwnership }}</span>
               </template>
+            </el-table-column>
+            <el-table-column label="备注1" min-width="170">
+              <template #default="{ row }"><el-input v-if="editingAssetId === row.id" v-model="editingAssetFields.remark1" size="small" maxlength="100" /><span v-else>{{ row.remark1 || '-' }}</span></template>
+            </el-table-column>
+            <el-table-column label="备注2" min-width="170">
+              <template #default="{ row }"><el-input v-if="editingAssetId === row.id" v-model="editingAssetFields.remark2" size="small" maxlength="100" /><span v-else>{{ row.remark2 || '-' }}</span></template>
             </el-table-column>
             <el-table-column label="状态" width="100" fixed="right" align="center">
               <template #default="{ row }">
@@ -467,7 +498,7 @@
       destroy-on-close
     >
       <el-alert
-        title="国内产地请选择到省，国外产地请选择到国家"
+        title="国内产地请选择到省市，国外产地请选择到国家"
         type="info"
         :closable="false"
         show-icon
@@ -482,7 +513,7 @@
         <el-button @click="originDialogVisible = false">取 消</el-button>
         <el-button
           type="primary"
-          :disabled="pendingOriginPath.length !== 2"
+          :disabled="!canConfirmOrigin"
           @click="confirmOriginSelection"
         >
           确 定
@@ -545,10 +576,11 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getAssetManagementApplicationDetail,
   updateAssetManagementAssetDetail,
+  updateAssetManagementConfirmation,
   type AssetManagementApplicationDetail,
   type AssetManagementAssetDetail,
   type AssetManagementOrderContract
@@ -568,6 +600,9 @@ const savingAssetId = ref<number>()
 const categoryDialogVisible = ref(false)
 const originDialogVisible = ref(false)
 const warehouseDialogVisible = ref(false)
+const selectedAssets = ref<AssetManagementAssetDetail[]>([])
+const plannedInboundValueInput = ref(0)
+const locallyAddedAssetIds = ref(new Set<number>())
 
 interface AssetCategorySelection {
   key: string
@@ -693,12 +728,37 @@ const countryNames = [
 ]
 const toOriginChildren = (names: string[]): OriginOption[] =>
   names.map((name) => ({ value: name, label: name }))
+const provinceCityOptions: Record<string, string[]> = {
+  北京市: ['北京市'], 天津市: ['天津市'], 上海市: ['上海市'], 重庆市: ['重庆市'],
+  河北省: ['石家庄市', '唐山市'], 山西省: ['太原市'], 内蒙古自治区: ['呼和浩特市'],
+  辽宁省: ['沈阳市', '大连市'], 吉林省: ['长春市', '松原市'], 黑龙江省: ['哈尔滨市'],
+  江苏省: ['南京市', '苏州市', '常州市'], 浙江省: ['杭州市', '宁波市', '温州市'],
+  安徽省: ['合肥市'], 福建省: ['福州市', '厦门市'], 江西省: ['南昌市'], 山东省: ['济南市', '青岛市'],
+  河南省: ['郑州市'], 湖北省: ['武汉市'], 湖南省: ['长沙市'], 广东省: ['广州市', '深圳市', '佛山市'],
+  广西壮族自治区: ['南宁市'], 海南省: ['海口市'], 四川省: ['成都市'], 贵州省: ['贵阳市'],
+  云南省: ['昆明市'], 西藏自治区: ['拉萨市'], 陕西省: ['西安市'], 甘肃省: ['兰州市'],
+  青海省: ['西宁市'], 宁夏回族自治区: ['银川市'], 新疆维吾尔自治区: ['乌鲁木齐市'],
+  香港特别行政区: ['香港特别行政区'], 澳门特别行政区: ['澳门特别行政区'], 台湾省: ['台北市']
+}
 const originOptions: OriginOption[] = [
-  { value: 'domestic', label: '国内', children: toOriginChildren(provinceNames) },
+  {
+    value: 'domestic',
+    label: '国内',
+    children: provinceNames.map((province) => ({
+      value: province,
+      label: province,
+      children: toOriginChildren(provinceCityOptions[province] || [province])
+    }))
+  },
   { value: 'overseas', label: '国外', children: toOriginChildren(countryNames) }
 ]
 const originCascaderProps = { expandTrigger: 'click' as const }
 const pendingOriginPath = ref<string[]>([])
+const canConfirmOrigin = computed(
+  () =>
+    (pendingOriginPath.value[0] === 'domestic' && pendingOriginPath.value.length === 3) ||
+    (pendingOriginPath.value[0] === 'overseas' && pendingOriginPath.value.length === 2)
+)
 
 interface WarehouseOption {
   regulatorEnterpriseName: string
@@ -805,13 +865,18 @@ const warehouseOptions: WarehouseOption[] = [
 const pendingWarehouse = ref<WarehouseOption>()
 
 const editingAssetFields = ref({
+  batchNo: '',
+  containerNo: '',
   origin: '',
+  specification: '',
   warehouseName: '',
   goodsStartDate: '',
   goodsEndDate: '',
   inboundQuantity: 0,
   initialRecognitionPrice: 0,
-  goodsOwnership: '核心企业' as '核心企业' | '借款人自己'
+  goodsOwnership: '核心企业' as '核心企业' | '借款人',
+  remark1: '',
+  remark2: ''
 })
 const editingRecognitionValue = computed(
   () =>
@@ -831,7 +896,7 @@ const selectedAssetRows = computed(() =>
     (item) => item.orderContractId === selectedOrderId.value
   )
 )
-const plannedInboundValue = computed(() =>
+const calculatedInboundValue = computed(() =>
   selectedAssetRows.value.reduce(
     (total, item) => total + Number(item.initialRecognitionValue || 0),
     0
@@ -887,6 +952,11 @@ const loadDetail = async () => {
       assetDetails: Array.isArray(record.assetDetails) ? record.assetDetails : []
     }
     selectedOrderId.value = detail.value.orderContracts[0]?.id
+    plannedInboundValueInput.value = Number(
+      detail.value.inboundGoodsValue || detail.value.inboundValue || calculatedInboundValue.value
+    )
+    selectedAssets.value = []
+    locallyAddedAssetIds.value = new Set()
     editingAssetId.value = undefined
     editingProductName.value = ''
     categoryDialogVisible.value = false
@@ -922,6 +992,85 @@ const viewAssetImage = (row: AssetManagementAssetDetail) => {
   ElMessage.info(`正在查看债项资产“${row.productName}”的影像资料（Mock）`)
 }
 
+const addAsset = () => {
+  if (!detail.value || !selectedOrderId.value) {
+    ElMessage.warning('请先选择一条有效订单/合同')
+    return
+  }
+  if (editingAssetId.value !== undefined) {
+    ElMessage.warning('请先完成当前债项资产的编辑')
+    return
+  }
+  const id = Math.max(0, ...detail.value.assetDetails.map((item) => item.id)) + 1
+  const row: AssetManagementAssetDetail = {
+    id,
+    orderContractId: selectedOrderId.value,
+    productCode: `SP${String(id).padStart(6, '0')}`,
+    productName: '新债项资产',
+    largeCategory: '金属材料',
+    middleCategory: '钢材',
+    smallCategory: '标准品',
+    batchNo: `PC${new Date().toISOString().slice(0, 10).replaceAll('-', '')}`,
+    containerNo: `CN${String(id).padStart(8, '0')}`,
+    origin: '浙江省宁波市',
+    specification: '待维护',
+    warehouseName: '宁波港通监管仓',
+    inboundQuantity: 1,
+    quantityUnit: '吨',
+    initialRecognitionPrice: 1,
+    initialRecognitionValue: 1,
+    currency: '人民币',
+    goodsStartDate: new Date().toISOString().slice(0, 10),
+    goodsEndDate: detail.value.contractEndDate || new Date().toISOString().slice(0, 10),
+    goodsOwnership: '核心企业',
+    remark1: '',
+    remark2: '',
+    assetStatus: '待入库'
+  }
+  detail.value.assetDetails.push(row)
+  locallyAddedAssetIds.value.add(id)
+  startAssetEdit(row)
+}
+
+const uploadAssetExcel = () => ElMessage.success('已模拟导入债项资产明细Excel')
+const exportAssetTemplate = () => ElMessage.success('已生成债项资产明细导入模板（Mock）')
+
+const deleteAssets = async () => {
+  if (!detail.value || !selectedAssets.value.length) return
+  try {
+    await ElMessageBox.confirm(
+      `确认删除已选择的 ${selectedAssets.value.length} 条债项资产明细吗？`,
+      '删除确认',
+      { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }
+    )
+  } catch {
+    return
+  }
+  const ids = new Set(selectedAssets.value.map((item) => item.id))
+  detail.value.assetDetails = detail.value.assetDetails.filter((item) => !ids.has(item.id))
+  selectedAssets.value = []
+  ElMessage.success('已删除所选债项资产明细')
+}
+
+const saveAssetSection = async () => {
+  if (!detail.value) return
+  if (editingAssetId.value !== undefined) {
+    ElMessage.warning('请先点击“完成”保存当前行')
+    return
+  }
+  try {
+    const result = await updateAssetManagementConfirmation(detail.value.id, {
+      inboundGoodsValue: plannedInboundValueInput.value
+    })
+    if (result.success === false) throw new Error(result.message || '保存失败')
+    detail.value.inboundGoodsValue = plannedInboundValueInput.value
+    detail.value.inboundValue = plannedInboundValueInput.value
+    ElMessage.success('债项资产明细已保存')
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '保存失败')
+  }
+}
+
 const startAssetEdit = (row: AssetManagementAssetDetail) => {
   if (editingAssetId.value !== undefined && editingAssetId.value !== row.id) {
     ElMessage.warning('请先完成当前债项资产的编辑')
@@ -935,13 +1084,18 @@ const startAssetEdit = (row: AssetManagementAssetDetail) => {
     smallCategory: row.smallCategory
   }
   editingAssetFields.value = {
+    batchNo: row.batchNo,
+    containerNo: row.containerNo,
     origin: row.origin,
+    specification: row.specification,
     warehouseName: row.warehouseName,
     goodsStartDate: row.goodsStartDate,
     goodsEndDate: row.goodsEndDate,
     inboundQuantity: row.inboundQuantity,
     initialRecognitionPrice: row.initialRecognitionPrice,
-    goodsOwnership: row.goodsOwnership === '借款人自己' ? '借款人自己' : '核心企业'
+    goodsOwnership: row.goodsOwnership === '借款人' || row.goodsOwnership === '借款人自己' ? '借款人' : '核心企业',
+    remark1: row.remark1 || '',
+    remark2: row.remark2 || ''
   }
 }
 
@@ -969,7 +1123,12 @@ const confirmCategorySelection = () => {
 
 const resolveOriginPath = (origin: string) => {
   const province = provinceNames.find((name) => origin.includes(name.replace(/[省市]$/, '')))
-  if (province) return ['domestic', province]
+  if (province) {
+    const city = (provinceCityOptions[province] || []).find((name) =>
+      origin.includes(name.replace(/市$/, ''))
+    )
+    return ['domestic', province, city || provinceCityOptions[province]?.[0] || province]
+  }
   const country = countryNames.find((name) => origin.includes(name))
   return country ? ['overseas', country] : []
 }
@@ -980,8 +1139,13 @@ const openOriginDialog = () => {
 }
 
 const confirmOriginSelection = () => {
-  if (pendingOriginPath.value.length !== 2) return
-  editingAssetFields.value.origin = pendingOriginPath.value[1]
+  if (!canConfirmOrigin.value) return
+  if (pendingOriginPath.value[0] === 'domestic') {
+    const [, province, city] = pendingOriginPath.value
+    editingAssetFields.value.origin = province === city ? province : `${province}${city}`
+  } else {
+    editingAssetFields.value.origin = pendingOriginPath.value[1]
+  }
   originDialogVisible.value = false
 }
 
@@ -1011,7 +1175,11 @@ const finishAssetEdit = async (row: AssetManagementAssetDetail) => {
     ElMessage.warning('请输入商品名称')
     return
   }
-  const { origin, warehouseName, goodsStartDate, goodsEndDate } = editingAssetFields.value
+  const { batchNo, containerNo, origin, specification, warehouseName, goodsStartDate, goodsEndDate } = editingAssetFields.value
+  if (!batchNo || !containerNo || !specification) {
+    ElMessage.warning('请完整填写批次号、柜号和规格')
+    return
+  }
   if (!origin) {
     ElMessage.warning('请选择产地')
     return
@@ -1044,11 +1212,13 @@ const finishAssetEdit = async (row: AssetManagementAssetDetail) => {
 
   savingAssetId.value = row.id
   try {
-    const result = await updateAssetManagementAssetDetail(detail.value.id, row.id, {
-      productName,
-      ...editingCategories.value,
-      ...editingAssetFields.value
-    })
+    const result = locallyAddedAssetIds.value.has(row.id)
+      ? { success: true }
+      : await updateAssetManagementAssetDetail(detail.value.id, row.id, {
+          productName,
+          ...editingCategories.value,
+          ...editingAssetFields.value
+        })
     if (result.success === false) {
       ElMessage.error(result.message || '债项资产明细更新失败')
       return
@@ -1057,7 +1227,10 @@ const finishAssetEdit = async (row: AssetManagementAssetDetail) => {
     row.largeCategory = editingCategories.value.largeCategory
     row.middleCategory = editingCategories.value.middleCategory
     row.smallCategory = editingCategories.value.smallCategory
+    row.batchNo = editingAssetFields.value.batchNo
+    row.containerNo = editingAssetFields.value.containerNo
     row.origin = editingAssetFields.value.origin
+    row.specification = editingAssetFields.value.specification
     row.warehouseName = editingAssetFields.value.warehouseName
     row.goodsStartDate = editingAssetFields.value.goodsStartDate
     row.goodsEndDate = editingAssetFields.value.goodsEndDate
@@ -1065,6 +1238,8 @@ const finishAssetEdit = async (row: AssetManagementAssetDetail) => {
     row.initialRecognitionPrice = editingAssetFields.value.initialRecognitionPrice
     row.initialRecognitionValue = Number(editingRecognitionValue.value.toFixed(2))
     row.goodsOwnership = editingAssetFields.value.goodsOwnership
+    row.remark1 = editingAssetFields.value.remark1
+    row.remark2 = editingAssetFields.value.remark2
     editingAssetId.value = undefined
     editingProductName.value = ''
     pendingCategorySelection.value = undefined
@@ -1189,15 +1364,29 @@ watch(() => route.query.id, loadDetail, { immediate: true })
 }
 
 .asset-total {
+  display: flex;
+  align-items: center;
   flex: 0 0 auto;
   color: #606266;
   white-space: nowrap;
+  gap: 8px;
+
+  :deep(.el-input-number) {
+    width: 180px;
+  }
 
   strong {
     color: #f56c6c;
     font-size: 16px;
     font-weight: 600;
   }
+}
+
+.asset-action-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
 }
 
 :deep(.selected-contract-row td.el-table__cell) {
