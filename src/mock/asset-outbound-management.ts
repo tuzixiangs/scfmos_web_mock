@@ -95,6 +95,9 @@ export interface AssetOutboundManagementApplicationRecord {
   status: AssetOutboundManagementApplicationStatus
   currentStage?: string
   completedAt?: string
+  handlerName?: string
+  handlerIdCard?: string
+  repaymentLoanNos?: string[]
   images: AssetOutboundManagementApplicationImage[]
   opinions: AssetOutboundManagementApplicationOpinion[]
   flowRecords: AssetOutboundManagementFlowRecord[]
@@ -103,6 +106,13 @@ export interface AssetOutboundManagementApplicationRecord {
 export interface AssetOutboundManagementApplicationCreatePayload {
   projectId?: number | string
   outboundType?: AssetOutboundManagementOutboundType
+  outboundValue?: number
+  productPlan?: string
+  handlerName?: string
+  handlerIdCard?: string
+  repaymentLoanNos?: string[]
+  attachmentNames?: string[]
+  applicationChannel?: string
 }
 
 export interface AssetOutboundManagementConfirmationPayload {
@@ -726,10 +736,7 @@ export const getAssetOutboundManagementInventoryGoods = (
 
 /** 根据项目生成待提交的债项资产出库申请。 */
 export const createAssetOutboundManagementApplicationRecord = (
-  payload: AssetOutboundManagementApplicationCreatePayload & {
-    outboundValue?: number
-    productPlan?: string
-  }
+  payload: AssetOutboundManagementApplicationCreatePayload
 ): AssetOutboundManagementApplicationMutationResult => {
   const projectId = Number(payload.projectId)
   const project = assetOutboundManagementAvailableProjects.find((item) => item.id === projectId && item.isEffective)
@@ -739,6 +746,24 @@ export const createAssetOutboundManagementApplicationRecord = (
     (item) => item.projectId === project.id && (item.phase === 'pending' || item.phase === 'reviewing')
   )
   if (hasInProgressApplication) return mutationFailure('该项目已有待处理或审查审批中的出库申请，不能重复新增')
+
+  const handlerName = trim(payload.handlerName)
+  const handlerIdCard = trim(payload.handlerIdCard)
+  if (!handlerName) return mutationFailure('请输入经办人姓名')
+  if (!/^\d{17}[\dXx]$/.test(handlerIdCard)) return mutationFailure('请输入18位有效身份证号码')
+
+  const repaymentLoanNos = Array.from(
+    new Set((Array.isArray(payload.repaymentLoanNos) ? payload.repaymentLoanNos : []).map(trim).filter(Boolean))
+  )
+  if (repaymentLoanNos.length > 20) return mutationFailure('单次最多选择20条提前还款借据')
+
+  const attachmentNames = (Array.isArray(payload.attachmentNames) ? payload.attachmentNames : [])
+    .map(trim)
+    .filter(Boolean)
+  if (attachmentNames.length > 5) return mutationFailure('最多上传5个文件')
+  if (attachmentNames.some((name) => !/\.(pdf|png|jpe?g)$/i.test(name))) {
+    return mutationFailure('仅支持上传 PDF、PNG、JPG、JPEG 格式文件')
+  }
 
   const id = nextId()
   const outboundType = payload.outboundType === '已完成出库' ? '已完成出库' : '部分出库'
@@ -757,7 +782,13 @@ export const createAssetOutboundManagementApplicationRecord = (
     outboundType,
     phase: 'pending',
     status: '待提交',
-    images: [],
+    images: attachmentNames.map((name, index) => ({
+      id: index + 1,
+      name,
+      url: `/mock-files/asset-outbound-management/${encodeURIComponent(name)}`,
+      uploadedAt: now(),
+      uploader: handlerName
+    })),
     opinions: [],
     flowRecords: []
   })
@@ -765,7 +796,16 @@ export const createAssetOutboundManagementApplicationRecord = (
     record.productPlan = payload.productPlan
     record.productScheme = payload.productPlan
   }
-  appendFlow(record, '出库申请', '创建申请')
+  record.handlerName = handlerName
+  record.handlerIdCard = handlerIdCard
+  record.repaymentLoanNos = repaymentLoanNos
+  record.applicationChannel = trim(payload.applicationChannel) || '企业网银'
+  appendFlow(
+    record,
+    '出库申请',
+    attachmentNames.length ? '上传提货申请书/还款凭证并创建申请' : '创建申请',
+    handlerName
+  )
   assetOutboundManagementApplicationRecords.unshift(record)
   return mutationSuccess(record, '已创建待提交的债项资产出库申请')
 }

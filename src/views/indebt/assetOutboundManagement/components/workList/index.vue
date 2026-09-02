@@ -63,10 +63,16 @@
     class="custom-create-dialog"
   >
     <div class="create-instruction-banner text-blue-600 text-sm mb-3 p-2 bg-blue-50 border border-blue-200 rounded">
-      提示：先选客户，再选项目，选完自动带出项目编号，最后选择产品方案。
+      提示：先选择客户、项目和产品方案，再录入提货出库及提前还款信息并上传相关凭证。
     </div>
 
+    <el-steps :active="createStep" align-center finish-status="success" class="create-steps">
+      <el-step title="选择项目与产品" />
+      <el-step title="录入提货/还款信息" />
+    </el-steps>
+
     <el-form ref="createFormRef" :model="createForm" :rules="createRules">
+      <div v-show="createStep === 0">
       <!-- 2x2 Grid Table Matching Mockup Screenshot -->
       <table class="grid-form-table">
         <tbody>
@@ -139,13 +145,21 @@
           </el-select>
         </el-form-item>
       </div>
+      </div>
 
       <!-- In-Stock Goods Section -->
-      <div v-if="createForm.linkedCustomerName && createForm.projectName && createForm.productPlan" class="inventory-section mt-5">
+      <div v-show="createStep === 1" class="create-business-step">
+      <el-alert
+        title="可同时录入提货出库和提前还款信息；返回上一步会重置本步骤已录入的数据。"
+        type="info"
+        :closable="false"
+        class="mb-14px"
+      />
+      <div class="inventory-section mt-5">
         <div class="inventory-header flex items-center justify-between mb-3">
           <div class="font-bold text-gray-800 text-sm flex items-center gap-2">
             <span class="w-2.5 h-4 bg-blue-600 rounded-sm inline-block"></span>
-            在库商品列表（已选择该客户在此项目此产品中的所有在库商品，供选择出库）
+            在库商品列表（请选择本次拟提货出库的商品）
           </div>
           <el-tag type="info" effect="plain">在库商品共 {{ inventoryGoods.length }} 项</el-tag>
         </div>
@@ -205,10 +219,105 @@
           </div>
         </div>
       </div>
+
+      <section class="repayment-section create-subsection">
+        <div class="create-subsection-header">
+          <div>
+            <strong>提前还款借据信息</strong>
+            <p>可选填；单次最多选择 20 条借据，一条借据对应一条提前还款子流程。</p>
+          </div>
+          <el-switch
+            v-model="createForm.includeEarlyRepayment"
+            active-text="同步提前还款"
+            @change="handleRepaymentToggle"
+          />
+        </div>
+        <template v-if="createForm.includeEarlyRepayment">
+          <div class="repayment-query-row">
+            <el-input
+              v-model.trim="repaymentLoanTypeKeyword"
+              clearable
+              placeholder="请输入贷款品种"
+            >
+              <template #prefix><Icon icon="ep:search" /></template>
+            </el-input>
+            <el-tag type="info" effect="plain">
+              已选择 {{ selectedRepaymentLoans.length }}/20 条
+            </el-tag>
+          </div>
+          <el-table
+            ref="repaymentTableRef"
+            :data="filteredRepaymentLoans"
+            border
+            size="small"
+            max-height="270"
+            @selection-change="handleRepaymentSelectionChange"
+          >
+            <el-table-column type="selection" width="48" align="center" />
+            <el-table-column prop="loanNo" label="借据号" min-width="170" />
+            <el-table-column prop="loanType" label="贷款品种" min-width="145" />
+            <el-table-column prop="currency" label="币种" width="90" />
+            <el-table-column prop="outstandingPrincipalText" label="贷款余额" min-width="130" align="right" />
+            <el-table-column prop="loanStartDate" label="贷款起始日" min-width="120" />
+            <el-table-column prop="loanEndDate" label="贷款到期日" min-width="120" />
+          </el-table>
+        </template>
+      </section>
+
+      <section class="handler-section create-subsection">
+        <div class="create-subsection-header">
+          <div>
+            <strong>经办人信息</strong>
+            <p>经办人姓名及身份证号码均为必填项。</p>
+          </div>
+        </div>
+        <div class="handler-form-grid">
+          <el-form-item label="经办人姓名" prop="handlerName">
+            <el-input v-model.trim="createForm.handlerName" maxlength="30" placeholder="请输入经办人姓名" />
+          </el-form-item>
+          <el-form-item label="身份证号码" prop="handlerIdCard">
+            <el-input
+              v-model.trim="createForm.handlerIdCard"
+              maxlength="18"
+              placeholder="请输入18位身份证号码"
+            />
+          </el-form-item>
+        </div>
+      </section>
+
+      <section class="document-section create-subsection">
+        <div class="create-subsection-header">
+          <div>
+            <strong>上传提货申请书/还款凭证</strong>
+            <p>非必传，支持 PDF、PNG、JPG、JPEG 格式，最多上传 5 个文件。</p>
+          </div>
+          <el-tag type="info" effect="plain">{{ attachmentFiles.length }}/5</el-tag>
+        </div>
+        <el-upload
+          v-model:file-list="attachmentFiles"
+          action="#"
+          :auto-upload="false"
+          :limit="5"
+          accept=".pdf,.png,.jpg,.jpeg"
+          :on-change="handleAttachmentChange"
+          :on-exceed="handleAttachmentExceed"
+        >
+          <el-button type="primary" plain>
+            <Icon icon="ep:upload" class="mr-4px" />选择文件
+          </el-button>
+        </el-upload>
+      </section>
+      </div>
     </el-form>
     <template #footer>
-      <el-button @click="createVisible = false">取 消</el-button>
-      <el-button type="primary" :loading="createLoading" @click="handleCreate">保 存</el-button>
+      <template v-if="createStep === 0">
+        <el-button @click="createVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handleCreateNext">下一步</el-button>
+      </template>
+      <template v-else>
+        <el-button @click="handleCreateBack">上一步</el-button>
+        <el-button type="primary" :loading="createLoading" @click="handleCreate">保 存</el-button>
+      </template>
     </template>
   </el-dialog>
 
@@ -473,7 +582,15 @@
 
 <script setup lang="ts">
 import { computed, onActivated, reactive, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type FormRules,
+  type UploadFile,
+  type UploadFiles,
+  type UploadUserFile
+} from 'element-plus'
 import { ActionBar, type ActionButton } from '@/components/ActionBar'
 import { useCrudSchemas, type CrudSchema } from '@/hooks/web/useCrudSchemas'
 import { useUserStore } from '@/store/modules/user'
@@ -537,6 +654,9 @@ interface AssetOutboundManagementRecord {
   contractEndDate: string
   currentStage?: string
   completedAt?: string
+  handlerName?: string
+  handlerIdCard?: string
+  repaymentLoanNos?: string[]
   opinions?: AssetOutboundManagementOpinion[]
   flowRecords?: AssetOutboundManagementFlowRecord[]
 }
@@ -568,6 +688,20 @@ interface CreateForm {
   productPlan: string
   businessContractNo: string
   outboundType: '部分出库' | '已完成出库' | ''
+  includeEarlyRepayment: boolean
+  handlerName: string
+  handlerIdCard: string
+}
+
+interface RepaymentLoan {
+  id: number
+  loanNo: string
+  loanType: string
+  currency: string
+  outstandingPrincipal: number
+  outstandingPrincipalText: string
+  loanStartDate: string
+  loanEndDate: string
 }
 
 interface ConfirmationForm {
@@ -716,6 +850,9 @@ const normalizeRecord = (
     contractEndDate: toText(record.contractEndDate ?? record.businessContractEndDate),
     currentStage: toText(record.currentStage ?? record.currentNode),
     completedAt: toText(record.completedAt ?? record.completeTime ?? record.completedTime),
+    handlerName: toText(record.handlerName ?? record.operatorName),
+    handlerIdCard: toText(record.handlerIdCard ?? record.operatorIdCard),
+    repaymentLoanNos: getArray(record.repaymentLoanNos ?? record.loanNos).map(toText),
     opinions: rawOpinions.map(normalizeOpinion),
     flowRecords: rawFlowRecords.map(normalizeFlowRecord)
   }
@@ -856,10 +993,7 @@ interface SelectableInventoryGoods extends AssetOutboundInventoryGoods {
 const createVisible = ref(false)
 const createLoading = ref(false)
 const createFormRef = ref<FormInstance>()
-const projectKeyword = ref('')
-const linkedCustomerKeyword = ref('')
 const projectsLoading = ref(false)
-const availableProjects = ref<AvailableProject[]>([])
 
 const customerSelectVisible = ref(false)
 const customerSearchKeyword = ref('')
@@ -871,6 +1005,35 @@ const customerProjects = ref<AvailableProject[]>([])
 
 const inventoryGoods = ref<SelectableInventoryGoods[]>([])
 const selectedInventoryGoods = ref<SelectableInventoryGoods[]>([])
+const inventoryTableRef = ref<{ clearSelection: () => void }>()
+const createStep = ref(0)
+const repaymentLoanTypeKeyword = ref('')
+const repaymentTableRef = ref<{
+  clearSelection: () => void
+  toggleRowSelection: (row: RepaymentLoan, selected?: boolean) => void
+}>()
+const selectedRepaymentLoans = ref<RepaymentLoan[]>([])
+const attachmentFiles = ref<UploadUserFile[]>([])
+const availableRepaymentLoans: RepaymentLoan[] = Array.from({ length: 22 }, (_, index) => {
+  const loanType = index % 2 === 0 ? '货押融资' : '先票后货'
+  const outstandingPrincipal = 360000 + index * 25000
+  return {
+    id: index + 1,
+    loanNo: `DK2026${String(index + 1).padStart(8, '0')}`,
+    loanType,
+    currency: '人民币',
+    outstandingPrincipal,
+    outstandingPrincipalText: formatAmount(outstandingPrincipal),
+    loanStartDate: `2026-${String((index % 6) + 1).padStart(2, '0')}-01`,
+    loanEndDate: `2027-${String((index % 6) + 1).padStart(2, '0')}-01`
+  }
+})
+const filteredRepaymentLoans = computed(() => {
+  const keyword = repaymentLoanTypeKeyword.value.trim()
+  return keyword
+    ? availableRepaymentLoans.filter((item) => item.loanType.includes(keyword))
+    : availableRepaymentLoans
+})
 
 const totalOutboundValue = computed(() => {
   return selectedInventoryGoods.value.reduce((sum, item) => sum + (item.proposedOutboundValue || 0), 0)
@@ -901,14 +1064,22 @@ const initialCreateForm = (): CreateForm => ({
   creditNo: '',
   productPlan: '',
   businessContractNo: '',
-  outboundType: '部分出库'
+  outboundType: '部分出库',
+  includeEarlyRepayment: false,
+  handlerName: '',
+  handlerIdCard: ''
 })
 const createForm = reactive<CreateForm>(initialCreateForm())
 const createRules: FormRules<CreateForm> = {
   linkedCustomerName: [{ required: true, message: '请选择链属客户名称', trigger: 'change' }],
   projectName: [{ required: true, message: '请选择有效项目名称', trigger: 'change' }],
   productPlan: [{ required: true, message: '请选择产品方案', trigger: 'change' }],
-  outboundType: [{ required: true, message: '请选择出库类型', trigger: 'change' }]
+  outboundType: [{ required: true, message: '请选择出库类型', trigger: 'change' }],
+  handlerName: [{ required: true, message: '请输入经办人姓名', trigger: 'blur' }],
+  handlerIdCard: [
+    { required: true, message: '请输入身份证号码', trigger: 'blur' },
+    { pattern: /^\d{17}[\dXx]$/, message: '请输入18位有效身份证号码', trigger: 'blur' }
+  ]
 }
 
 const initialConfirmationForm = (): ConfirmationForm => ({
@@ -963,42 +1134,6 @@ const handleSearch = (params: Recordable) => {
   setSearchParams({ ...params, phase: currentPhase.value })
 }
 
-const loadAvailableProjects = async () => {
-  projectsLoading.value = true
-  try {
-    const result = await callApi<unknown>(
-      ['getAvailableAssetOutboundManagementProjects', 'getEffectiveAssetOutboundManagementProjects'],
-      {
-        projectName: projectKeyword.value.trim() || undefined,
-        linkedCustomerName: linkedCustomerKeyword.value.trim() || undefined,
-        customerName: linkedCustomerKeyword.value.trim() || undefined
-      }
-    )
-    const source = unwrapData(result)
-    const page = toObject(source)
-    const rows = Array.isArray(source) ? source : getArray(page.list ?? page.records ?? page.rows)
-    availableProjects.value = rows.map(normalizeProject)
-  } catch (error) {
-    availableProjects.value = []
-    ElMessage.error(error instanceof Error ? error.message : '获取有效项目失败')
-  } finally {
-    projectsLoading.value = false
-  }
-}
-
-const selectProject = (project: AvailableProject) => {
-  Object.assign(createForm, {
-    projectId: project.id,
-    projectName: project.projectName,
-    projectNo: project.projectNo,
-    linkedCustomerName: project.linkedCustomerName,
-    creditNo: project.creditNo,
-    productPlan: project.productPlan,
-    businessContractNo: project.businessContractNo
-  })
-  createFormRef.value?.validateField('projectId')
-}
-
 const openCustomerSelect = () => {
   customerSearchKeyword.value = ''
   customerSelectVisible.value = true
@@ -1011,13 +1146,17 @@ const loadCustomerList = () => {
 
 const handleSelectCustomer = (row: AssetOutboundManagementCustomer) => {
   createForm.linkedCustomerName = row.linkedCustomerName
-  linkedCustomerKeyword.value = row.linkedCustomerName
   createForm.projectId = ''
   createForm.projectName = ''
   createForm.projectNo = ''
   createForm.productPlan = ''
+  createForm.includeEarlyRepayment = false
+  createForm.handlerName = ''
+  createForm.handlerIdCard = ''
   inventoryGoods.value = []
   selectedInventoryGoods.value = []
+  selectedRepaymentLoans.value = []
+  attachmentFiles.value = []
   customerSelectVisible.value = false
   ElMessage.success(`已选择链属客户：${row.linkedCustomerName}，请接着选择项目`)
 }
@@ -1082,7 +1221,8 @@ const loadInventoryGoodsList = () => {
       proposedOutboundQuantity: item.inStockQuantity,
       proposedOutboundValue: item.inStockValue
     }))
-    selectedInventoryGoods.value = [...inventoryGoods.value]
+    selectedInventoryGoods.value = []
+    inventoryTableRef.value?.clearSelection()
   } else {
     inventoryGoods.value = []
     selectedInventoryGoods.value = []
@@ -1097,14 +1237,91 @@ const handleInventorySelectionChange = (selection: SelectableInventoryGoods[]) =
   selectedInventoryGoods.value = selection
 }
 
+const handleRepaymentSelectionChange = (selection: RepaymentLoan[]) => {
+  if (selection.length <= 20) {
+    selectedRepaymentLoans.value = selection
+    return
+  }
+  const overflow = selection[selection.length - 1]
+  repaymentTableRef.value?.toggleRowSelection(overflow, false)
+  selectedRepaymentLoans.value = selection.slice(0, 20)
+  ElMessage.warning('单次最多选择20条提前还款借据')
+}
+
+const handleRepaymentToggle = (enabled: string | number | boolean) => {
+  if (Boolean(enabled)) return
+  selectedRepaymentLoans.value = []
+  repaymentLoanTypeKeyword.value = ''
+  repaymentTableRef.value?.clearSelection()
+}
+
+const handleAttachmentChange = (file: UploadFile, files: UploadFiles) => {
+  if (!/\.(pdf|png|jpe?g)$/i.test(file.name)) {
+    attachmentFiles.value = files.filter((item) => item.uid !== file.uid) as UploadUserFile[]
+    ElMessage.warning('仅支持上传 PDF、PNG、JPG、JPEG 格式文件')
+    return
+  }
+  attachmentFiles.value = files.slice(0, 5) as UploadUserFile[]
+}
+
+const handleAttachmentExceed = () => {
+  ElMessage.warning('最多上传5个文件')
+}
+
+const resetCreateBusinessData = () => {
+  selectedInventoryGoods.value = []
+  inventoryTableRef.value?.clearSelection()
+  createForm.includeEarlyRepayment = false
+  selectedRepaymentLoans.value = []
+  repaymentLoanTypeKeyword.value = ''
+  repaymentTableRef.value?.clearSelection()
+  createForm.handlerName = ''
+  createForm.handlerIdCard = ''
+  attachmentFiles.value = []
+  createFormRef.value?.clearValidate(['handlerName', 'handlerIdCard'])
+}
+
+const handleCreateNext = () => {
+  if (!createForm.linkedCustomerName) return ElMessage.warning('请选择链属客户名称')
+  if (!createForm.projectId) return ElMessage.warning('请选择有效项目名称')
+  if (!createForm.productPlan) return ElMessage.warning('请选择产品方案')
+  if (!createForm.outboundType) return ElMessage.warning('请选择出库类型')
+  if (!inventoryGoods.value.length) loadInventoryGoodsList()
+  createStep.value = 1
+}
+
+const handleCreateBack = async () => {
+  const hasInput =
+    selectedInventoryGoods.value.length > 0 ||
+    selectedRepaymentLoans.value.length > 0 ||
+    Boolean(createForm.handlerName || createForm.handlerIdCard) ||
+    attachmentFiles.value.length > 0
+
+  if (hasInput) {
+    try {
+      await ElMessageBox.confirm(
+        '返回上一步将重置已录入的提货/还款信息，请确认。',
+        '返回确认',
+        { confirmButtonText: '确认', cancelButtonText: '取消', type: 'warning' }
+      )
+    } catch {
+      return
+    }
+  }
+  resetCreateBusinessData()
+  createStep.value = 0
+}
+
 const openCreate = async () => {
   Object.assign(createForm, initialCreateForm())
-  projectKeyword.value = ''
-  linkedCustomerKeyword.value = ''
+  createStep.value = 0
   customerSearchKeyword.value = ''
   projectSearchKeyword.value = ''
   inventoryGoods.value = []
   selectedInventoryGoods.value = []
+  selectedRepaymentLoans.value = []
+  repaymentLoanTypeKeyword.value = ''
+  attachmentFiles.value = []
   createFormRef.value?.clearValidate()
   createVisible.value = true
 }
@@ -1126,6 +1343,15 @@ const handleCreate = async () => {
     ElMessage.warning('请勾选拟出库的在库商品')
     return
   }
+  const handlerValid = await createFormRef.value
+    ?.validateField(['handlerName', 'handlerIdCard'])
+    .then(() => true)
+    .catch(() => false)
+  if (!handlerValid) return
+  if (createForm.includeEarlyRepayment && !selectedRepaymentLoans.value.length) {
+    ElMessage.warning('请选择需要提前还款的借据')
+    return
+  }
 
   createLoading.value = true
   try {
@@ -1134,7 +1360,12 @@ const handleCreate = async () => {
       outboundType: createForm.outboundType,
       linkedCustomerName: createForm.linkedCustomerName,
       productPlan: createForm.productPlan,
-      outboundValue: totalOutboundValue.value
+      outboundValue: totalOutboundValue.value,
+      handlerName: createForm.handlerName,
+      handlerIdCard: createForm.handlerIdCard,
+      repaymentLoanNos: selectedRepaymentLoans.value.map((item) => item.loanNo),
+      attachmentNames: attachmentFiles.value.map((item) => item.name),
+      applicationChannel: '企业网银'
     })
     if (isFailedResult(result)) {
       ElMessage.error(result.message || '新增债项资产出库申请失败')
@@ -1692,6 +1923,14 @@ onActivated(() => {
   margin-bottom: 18px;
 }
 
+.create-steps {
+  margin: 4px 0 24px;
+}
+
+.create-business-step {
+  min-width: 0;
+}
+
 .grid-form-table {
   width: 100%;
   border-collapse: collapse;
@@ -1735,6 +1974,54 @@ onActivated(() => {
   padding-top: 16px;
 }
 
+.create-subsection {
+  margin-top: 18px;
+  padding: 14px 16px 16px;
+  border: 1px solid #e4e7ed;
+  background: #fff;
+}
+
+.create-subsection-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+
+  strong {
+    color: #303133;
+    font-size: 14px;
+  }
+
+  p {
+    margin: 5px 0 0;
+    color: #909399;
+    font-size: 12px;
+  }
+}
+
+.repayment-query-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  .el-input {
+    width: 320px;
+  }
+}
+
+.handler-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 22px;
+
+  :deep(.el-form-item) {
+    margin-bottom: 0;
+  }
+}
+
 @media (max-width: 900px) {
   .project-query-row,
   .detail-section-heading {
@@ -1747,6 +2034,20 @@ onActivated(() => {
 
   .arrival-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .handler-form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .repayment-query-row {
+    align-items: stretch;
+    flex-direction: column;
+
+    .el-input {
+      width: 100%;
+    }
   }
 }
 </style>

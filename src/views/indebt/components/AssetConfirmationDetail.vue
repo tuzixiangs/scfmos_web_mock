@@ -36,6 +36,13 @@
               <el-col :span="12"><el-form-item label="产品方案"><el-input :model-value="detail.productPlan || detail.productScheme || '-'" disabled /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="当前阶段"><el-input :model-value="detail.currentStage || '-'" disabled /></el-form-item></el-col>
             </el-row>
+            <el-row v-if="props.mode === 'outbound'" :gutter="48">
+              <el-col :span="12"><el-form-item label="经办人姓名"><el-input :model-value="detail.handlerName || '-'" disabled /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="身份证号码"><el-input :model-value="detail.handlerIdCard || '-'" disabled /></el-form-item></el-col>
+            </el-row>
+            <el-row v-if="props.mode === 'outbound' && detail.repaymentLoanNos?.length" :gutter="48">
+              <el-col :span="24"><el-form-item label="提前还款借据"><el-input :model-value="detail.repaymentLoanNos.join('、')" type="textarea" :rows="2" disabled /></el-form-item></el-col>
+            </el-row>
           </el-form>
         </div>
       </el-collapse-item>
@@ -89,6 +96,30 @@
         </div>
       </el-collapse-item>
 
+      <el-collapse-item v-if="props.mode === 'outbound'" name="documents">
+        <template #title><span class="collapse-title">提货申请书/还款凭证</span></template>
+        <div class="collapse-content">
+          <el-alert
+            title="支持 PDF、PNG、JPG、JPEG 格式，单次最多 5 个文件。"
+            type="info"
+            :closable="false"
+            class="mb-14px"
+          />
+          <el-table v-if="detail.images?.length" :data="detail.images" border size="small">
+            <el-table-column type="index" label="序号" width="66" align="center" />
+            <el-table-column prop="name" label="文件名称" min-width="260" />
+            <el-table-column prop="uploader" label="上传人" min-width="120" />
+            <el-table-column prop="uploadedAt" label="上传时间" min-width="170" />
+            <el-table-column label="操作" width="100" align="center">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="ElMessage.info(`正在查看“${row.name}”（Mock）`)">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-else description="暂无已上传的提货申请书或还款凭证" :image-size="72" />
+        </div>
+      </el-collapse-item>
+
       <el-collapse-item name="process">
         <template #title><span class="collapse-title">审批意见及流转记录</span></template>
         <div class="collapse-content process-grid">
@@ -108,6 +139,7 @@ import * as OutboundApi from '@/api/indebt/assetOutboundManagement'
 
 interface DetailOpinion { id: number; content: string; signer: string; signedAt: string }
 interface DetailFlow { id: number; node: string; action: string; operator: string; operatedAt: string; comment?: string }
+interface DetailImage { id: number; name: string; url: string; uploadedAt: string; uploader: string }
 interface AssetConfirmationRecord {
   id: number; applicationNo: string; applicationDate: string; projectName: string; projectNo: string;
   customerName: string; coreCustomerNo: string; linkedCustomerName?: string; creditNo: string;
@@ -118,6 +150,8 @@ interface AssetConfirmationRecord {
   arrivalDeadline: string; inboundType?: string; outboundType?: string; inboundValue?: number;
   inboundGoodsValue?: number; outboundValue?: number; outboundGoodsValue?: number; confirmationRemark?: string;
   arrivalDate?: string; inboundDate?: string; updatedBy?: string;
+  completedAt?: string;
+  handlerName?: string; handlerIdCard?: string; repaymentLoanNos?: string[]; images?: DetailImage[];
   opinions?: DetailOpinion[]; flowRecords?: DetailFlow[]
 }
 
@@ -128,7 +162,7 @@ const loading = ref(false)
 const saving = ref(false)
 const detail = ref<AssetConfirmationRecord>()
 const formRef = ref<FormInstance>()
-const activeSections = ref(['application', 'contract', 'confirmation', 'process'])
+const activeSections = ref(['application', 'contract', 'confirmation', 'documents', 'process'])
 const businessText = computed(() => props.mode === 'arrival' ? '到港' : '出库')
 const canEdit = computed(() => props.mode === 'outbound' && detail.value?.phase === 'pending')
 const statusTagType = computed(() => detail.value?.phase === 'approved' ? 'success' : detail.value?.phase === 'reviewing' ? 'warning' : detail.value?.phase === 'rejected' ? 'danger' : 'info')

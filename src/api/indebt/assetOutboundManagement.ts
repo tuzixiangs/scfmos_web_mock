@@ -103,6 +103,9 @@ export interface AssetOutboundManagementApplicationRecord {
   status: AssetOutboundManagementApplicationStatus
   currentStage?: string
   completedAt?: string
+  handlerName?: string
+  handlerIdCard?: string
+  repaymentLoanNos?: string[]
   images?: AssetOutboundManagementApplicationImage[]
   opinions?: AssetOutboundManagementApplicationOpinion[]
   flowRecords?: AssetOutboundManagementFlowRecord[]
@@ -153,6 +156,11 @@ export interface AssetOutboundManagementApplicationCreateForm {
   linkedCustomerName?: string
   productPlan?: string
   outboundValue?: number
+  handlerName: string
+  handlerIdCard: string
+  repaymentLoanNos?: string[]
+  attachmentNames?: string[]
+  applicationChannel?: string
 }
 
 /** 待处理节点的详情允许确认出库在库货值、出库类型和出库截止日期。 */
