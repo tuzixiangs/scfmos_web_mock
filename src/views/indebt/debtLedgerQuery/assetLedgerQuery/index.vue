@@ -9,6 +9,13 @@
     />
     <main class="component">
       <ContentWrap>
+        <el-alert
+          title="台账由信贷管理系统每日生成 Excel，并邮件发送给供应链系统管理员。"
+          type="info"
+          :closable="false"
+          show-icon
+          class="mb-12px"
+        />
         <Search
           :schema="projectSchemas.searchSchema"
           :model="projectQuery"
@@ -34,6 +41,13 @@
   </div>
 
   <ContentWrap v-else class="asset-ledger-detail-page">
+    <el-alert
+      title="台账由信贷管理系统每日生成 Excel，并邮件发送给供应链系统管理员。"
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-12px"
+    />
     <div class="detail-header">
       <el-button link type="primary" @click="backToProjects">
         <Icon icon="ep:arrow-left" class="mr-4px" />返回项目列表
@@ -81,6 +95,7 @@
           <template #inStockLatestPrice="{ row }">{{ money(row.inStockLatestPrice) }}</template>
           <template #latestMarketPrice="{ row }">{{ money(row.latestMarketPrice) }}</template>
           <template #inStockLatestValue="{ row }">{{ money(row.inStockLatestValue) }}</template>
+          <template #dropRate="{ row }">{{ calculatedDropRate(row) }}%</template>
           <template #priceTrigger="{ row }">
             <el-tag :type="row.priceTrigger === '已触发' ? 'danger' : 'success'" effect="light">
               {{ row.priceTrigger }}
@@ -209,6 +224,11 @@ const statusMenus = computed(() => {
 const activeStatusLabel = computed(() => statusMenus.value.find((item) => item.key === activeStatus.value)?.label || '')
 
 const money = (value: number) => Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const calculatedDropRate = (row: AssetLedgerApi.AssetLedgerRecord) => {
+  const inStockPrice = Number(row.inStockLatestPrice)
+  if (inStockPrice <= 0) return '0.00'
+  return (Math.max(0, (inStockPrice - Number(row.latestMarketPrice)) / inStockPrice) * 100).toFixed(2)
+}
 const loadProjects = async () => {
   projectLoading.value = true
   try { projects.value = await AssetLedgerApi.getAssetLedgerProjects({ ...projectQuery, productPlan: currentProductPlan.value }) } finally { projectLoading.value = false }

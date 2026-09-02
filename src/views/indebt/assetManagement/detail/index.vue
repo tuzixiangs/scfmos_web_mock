@@ -197,6 +197,13 @@
               <strong>{{ currencySymbol }}</strong>
             </div>
           </div>
+          <el-alert
+            :title="warningAccountingHint"
+            type="info"
+            :closable="false"
+            show-icon
+            class="mb-12px"
+          />
           <div class="asset-action-bar">
             <el-button type="primary" plain @click="addAsset"><Icon icon="ep:plus" class="mr-4px" />新增</el-button>
             <el-button plain @click="uploadAssetExcel"><Icon icon="ep:upload" class="mr-4px" />上传Excel</el-button>
@@ -266,19 +273,13 @@
             </el-table-column>
             <el-table-column label="商品小类" min-width="140">
               <template #default="{ row }">
-                <div v-if="editingAssetId === row.id" class="editable-category-cell">
-                  <span>{{ editingCategories.smallCategory }}</span>
-                  <el-tooltip content="选择商品分类" placement="top">
-                    <el-button
-                      link
-                      type="primary"
-                      aria-label="选择商品分类"
-                      @click.stop="openCategoryDialog"
-                    >
-                      <Icon icon="ep:search" />
-                    </el-button>
-                  </el-tooltip>
-                </div>
+                <el-input
+                  v-if="editingAssetId === row.id"
+                  v-model.trim="editingCategories.smallCategory"
+                  size="small"
+                  maxlength="50"
+                  placeholder="请输入商品小类"
+                />
                 <span v-else>{{ row.smallCategory }}</span>
               </template>
             </el-table-column>
@@ -462,7 +463,7 @@
       destroy-on-close
     >
       <el-alert
-        title="请选择商品小类，确认后将同步反显商品大类、中类和小类"
+        title="仅展示当前授信项目和产品方案允许的商品大类、中类；商品小类请在明细行中手工输入。"
         type="info"
         :closable="false"
         show-icon
@@ -608,7 +609,6 @@ interface AssetCategorySelection {
   key: string
   largeCategory: string
   middleCategory: string
-  smallCategory: string
 }
 
 interface AssetCategoryTreeNode {
@@ -618,15 +618,15 @@ interface AssetCategoryTreeNode {
   children?: AssetCategoryTreeNode[]
 }
 
-const categoryDefinitions = [
-  ['金属材料', '钢材'],
-  ['金属材料', '有色金属'],
-  ['化工原料', '合成树脂'],
-  ['农产品', '粮食'],
-  ['能源矿产', '煤炭'],
-  ['家用电器', '空气调节器'],
-  ['医疗器械', '医用耗材'],
-  ['食品', '乳制品']
+const categoryDefinitions: ReadonlyArray<readonly [string, string, readonly string[]]> = [
+  ['金属材料', '钢材', ['热轧卷板', '冷轧卷板', '螺纹钢', '标准品', '优等品']],
+  ['金属材料', '有色金属', ['电解铜', '铜杆', '铝材', '标准品', '优等品']],
+  ['化工原料', '合成树脂', ['聚乙烯', '聚丙烯', '标准品', '优等品']],
+  ['农产品', '粮食', ['玉米', '大豆', '小麦', '标准品', '优等品']],
+  ['能源矿产', '煤炭', ['动力煤', '焦煤', '标准品', '优等品']],
+  ['家用电器', '空气调节器', ['家用空调', '商用空调', '标准品', '优等品']],
+  ['医疗器械', '医用耗材', ['一次性耗材', '植入耗材', '标准品', '优等品']],
+  ['食品', '乳制品', ['常温奶', '低温奶', '标准品', '优等品']]
 ] as const
 
 const categoryTree: AssetCategoryTreeNode[] = Array.from(
@@ -635,16 +635,11 @@ const categoryTree: AssetCategoryTreeNode[] = Array.from(
     middleNodes.push({
       key: `${largeCategory}/${middleCategory}`,
       label: middleCategory,
-      children: ['标准品', '优等品'].map((smallCategory) => ({
-        key: `${largeCategory}/${middleCategory}/${smallCategory}`,
-        label: smallCategory,
-        selection: {
-          key: `${largeCategory}/${middleCategory}/${smallCategory}`,
-          largeCategory,
-          middleCategory,
-          smallCategory
-        }
-      }))
+      selection: {
+        key: `${largeCategory}/${middleCategory}`,
+        largeCategory,
+        middleCategory
+      }
     })
     groups.set(largeCategory, middleNodes)
     return groups
@@ -661,6 +656,14 @@ const editingCategories = ref({
   smallCategory: ''
 })
 const pendingCategorySelection = ref<AssetCategorySelection>()
+
+const allowedSmallCategories = (
+  largeCategory: string,
+  middleCategory: string
+): readonly string[] =>
+  categoryDefinitions.find(
+    ([large, middle]) => large === largeCategory && middle === middleCategory
+  )?.[2] || []
 
 interface OriginOption {
   value: string
@@ -911,6 +914,11 @@ const currencySymbol = computed(() => {
   if (detail.value?.currency === '欧元') return '€'
   return '¥'
 })
+const warningAccountingHint = computed(() =>
+  detail.value?.productPlan?.includes('先票')
+    ? '债项核算提示：该客户入库类型达到“全部入库”后，系统开始校验债项货值预警。'
+    : '债项核算提示：项下存在拟入库资产时暂不计算货值预警；全部转为已入库后开始校验。'
+)
 
 const formatAmount = (value: unknown) => {
   const number = Number(value)
@@ -1032,8 +1040,21 @@ const addAsset = () => {
   startAssetEdit(row)
 }
 
-const uploadAssetExcel = () => ElMessage.success('已模拟导入债项资产明细Excel')
-const exportAssetTemplate = () => ElMessage.success('已生成债项资产明细导入模板（Mock）')
+const uploadAssetExcel = () => {
+  const invalidRow = selectedAssetRows.value.find(
+    (row) =>
+      !allowedSmallCategories(row.largeCategory, row.middleCategory).includes(row.smallCategory)
+  )
+  if (invalidRow) {
+    ElMessage.error(
+      `“${invalidRow.productName}”的商品分类不在当前项目、产品及商品管理范围内`
+    )
+    return
+  }
+  ElMessage.success('已按当前项目和产品范围校验并导入债项资产明细 Excel（Mock）')
+}
+const exportAssetTemplate = () =>
+  ElMessage.success('已导出当前项目和产品范围内的商品，商品小类请人工维护（Mock）')
 
 const deleteAssets = async () => {
   if (!detail.value || !selectedAssets.value.length) return
@@ -1100,12 +1121,11 @@ const startAssetEdit = (row: AssetManagementAssetDetail) => {
 }
 
 const openCategoryDialog = () => {
-  const { largeCategory, middleCategory, smallCategory } = editingCategories.value
+  const { largeCategory, middleCategory } = editingCategories.value
   pendingCategorySelection.value = {
-    key: `${largeCategory}/${middleCategory}/${smallCategory}`,
+    key: `${largeCategory}/${middleCategory}`,
     largeCategory,
-    middleCategory,
-    smallCategory
+    middleCategory
   }
   categoryDialogVisible.value = true
 }
@@ -1116,7 +1136,12 @@ const selectCategoryNode = (node: AssetCategoryTreeNode) => {
 
 const confirmCategorySelection = () => {
   if (!pendingCategorySelection.value) return
-  const { largeCategory, middleCategory, smallCategory } = pendingCategorySelection.value
+  const { largeCategory, middleCategory } = pendingCategorySelection.value
+  const smallCategory = allowedSmallCategories(largeCategory, middleCategory).includes(
+    editingCategories.value.smallCategory
+  )
+    ? editingCategories.value.smallCategory
+    : ''
   editingCategories.value = { largeCategory, middleCategory, smallCategory }
   categoryDialogVisible.value = false
 }
@@ -1173,6 +1198,23 @@ const finishAssetEdit = async (row: AssetManagementAssetDetail) => {
   const productName = editingProductName.value.trim()
   if (!productName) {
     ElMessage.warning('请输入商品名称')
+    return
+  }
+  if (!editingCategories.value.largeCategory || !editingCategories.value.middleCategory) {
+    ElMessage.warning('请选择授信商品范围内的商品大类和商品中类')
+    return
+  }
+  if (!editingCategories.value.smallCategory.trim()) {
+    ElMessage.warning('请输入商品小类')
+    return
+  }
+  if (
+    !allowedSmallCategories(
+      editingCategories.value.largeCategory,
+      editingCategories.value.middleCategory
+    ).includes(editingCategories.value.smallCategory.trim())
+  ) {
+    ElMessage.warning('商品小类必须在商品管理的小类范围内')
     return
   }
   const { batchNo, containerNo, origin, specification, warehouseName, goodsStartDate, goodsEndDate } = editingAssetFields.value

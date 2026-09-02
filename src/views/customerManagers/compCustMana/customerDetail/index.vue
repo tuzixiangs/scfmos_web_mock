@@ -15,6 +15,8 @@
 <script setup>
 import * as Api from './api.js'
 import customerProfile from './components/customerProfile/index.vue'
+import customerQualification from './components/customerQualification/index.vue'
+import customerSection from './components/customerSection/index.vue'
 import dynamicContainer from '@/components/dynamicContainer/index.vue'
 const modules = import.meta.glob('./components/*/index.vue')
 
@@ -56,6 +58,12 @@ getCustomerView()
  * 客户详情需要特殊处理，因为默认就展示客户详情，在取菜单接口时候直接import节省白屏时间
  */
 const getComponent = (menu) => {
+  if (menu.key === '010005') {
+    return customerQualification
+  }
+  if (menu.value === '@/components/busiComp/crmsIframe/index.vue') {
+    return customerSection
+  }
   if (menu.value === './components/customerProfile/index.vue') {
     return customerProfile
   }

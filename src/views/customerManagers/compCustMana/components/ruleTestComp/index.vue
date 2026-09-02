@@ -40,11 +40,19 @@
       </el-descriptions>
 
       <ReuseTemplate class="mt-10px" title="债项规则配置">
-        <el-button size="small" plain type="primary">
+        <el-button size="small" plain type="primary" @click="openHistoryDialog">
           <Icon :size="14" icon="ep:clock" class="mr-5px" />
           引入历史
         </el-button>
       </ReuseTemplate>
+
+      <el-alert
+        title="本期支持单一供应链项目配置多个标准产品的债项规则；多项目组合场景后续迭代。"
+        type="info"
+        :closable="false"
+        show-icon
+        class="mx-30px mb-12px"
+      />
 
       <!-- 产品 -->
       <component :is="productRuleComp" class="ml-20px" @settingClick="settingClick" />
@@ -63,12 +71,53 @@
     </el-card>
 
     <ruleSettingPop ref="ruleSettingPopRef" />
+
+    <el-dialog
+      v-model="historyVisible"
+      title="引入历史债项规则"
+      width="880px"
+      destroy-on-close
+      :close-on-click-modal="false"
+    >
+      <el-alert
+        title="请选择当前客户历史授信编号下的产品债项规则；确认后将覆盖当前产品的规则配置。"
+        type="info"
+        :closable="false"
+        class="mb-16px"
+      />
+      <el-table
+        :data="historyRuleOptions"
+        border
+        highlight-current-row
+        @row-click="selectedHistoryRule = $event"
+      >
+        <el-table-column width="54" align="center">
+          <template #default="{ row }">
+            <el-radio :model-value="selectedHistoryRule?.id" :value="row.id">
+              <span class="sr-only">选择历史规则</span>
+            </el-radio>
+          </template>
+        </el-table-column>
+        <el-table-column prop="creditNo" label="历史授信编号" min-width="180" />
+        <el-table-column prop="productPlan" label="产品方案" min-width="180" />
+        <el-table-column prop="ruleName" label="债项规则方案" min-width="190" />
+        <el-table-column prop="updatedAt" label="最近更新日期" width="130" />
+        <el-table-column prop="updatedBy" label="更新人" width="110" />
+      </el-table>
+      <template #footer>
+        <el-button @click="historyVisible = false">取 消</el-button>
+        <el-button type="primary" :disabled="!selectedHistoryRule" @click="confirmHistoryImport">
+          确认引入
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { createReusableTemplate } from '@vueuse/core'
 import { hydrateOnIdle } from 'vue'
+import { ElMessage } from 'element-plus'
 import ruleSettingPop from './components/ruleSetting/pop.vue'
 
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
@@ -104,6 +153,40 @@ onMounted(() => {
 const ruleSettingPopRef = ref()
 const settingClick = () => {
   ruleSettingPopRef.value.open()
+}
+
+const historyVisible = ref(false)
+const selectedHistoryRule = ref()
+const historyRuleOptions = [
+  {
+    id: 1,
+    creditNo: 'CR202506180006',
+    productPlan: '钢材库存质押融资方案',
+    ruleName: '存货类标准产品债项规则（2026版）',
+    updatedAt: '2026-06-18',
+    updatedBy: '张晨'
+  },
+  {
+    id: 2,
+    creditNo: 'CR202503120015',
+    productPlan: '钢材库存质押融资方案',
+    ruleName: '存货类标准产品债项规则（历史版）',
+    updatedAt: '2026-03-12',
+    updatedBy: '李敏'
+  }
+]
+
+const openHistoryDialog = () => {
+  selectedHistoryRule.value = undefined
+  historyVisible.value = true
+}
+
+const confirmHistoryImport = () => {
+  if (!selectedHistoryRule.value) return
+  historyVisible.value = false
+  ElMessage.success(
+    `已引入授信编号 ${selectedHistoryRule.value.creditNo} 的产品债项规则（Mock）`
+  )
 }
 </script>
 

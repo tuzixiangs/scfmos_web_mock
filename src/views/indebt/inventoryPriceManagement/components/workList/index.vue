@@ -107,6 +107,7 @@
             </el-table-column>
             <el-table-column prop="projectName" label="项目名称" min-width="180" />
             <el-table-column prop="projectNo" label="项目编号" min-width="170" />
+            <el-table-column prop="productScheme" label="产品方案" min-width="190" />
             <el-table-column prop="coreEnterpriseName" label="核心企业名称" min-width="180" />
             <el-table-column prop="coreCustomerNo" label="核心客户编号" min-width="155" />
           </el-table>
@@ -123,6 +124,9 @@
         </el-form-item>
         <el-form-item label="项目编号" prop="projectNo">
           <el-input v-model="createForm.projectNo" readonly placeholder="请先从上方选择项目" />
+        </el-form-item>
+        <el-form-item label="产品方案" prop="productScheme">
+          <el-input v-model="createForm.productScheme" readonly placeholder="请先从上方选择项目" />
         </el-form-item>
         <el-form-item label="核心企业名称" prop="coreEnterpriseName">
           <el-input
@@ -447,6 +451,7 @@ interface InventoryPriceRecord {
   applicationNo: string
   projectNo: string
   projectName: string
+  productScheme: string
   coreEnterpriseName: string
   coreCustomerNo: string
   itemCount: number
@@ -469,6 +474,7 @@ interface InventoryPriceProject {
   id: number | string
   projectName: string
   projectNo: string
+  productScheme: string
   coreEnterpriseName: string
   coreCustomerNo: string
 }
@@ -477,6 +483,7 @@ interface CreateForm {
   projectId: number | string | ''
   projectName: string
   projectNo: string
+  productScheme: string
   coreEnterpriseName: string
   coreCustomerNo: string
 }
@@ -639,6 +646,7 @@ const initialCreateForm = (): CreateForm => ({
   projectId: '',
   projectName: '',
   projectNo: '',
+  productScheme: '',
   coreEnterpriseName: '',
   coreCustomerNo: ''
 })
@@ -719,6 +727,7 @@ const normalizePriceRecord = (
     applicationNo: toText(record.applicationNo ?? record.applicationNumber),
     projectNo: toText(record.projectNo ?? record.projectCode),
     projectName: toText(record.projectName),
+    productScheme: toText(record.productScheme ?? record.productPlan),
     coreEnterpriseName: toText(record.coreEnterpriseName),
     coreCustomerNo: toText(record.coreCustomerNo ?? record.coreCustomerId),
     itemCount: rawItems.length,
@@ -758,6 +767,7 @@ const normalizeProject = (value: unknown): InventoryPriceProject => {
     id: (project.id ?? project.projectId ?? 0) as number | string,
     projectName: toText(project.projectName),
     projectNo: toText(project.projectNo ?? project.projectCode),
+    productScheme: toText(project.productScheme ?? project.productPlan),
     coreEnterpriseName: toText(project.coreEnterpriseName),
     coreCustomerNo: toText(project.coreCustomerNo ?? project.coreCustomerId)
   }
@@ -869,6 +879,7 @@ const selectProject = (project: InventoryPriceProject) => {
     projectId: project.id,
     projectName: project.projectName,
     projectNo: project.projectNo,
+    productScheme: project.productScheme,
     coreEnterpriseName: project.coreEnterpriseName,
     coreCustomerNo: project.coreCustomerNo
   })

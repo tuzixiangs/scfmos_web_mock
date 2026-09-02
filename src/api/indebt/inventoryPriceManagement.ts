@@ -62,6 +62,7 @@ export interface InventoryPriceApplicationRecord {
   projectId: number
   projectNo: string
   projectName: string
+  productScheme: string
   coreEnterpriseName: string
   coreCustomerNo: string
   largeCategory: string

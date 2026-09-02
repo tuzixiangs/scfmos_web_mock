@@ -50,8 +50,8 @@ export const companyCustomerViewMenu = [
     key: '010',
     title: '客户基本信息',
     children: [
-      { key: '010010', title: '客户概况', value: './components/customerProfile/index.vue', isLeaf: true },
       { key: '010005', title: '客户资质认定信息', value: '@/components/busiComp/crmsIframe/index.vue', isLeaf: true },
+      { key: '010010', title: '客户概况', value: './components/customerProfile/index.vue', isLeaf: true },
       { key: '010130', title: '企业账户查询', value: '@/components/busiComp/crmsIframe/index.vue', isLeaf: true },
       { key: '010135', title: '企业账户明细', value: './components/entAccountDetail/index.vue', isLeaf: true },
       { key: '010140', title: '银行账号信息', value: '@/components/busiComp/crmsIframe/index.vue', isLeaf: true },

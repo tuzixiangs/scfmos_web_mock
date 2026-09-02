@@ -3,7 +3,7 @@
     <div class="detail-toolbar">
       <el-button @click="goBack"><Icon icon="ep:arrow-left" class="mr-4px" />返 回</el-button>
       <span>动产登记编号：{{ current?.registrationNo }}</span>
-      <el-tag type="warning" effect="light">{{ current?.status }}</el-tag>
+      <el-tag :type="current?.status === '自动审批通过' ? 'success' : 'warning'" effect="light">{{ current?.status }}</el-tag>
     </div>
     <el-collapse v-model="activeSections" class="system-detail-collapse">
       <el-collapse-item name="base">
@@ -29,11 +29,22 @@
         <template #title><span class="collapse-title">质物明细</span></template>
         <div class="collapse-content"><el-table :data="assetRows" border><el-table-column type="index" label="序号" width="66" /><el-table-column prop="productCode" label="商品编号" /><el-table-column prop="productName" label="商品名称" /><el-table-column prop="category" label="商品分类" /><el-table-column prop="quantity" label="数量/重量" /><el-table-column prop="value" label="质物价值" /></el-table></div>
       </el-collapse-item>
+      <el-collapse-item name="approval">
+        <template #title><span class="collapse-title">审批记录</span></template>
+        <div class="collapse-content">
+          <el-timeline v-if="current?.status === '自动审批通过'">
+            <el-timeline-item timestamp="2026-08-25 16:30:00" type="success" placement="top">
+              系统自动审批通过，审批记录已留存
+            </el-timeline-item>
+          </el-timeline>
+          <el-empty v-else description="暂无自动审批记录" :image-size="72" />
+        </div>
+      </el-collapse-item>
     </el-collapse>
   </div>
 
   <ContentWrap v-else class="registration-list-page">
-    <el-alert title="本页面模拟内嵌信贷系统动产登记功能；出账、入库、出库生成的变更待办会自动进入对应列表。" type="info" :closable="false" class="mb-16px" />
+    <el-alert title="变更待办仅在业务详情页点击“生成动产质押变更待办”后创建，并归属于执行该操作的用户。" type="info" :closable="false" show-icon class="mb-16px" />
     <el-form :inline="true" :model="query">
       <el-form-item label="登记编号"><el-input v-model="query.registrationNo" clearable /></el-form-item>
       <el-form-item label="借款人名称"><el-input v-model="query.borrowerName" clearable /></el-form-item>
@@ -49,6 +60,7 @@
       <el-table-column prop="pledgedValueText" label="质押财产价值" min-width="150" align="right" />
       <el-table-column prop="expiryDate" label="登记到期日" min-width="130" />
       <el-table-column prop="source" label="待办来源" min-width="130" />
+      <el-table-column prop="createdBy" label="待办创建人" min-width="120" />
       <el-table-column prop="status" label="状态" min-width="110"><template #default="{ row }"><el-tag effect="light">{{ row.status }}</el-tag></template></el-table-column>
       <el-table-column label="操作" width="230" fixed="right" align="center">
         <template #default="{ row }"><el-button link type="primary" @click.stop="openDetail(row)">详情</el-button><el-button link type="danger" @click.stop="removeRow(row)">删除</el-button><el-button link type="primary" @click.stop="viewImages(row)">查看影像资料</el-button></template>
@@ -62,15 +74,16 @@ import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 defineOptions({ name: 'MovablePropertyRegistration' })
-interface RegistrationRow { id: number; registrationNo: string; businessContractNo: string; borrowerName: string; registrationType: string; pledgedValue: number; pledgedValueText: string; expiryDate: string; source: string; status: string; propertyDescription: string; changeContent: string }
+interface RegistrationRow { id: number; registrationNo: string; businessContractNo: string; borrowerName: string; registrationType: string; pledgedValue: number; pledgedValueText: string; expiryDate: string; source: string; createdBy: string; status: string; propertyDescription: string; changeContent: string }
 const route = useRoute()
 const router = useRouter()
 const showDetail = computed(() => route.query.view === 'detail' && Boolean(route.query.id))
-const activeSections = ref(['base', 'assets'])
+const activeSections = ref(['base', 'assets', 'approval'])
 const query = reactive({ registrationNo: '', borrowerName: '' })
 const rows = ref<RegistrationRow[]>([
-  { id: 1, registrationNo: 'MPR202608270001', businessContractNo: 'BCT202607010001', borrowerName: '阿姆特拉斯供应链有限公司', registrationType: '变更登记', pledgedValue: 5590000, pledgedValueText: '5,590,000.00', expiryDate: '2027-07-01', source: '债项资产入库', status: '待提交', propertyDescription: '钢材库存及其对应仓单', changeContent: '新增本次入库质物明细' },
-  { id: 2, registrationNo: 'MPR202608260002', businessContractNo: 'BCT202606150008', borrowerName: '华东金属贸易有限公司', registrationType: '变更登记', pledgedValue: 3180000, pledgedValueText: '3,180,000.00', expiryDate: '2027-06-15', source: '债项资产出库', status: '复核中', propertyDescription: '有色金属库存', changeContent: '扣减本次出库质物明细' }
+  { id: 1, registrationNo: 'MPR202608270001', businessContractNo: 'BCT202607010001', borrowerName: '阿姆特拉斯供应链有限公司', registrationType: '变更登记', pledgedValue: 5590000, pledgedValueText: '5,590,000.00', expiryDate: '2027-07-01', source: '债项资产入库', createdBy: '本地演示用户', status: '待提交', propertyDescription: '钢材库存及其对应仓单', changeContent: '新增本次入库质物明细' },
+  { id: 2, registrationNo: 'MPR202608260002', businessContractNo: 'BCT202606150008', borrowerName: '华东金属贸易有限公司', registrationType: '变更登记', pledgedValue: 3180000, pledgedValueText: '3,180,000.00', expiryDate: '2027-06-15', source: '债项资产出库', createdBy: '李敏', status: '复核中', propertyDescription: '有色金属库存', changeContent: '扣减本次出库质物明细' },
+  { id: 3, registrationNo: 'MPR202608250003', businessContractNo: 'BCT202605220009', borrowerName: '恒源化工有限公司', registrationType: '首次登记', pledgedValue: 4260000, pledgedValueText: '4,260,000.00', expiryDate: '2027-05-22', source: '业务出账', createdBy: '王磊', status: '自动审批通过', propertyDescription: '化工原料库存及电子仓单', changeContent: '首次建立动产质押登记' }
 ])
 const filteredRows = computed(() => rows.value.filter((row) => (!query.registrationNo || row.registrationNo.includes(query.registrationNo)) && (!query.borrowerName || row.borrowerName.includes(query.borrowerName))))
 const current = ref<RegistrationRow>()

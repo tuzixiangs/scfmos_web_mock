@@ -1,5 +1,13 @@
 <template>
   <ContentWrap class="warehouse-work-list">
+    <el-alert
+      v-if="currentPhase === 'approved'"
+      title="仓库信息维护仅展示审批通过且当前有效的仓库。"
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-12px"
+    />
     <Search
       :schema="allSchemas.searchSchema"
       :model="tableObject.params"

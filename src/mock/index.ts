@@ -1104,7 +1104,12 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
     data = { total: records.length, list, records: list, pageNo, pageSize }
   } else if (/\/system\/custom-self-employed\/getCustomerView$/.test(url)) {
-    data = cloneMockData(selfEmployedCustomerViewMenu)
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(
+      String(query.codeNo || '').toLowerCase().includes('enterprise')
+        ? companyCustomerViewMenu
+        : selfEmployedCustomerViewMenu
+    )
   } else if (/\/system\/custom-self-employed\/page$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))

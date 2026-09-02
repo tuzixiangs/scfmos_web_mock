@@ -221,6 +221,18 @@
                 ><span v-else>{{ row[field.prop] }}</span></template
               ></el-table-column
             >
+            <el-table-column label="商品小类" min-width="150">
+              <template #default="{ row }">
+                <el-input
+                  v-if="editingItemId === row.id"
+                  v-model.trim="itemForm.smallCategory"
+                  size="small"
+                  maxlength="50"
+                  placeholder="请输入商品小类"
+                />
+                <span v-else>{{ row.smallCategory }}</span>
+              </template>
+            </el-table-column>
             <el-table-column prop="batchNo" label="批号" min-width="120" />
             <el-table-column prop="cabinetNo" label="柜号" min-width="120" />
             <el-table-column label="产地" min-width="145"
@@ -400,14 +412,20 @@
     </el-dialog>
 
     <el-dialog v-model="categoryDialogVisible" title="选择商品分类" width="520px" append-to-body
-      ><el-cascader-panel
+      ><el-alert
+        title="仅可选择当前授信项目和产品方案允许的商品大类、中类；商品小类在明细行中手工输入。"
+        type="info"
+        :closable="false"
+        show-icon
+        class="mb-12px"
+      /><el-cascader-panel
         v-model="pendingCategoryPath"
         :options="categoryCascaderOptions"
       /><template #footer
         ><el-button @click="categoryDialogVisible = false">取 消</el-button
         ><el-button
           type="primary"
-          :disabled="pendingCategoryPath.length !== 3"
+          :disabled="pendingCategoryPath.length !== 2"
           @click="confirmCategory"
           >确 定</el-button
         ></template
@@ -538,14 +556,14 @@ interface CategoryOption {
 }
 const categoryOptions: CategoryOption[] = [
   {
-    name: '金属材料',
+    name: '金属及矿产品',
     children: [
-      { name: '钢材', children: ['热轧卷板', '冷轧卷板', '螺纹钢'] },
-      { name: '有色金属', children: ['铜材', '铝材'] }
+      { name: '黑色金属', children: ['热轧卷板', '冷轧卷板', '螺纹钢'] },
+      { name: '有色金属', children: ['电解铜', '铜杆', '铝材'] }
     ]
   },
   {
-    name: '化工产品',
+    name: '化工原料',
     children: [
       { name: '基础化工', children: ['聚乙烯', '聚丙烯'] },
       { name: '精细化工', children: ['涂料', '助剂'] }
@@ -557,24 +575,34 @@ const categoryOptions: CategoryOption[] = [
       { name: '粮食', children: ['玉米', '大豆', '小麦'] },
       { name: '油脂', children: ['豆油', '棕榈油'] }
     ]
+  },
+  {
+    name: '消费品',
+    children: [{ name: '家用电器', children: ['冰箱', '空调'] }]
+  },
+  {
+    name: '能源产品',
+    children: [{ name: '煤炭', children: ['动力煤', '无烟煤', '焦煤'] }]
   }
 ]
-type CategoryField = 'largeCategory' | 'middleCategory' | 'smallCategory'
+type CategoryField = 'largeCategory' | 'middleCategory'
 const categoryColumns: { prop: CategoryField; label: string }[] = [
   { prop: 'largeCategory', label: '商品大类' },
-  { prop: 'middleCategory', label: '商品中类' },
-  { prop: 'smallCategory', label: '商品小类' }
+  { prop: 'middleCategory', label: '商品中类' }
 ]
 const categoryCascaderOptions = categoryOptions.map((large) => ({
   value: large.name,
   label: large.name,
   children: large.children.map((middle) => ({
     value: middle.name,
-    label: middle.name,
-    children: middle.children.map((small) => ({ value: small, label: small }))
+    label: middle.name
   }))
 }))
 const pendingCategoryPath = ref<string[]>([])
+const allowedSmallCategories = (largeCategory: string, middleCategory: string) =>
+  categoryOptions.find((large) => large.name === largeCategory)?.children.find(
+    (middle) => middle.name === middleCategory
+  )?.children || []
 
 const provinceNames = [
   '北京市',
@@ -799,17 +827,19 @@ const startItemEdit = (row: OrderContractItem) => {
   editingItemId.value = row.id
 }
 const openCategoryDialog = () => {
-  pendingCategoryPath.value = [
-    itemForm.largeCategory,
-    itemForm.middleCategory,
-    itemForm.smallCategory
-  ].filter(Boolean)
+  pendingCategoryPath.value = [itemForm.largeCategory, itemForm.middleCategory].filter(Boolean)
   categoryDialogVisible.value = true
 }
 const confirmCategory = () => {
-  if (pendingCategoryPath.value.length !== 3) return
-  ;[itemForm.largeCategory, itemForm.middleCategory, itemForm.smallCategory] =
-    pendingCategoryPath.value
+  if (pendingCategoryPath.value.length !== 2) return
+  ;[itemForm.largeCategory, itemForm.middleCategory] = pendingCategoryPath.value
+  if (
+    !allowedSmallCategories(itemForm.largeCategory, itemForm.middleCategory).includes(
+      itemForm.smallCategory
+    )
+  ) {
+    itemForm.smallCategory = ''
+  }
   categoryDialogVisible.value = false
 }
 const openOriginDialog = () => {
@@ -840,8 +870,15 @@ const confirmWarehouse = () => {
 const saveInlineItem = async (row: OrderContractItem) => {
   if (!detail.value) return
   if (!itemForm.productName.trim()) return ElMessage.warning('请输入商品名称')
-  if (!itemForm.largeCategory || !itemForm.middleCategory || !itemForm.smallCategory)
-    return ElMessage.warning('请选择完整的商品分类')
+  if (!itemForm.largeCategory || !itemForm.middleCategory)
+    return ElMessage.warning('请选择授信商品范围内的商品大类和商品中类')
+  if (!itemForm.smallCategory.trim()) return ElMessage.warning('请输入商品小类')
+  if (
+    !allowedSmallCategories(itemForm.largeCategory, itemForm.middleCategory).includes(
+      itemForm.smallCategory.trim()
+    )
+  )
+    return ElMessage.warning('商品小类必须在商品管理的小类范围内')
   if (!itemForm.origin) return ElMessage.warning('请选择产地')
   if (!itemForm.warehouseName) return ElMessage.warning('请选择仓储地')
   if (itemForm.quantityOrWeight <= 0 || itemForm.unitPrice <= 0)

@@ -1,5 +1,12 @@
 <template>
   <ContentWrap v-if="!detailVisible && !ledgerDialogVisible" class="asset-risk-ledger-page">
+    <el-alert
+      title="台账由信贷管理系统每日生成 Excel，并邮件发送给供应链系统管理员。"
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-12px"
+    />
     <Search
       :schema="projectSchemas.searchSchema"
       :model="projectQuery"
@@ -23,6 +30,13 @@
   </ContentWrap>
 
   <ContentWrap v-else-if="!ledgerDialogVisible" class="asset-risk-ledger-detail">
+    <el-alert
+      title="台账由信贷管理系统每日生成 Excel，并邮件发送给供应链系统管理员。"
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-12px"
+    />
     <div class="detail-header">
       <el-button link type="primary" @click="backToProjects"><Icon icon="ep:arrow-left" class="mr-4px" />返回项目列表</el-button>
       <span class="detail-title">{{ currentProject?.projectName }} - 债项资产风险台账查询</span>

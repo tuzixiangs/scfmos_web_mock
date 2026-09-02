@@ -48,7 +48,10 @@ export const assetLedgerRecords: AssetLedgerRecord[] = orderContractLedgerRecord
       initialPricingValue: (quantity + 25) * (unitPrice - 320),
       latestMarketValue: inStockQuantity * marketPrice,
       priceTrigger: statusIndex === 0 ? '已触发' : '未触发',
-      dropRate: statusIndex === 0 ? 2.65 : 0.85,
+      // 跌幅按债项规则公式实时计算：(在库最新价格 - 最新市价) / 在库最新价格。
+      dropRate: Number(
+        (Math.max(0, (unitPrice - marketPrice) / unitPrice) * 100).toFixed(2)
+      ),
       unitPriceUpdatedAt: `2026-07-${String(10 + dataIndex).padStart(2, '0')}`,
       priceCompensationAmount: statusIndex === 0 ? 18500 + dataIndex * 1200 : 0,
       currency: record.currency,

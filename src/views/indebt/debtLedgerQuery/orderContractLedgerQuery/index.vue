@@ -8,6 +8,13 @@
       @menu-select="handleMenuSelect"
     />
     <main class="component">
+      <el-alert
+        title="台账由信贷管理系统每日生成 Excel，并邮件发送给供应链系统管理员。"
+        type="info"
+        :closable="false"
+        show-icon
+        class="ledger-notice"
+      />
       <OrderContractLedgerWorkList :params="{ productPlan, ledgerStatus }" />
     </main>
   </div>
@@ -77,6 +84,8 @@ const handleMenuSelect = (menu: { key: string; plan?: ProductPlanKey; status?: L
   flex: 1;
   overflow: auto;
 }
+
+.ledger-notice { margin: 12px 12px 0; }
 
 @media (max-width: 900px) {
   .dynamic-navmenu { width: 198px; min-width: 198px; flex-basis: 198px; }

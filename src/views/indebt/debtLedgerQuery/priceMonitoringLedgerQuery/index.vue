@@ -1,5 +1,12 @@
 <template>
   <ContentWrap class="price-ledger-page">
+    <el-alert
+      title="台账由信贷管理系统每日生成 Excel，并邮件发送给供应链系统管理员。"
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-12px"
+    />
     <el-form :inline="true" :model="query" class="query-form">
       <el-form-item label="项目名称"><el-input v-model="query.projectName" clearable placeholder="请输入项目名称" /></el-form-item>
       <el-form-item label="核心企业名称"><el-input v-model="query.coreEnterpriseName" clearable placeholder="请输入核心企业名称" /></el-form-item>

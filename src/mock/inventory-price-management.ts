@@ -46,6 +46,7 @@ export interface InventoryPriceApplicationRecord {
   projectId: number
   projectNo: string
   projectName: string
+  productScheme: string
   coreEnterpriseName: string
   coreCustomerNo: string
   largeCategory: string
@@ -174,7 +175,9 @@ const record = (
     | 'latestUnitPrice'
     | 'monitoringUnitPrice'
     | 'monitoringSource'
+    | 'productScheme'
   > & {
+    productScheme?: string
     images?: InventoryPriceApplicationImage[]
     opinions?: InventoryPriceApplicationOpinion[]
     items: InventoryPriceItem[]
@@ -183,6 +186,11 @@ const record = (
   const primary = data.items[0]
   const result: InventoryPriceApplicationRecord = {
     ...data,
+    productScheme:
+      data.productScheme ||
+      inventoryPriceAvailableProjects.find((project) => project.id === data.projectId)
+        ?.productScheme ||
+      '',
     largeCategory: primary?.largeCategory || '',
     middleCategory: primary?.middleCategory || '',
     smallCategory: primary?.smallCategory || '',
@@ -675,7 +683,7 @@ export const uploadInventoryPriceExcelRecord = (
 export const getInventoryPriceExcelTemplate = (): InventoryPriceTemplateResult => ({
   fileName: '存货类价格盯市导入模板.xlsx',
   columns: ['商品大类', '商品中类', '商品小类', '产地', '本次盯市单价', '盯市来源'],
-  message: 'Mock 模板已就绪，可按商品小类和产地填写盯市单价及来源'
+  message: 'Mock 模板已按当前项目及产品方案的入库商品生成，可填写盯市单价及来源'
 })
 
 export const uploadInventoryPriceApplicationImage = (
