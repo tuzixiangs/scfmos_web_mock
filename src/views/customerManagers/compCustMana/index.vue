@@ -74,8 +74,8 @@
         <el-button @click="reqPermissionClick" plain> 权限申请 </el-button>
         <!-- <el-button @click="button1" plain tpye=""> 集团客户关联搜索 </el-button> -->
         <el-button @click="handleGetCustomerOwnership" plain> 获取客户主办权 </el-button> 
-        <el-button @click="jumpIframePage1" plain tpye=""> 移交主办权 </el-button> 
-        <el-button @click="jumpIframePage2" plain tpye=""> 接收主办权 </el-button> 
+        <el-button @click="openTransferOwnership" plain tpye=""> 移交主办权 </el-button>
+        <el-button @click="openReceiveOwnership" plain tpye=""> 接收主办权 </el-button>
        <el-button @click="handleSyncCreditLimit" plain> 同步额度系统 </el-button>                   
         <el-button @click="del" plain>
           删除
@@ -174,7 +174,6 @@ import reqPermission from './components/reqPermission.vue'
 import { useMessage } from '@/hooks/web/useMessage'
 import { personalApi } from '@/api/customerInfoMGM/personal'
 import { useRiskDetection } from '@/views/creditApplicationMGM/approvalChangeRequest/hooks'
-import { getIframeUrl } from '@/components/busiComp/crmsIframe/api'
 import ruleTestComp from './components/ruleTestComp/pop.vue'
 import indebtDataTest from './components/indebtDataTest/index.vue'
 
@@ -210,35 +209,13 @@ const add = (type, id) => {
   console.log('qweqweqw', addCustomerDialogVisible.value)
   addCustomerDialogVisible.value = true
 }
-//移交主办权
-const jumpIframePage1 = async () => {
-  loading.value = true
-   await Api.hostingRight()
-  const res = await getIframeUrl({ tpopentype: 'HostingRight',tpserialno:'0110' }).finally(
-    () => (loading.value = false)
-  )
-  router.push({
-    name: 'IframeView',
-    query: {
-      url: encodeURIComponent(res),
-      title: encodeURIComponent('移交主办权')
-    }
-  })
+// 移交主办权、接收主办权均进入本地业务页面，不再依赖内网 iframe。
+const openTransferOwnership = () => {
+  router.push({ name: 'CustomerOwnershipTransfer' })
 }
-//接收主办权
-const jumpIframePage2 = async () => {
-  loading.value = true
-  await Api.receiveRight()
-  const res = await getIframeUrl({ tpopentype: 'ReceiveRight',tpserialno:'0110'}).finally(
-    () => (loading.value = false)
-  )
-  router.push({
-    name: 'IframeView',
-    query: {
-      url: encodeURIComponent(res),
-      title: encodeURIComponent('接收主办权')
-    }
-  })
+
+const openReceiveOwnership = () => {
+  router.push({ name: 'CustomerOwnershipReceive' })
 }
 
 const { confirmFetch } = useMessage()
@@ -365,10 +342,10 @@ const reqPermissionClick = () => {
   reqPermissionRef.value.open(currentRow.value)
 }
 
-const reqPermissionConfirm = (params) => {
+const reqPermissionConfirm = (params = {}) => {
   getList()
   if (params.backToDetail) {
-    goDetail({ customerId: info.customerId })
+    goDetail({ customerId: params.customerId })
   }
 }
 

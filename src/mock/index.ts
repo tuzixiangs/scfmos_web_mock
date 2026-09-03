@@ -183,14 +183,25 @@ import {
 } from './project-param-adjustment'
 import { projectCreditApprovalMenus, projectCreditApprovalPage } from './project-credit-approval'
 import {
+  createCustomerRiskCheckTask,
+  getCustomerRiskCheckResults
+} from './customer-risk-detection'
+import {
   companyCustomerDetail,
   companyCustomerList,
   companyCustomerPageVO,
   companyCustomerViewMenu,
+  customerCountryTree,
+  customerCreditTemplateTree,
+  customerEnterpriseOptions,
+  customerHoldingTypeTree,
+  customerIndustryTree,
+  customerRegionTree,
   selfEmployedCustomerDetail,
   selfEmployedCustomerList,
   selfEmployedCustomerPageVO,
   selfEmployedCustomerViewMenu,
+  salaryEarnerCustomerViewMenu,
   workflowDetail,
   workflowDetailMenu,
   workflowDetailPageVO
@@ -239,6 +250,49 @@ const parseMockPayload = (data: unknown): Recordable => {
   } catch {
     return Object.fromEntries(new URLSearchParams(data))
   }
+}
+
+const customerOwnershipPageData = (
+  config: AxiosRequestConfig,
+  mode: 'transfer' | 'receive'
+) => {
+  const query = { ...urlQuery(config.url), ...(config.params || {}) }
+  const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+  const pageSize = Math.max(1, Number(query.pageSize || 20))
+  const customerName = String(query.customerName || '').trim()
+  const certId = String(query.certId || '').trim()
+  const customerType = String(query.customerType || '0110')
+  const isCompanyCustomer = customerType === '0110'
+  const targetManagers = ['李敏', '张晨', '王璐']
+  const sourceRecords = (isCompanyCustomer
+    ? companyCustomerList
+    : selfEmployedCustomerList) as Array<Record<string, any>>
+  const records = sourceRecords
+    .map((item, index) => ({
+      customerName: item.customerName,
+      customerId: item.customerID || item.customerId,
+      certType: isCompanyCustomer ? 'Ent02' : 'Ind01',
+      certTypeName: item.certTypeName,
+      certId: item.certID || item.certId,
+      customerTypeName: isCompanyCustomer
+        ? '公司客户'
+        : customerType === '0310'
+          ? '受薪人士'
+          : '自雇人士',
+      managerUserName: item.managerUserName || targetManagers[index % targetManagers.length],
+      mfCustomerId: item.mfcustomerID || item.mfCustomerID,
+      changeStatus: mode === 'receive' ? '01' : '00',
+      changeStatusName: mode === 'receive' ? '待接收' : '可移交',
+      targetUserId: mode === 'transfer' ? `U20260${index + 1}` : '',
+      targetUserName: mode === 'transfer' ? targetManagers[index] : ''
+    }))
+    .filter(
+      (item) =>
+        (!customerName || item.customerName.includes(customerName)) &&
+        (!certId || item.certId.includes(certId))
+    )
+  const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+  return { total: records.length, list, records: list, pageNo, pageSize }
 }
 
 const pageData = (config: AxiosRequestConfig) => {
@@ -681,6 +735,14 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     data = permissionInfo
   } else if (/\/system\/dict-data\/simple-list$/.test(url)) {
     data = dictData
+  } else if (/\/system\/risk-detection\/start$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const params = typeof payload.params === 'object' && payload.params ? payload.params : {}
+    data = cloneMockData(
+      createCustomerRiskCheckTask(String((params as Recordable).ObjectNo || ''))
+    )
+  } else if (/\/system\/risk-detection\/result$/.test(url)) {
+    data = cloneMockData(getCustomerRiskCheckResults())
   } else if (/\/system\/business\/approveMenu\/Menu$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     data =
@@ -1046,6 +1108,49 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     )
     const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
     data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/customerinfo\/ent\/selectTeamWork$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const projectId = String(query.projectid || query.projectId || '').trim()
+    const projectName = String(query.projectname || query.projectName || '').trim()
+    const records = projectParamAdjustmentProjects
+      .map((item) => ({
+        ...item,
+        projectid: item.projectId,
+        projectname: item.projectName
+      }))
+      .filter(
+        (item) =>
+          (!projectId || item.projectid.includes(projectId)) &&
+          (!projectName || item.projectname.includes(projectName))
+      )
+    const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+    data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/teamwork\/relative\/create$/.test(url)) {
+    data = { '3': { msg: '客户可直接加入该供应链群' } }
+  } else if (/\/system\/teamwork\/relative\/add$/.test(url)) {
+    data = '加入供应链群成功'
+  } else if (/\/system\/customerinfo\/sendCustomerList$/.test(url)) {
+    data = customerOwnershipPageData(config, 'transfer')
+  } else if (/\/system\/customerinfo\/receiveCustomerList$/.test(url)) {
+    data = customerOwnershipPageData(config, 'receive')
+  } else if (/\/system\/customerinfo\/getCustomerRight$/.test(url)) {
+    data = { GetHost: 'Y' }
+  } else if (/\/system\/customerinfo\/synchronizeCustomer$/.test(url)) {
+    data = true
+  } else if (/\/system\/customerinfo\/(?:hostingRight|receiveRight)$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    data = {
+      success: true,
+      customerIds: Array.isArray(payload.customerIds) ? payload.customerIds : []
+    }
+  } else if (/\/system\/customerinfo\/applyRole$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const permissionCount = Array.isArray(payload.requestedPermissions)
+      ? payload.requestedPermissions.length
+      : 1
+    data = `权限申请已提交，共申请 ${permissionCount} 项权限`
   } else if (/\/system\/customerinfo\/getTeamWorkProjectIntList$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
@@ -1105,10 +1210,13 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     data = { total: records.length, list, records: list, pageNo, pageSize }
   } else if (/\/system\/custom-self-employed\/getCustomerView$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const codeNo = String(query.codeNo || '').toLowerCase()
     data = cloneMockData(
-      String(query.codeNo || '').toLowerCase().includes('enterprise')
+      codeNo.includes('enterprise')
         ? companyCustomerViewMenu
-        : selfEmployedCustomerViewMenu
+        : codeNo === 'indview'
+          ? salaryEarnerCustomerViewMenu
+          : selfEmployedCustomerViewMenu
     )
   } else if (/\/system\/custom-self-employed\/page$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
@@ -1125,6 +1233,30 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     )
     const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
     data = { total: records.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/custom-salary-earner\/page$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const customerName = String(query.customerName || '').trim()
+    const certId = String(query.certId || '').trim()
+    const mfCustomerId = String(query.mfCustomerId || '').trim()
+    const managers = ['李敏', '张晨']
+    const records = selfEmployedCustomerList
+      .map((item, index) => ({
+        ...item,
+        customerType: '0310',
+        certId1: item.certId,
+        userName: managers[index % managers.length],
+        orgName: index % 2 === 0 ? '上海分行普惠金融部' : '南京分行供应链金融部'
+      }))
+      .filter(
+        (item) =>
+          (!customerName || item.customerName.includes(customerName)) &&
+          (!certId || item.certId.includes(certId)) &&
+          (!mfCustomerId || item.mfCustomerID.includes(mfCustomerId))
+      )
+    const list = cloneMockData(records.slice((pageNo - 1) * pageSize, pageNo * pageSize))
+    data = { total: records.length, list, records: list, pageNo, pageSize }
   } else if (/\/system\/custom-self-employed\/get$/.test(url)) {
     const customerId = String(urlQuery(config.url).customerid || config.params?.customerid || '')
     const listItem = selfEmployedCustomerList.find((item) => item.customerId === customerId)
@@ -1139,9 +1271,32 @@ export const mockAdapter: AxiosAdapter = async (config) => {
   } else if (/\/system\/customerinfo\/getCustomerPageVO$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     data =
-      String(query.customerType || '') === '0320'
+      ['0310', '0320'].includes(String(query.customerType || ''))
         ? cloneMockData(selfEmployedCustomerPageVO)
         : cloneMockData(companyCustomerPageVO)
+  } else if (/\/system\/codeLibrary\/cityTreeList$/.test(url)) {
+    data = cloneMockData(customerRegionTree)
+  } else if (/\/system\/codeLibrary\/industryTreeList$/.test(url)) {
+    data = cloneMockData(customerIndustryTree)
+  } else if (/\/system\/codeLibrary\/creditBelongTree$/.test(url)) {
+    data = cloneMockData(customerCreditTemplateTree)
+  } else if (/\/system\/codeLibrary\/codeLibraryTreeList$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(
+      String(query.codeNo || '').toLowerCase().includes('entorg')
+        ? customerHoldingTypeTree
+        : customerCountryTree
+    )
+  } else if (/\/system\/custom-self-employed\/selectEntOrg$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const customerId = String(query.customerid || '').trim()
+    const customerName = String(query.customername || '').trim()
+    const records = customerEnterpriseOptions.filter(
+      (item) =>
+        (!customerId || item.customerid.includes(customerId)) &&
+        (!customerName || item.customername.includes(customerName))
+    )
+    data = { list: cloneMockData(records), total: records.length }
   } else if (/\/system\/customerinfo\/ent\/customerInfoEntDetail$/.test(url)) {
     const customerId = String(urlQuery(config.url).customerId || config.params?.customerId || '')
     const listItem = companyCustomerList.find((item) => item.customerID === customerId)
@@ -1154,9 +1309,9 @@ export const mockAdapter: AxiosAdapter = async (config) => {
   } else if (/\/system\/customerinfo\/ent\/getCustomerTemplateNo$/.test(url)) {
     data = 'EnterpriseInfo1010NC'
   } else if (/\/system\/customerinfo\/ent\/entTempSaveFlag$/.test(url)) {
-    data = '2'
+    data = '1'
   } else if (/\/system\/customerinfo\/entImportFlag$/.test(url)) {
-    data = false
+    data = true
   } else if (
     /\/system\/(?:singleCreditApply\/getMenuList|business-approve\/approveLineMenu|business-contract\/getMenuList|putout-info\/getPutOutDetailTree)$/.test(
       url

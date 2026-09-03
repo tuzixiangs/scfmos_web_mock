@@ -75,15 +75,22 @@ tpye="" @click="onCustomerChange"
       @confirm="(item) => popConfirm('ctcdstccdname', item)"
     />
      
-    <!-- 控股类型 -->
-    <treeListPop
+    <!-- 信用等级评估模板名称 -->
+    <creditBelongPop
       :ref="(el) => setMapRef(el, `creditbelongname`)"
+      :customerType="customerType"
       @confirm="(item) => popConfirm('creditbelongname', item)"
     />
     <!-- 单位地址 -->
     <selectRegionCodePop
       :ref="(el) => setMapRef(el, `workadd`)"
       @confirm="(item) => popConfirm('workadd', item)"
+    />
+
+    <!-- 主经营企业 -->
+    <selectEntorgPop
+      :ref="(el) => setMapRef(el, `entorgcustomername`)"
+      @confirm="(item) => popConfirm('entorgcustomername', item)"
     />
   </div>
 </template>
@@ -93,6 +100,8 @@ import dynamicForm from '@/components/dynamicForm/index.vue'
 import customerChange from './components/customerChange/index.vue'
 import orgTypeNamePop from './components/orgTypeNamePop.vue'
 import industrytypePop from './components/industrytypePop.vue'
+import creditBelongPop from '../../../../personal/customerDetail/components/personalProfile/components/creditBelongPop.vue'
+import selectEntorgPop from '../../../../personal/customerDetail/components/personalProfile/components/selectEntorgPop.vue'
 import treeListPop from '@/components/dynamicForm/components/treeListPop.vue'
 import selectRegionCodePop from '@/components/dynamicForm/components/selectRegionCodePop.vue'
 
@@ -109,10 +118,11 @@ const customerType = '0310'
 const formTempList = ref([])
 
 const route = useRoute() // 路由对象
+const customerId = computed(() => route.query.customerId || route.query.customerID || route.query.customerid)
 
 // 获取表单字段配置
 const getTemplateVO = (templateNo, customerType) => {
-  Api.getTemplateVO({ templateNo, customerType, customerId: route.query.customerId })
+  Api.getTemplateVO({ templateNo, customerType, customerId: customerId.value })
     .then((res) => {
       formTempList.value = res?.templates || []
       dockList.push(...(res?.docks || []))
@@ -135,7 +145,7 @@ const getCustomerTemplateNo = () => {
 const emit = defineEmits(['sendInfo'])
 const formData = reactive({})
 const getDetail = () => {
-  Api.getCustomerInfo({ customerid: route.query.customerId }).then((res) => {
+  Api.getCustomerInfo({ customerid: customerId.value }).then((res) => {
     dynamicFormRef.value?.resetFields()
     Object.assign(formData, res)
         entTempSaveFlag()
@@ -222,7 +232,7 @@ const entImportFlag = () => {
 // 客户变更
 const customerChangeRef = ref()
 const onCustomerChange = () => {
-  customerChangeRef.value.open(route.query.customerId)
+  customerChangeRef.value.open(customerId.value)
 }
 
 // 所有弹窗选择ref

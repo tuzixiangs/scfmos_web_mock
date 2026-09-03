@@ -10,6 +10,27 @@
       <!-- 检查分组列表 -->
       <el-scrollbar ref="scrollbarRef" height="600px">
         <div class="risk-check-container">
+          <el-empty
+            v-if="checkGroups.length === 0 && !loading"
+            description="暂无客户信息检查结果，请点击重新检查"
+            :image-size="100"
+          />
+          <div v-if="checkGroups.length > 0" class="check-progress-panel">
+            <div class="progress-title-row">
+              <span class="progress-title">批量检查进度</span>
+              <el-tag :type="isCheckCompleted ? 'success' : 'info'" size="small" effect="light">
+                {{ isCheckCompleted ? '检查完成' : '检查中' }}
+              </el-tag>
+            </div>
+            <el-progress
+              :percentage="checkProgress.percentage"
+              :status="isCheckCompleted ? 'success' : undefined"
+            />
+            <div class="progress-description">
+              正在检查 {{ checkProgress.total }} 项客户信息，已完成
+              {{ checkProgress.completed }} 项，剩余 {{ checkProgress.pending }} 项
+            </div>
+          </div>
           <div v-for="group in checkGroups" :key="group.grpId" class="check-group">
             <!-- 分组标题 -->
             <div class="group-header">
@@ -69,9 +90,9 @@
 
           <!-- 最终结果 -->
           <div v-if="checkGroups.length > 0" class="final-result">
-            <span class="result-label">最终结果：</span>
-            <span :class="['result-text', finalResult.status]">
-              {{ finalResult.text }}
+            <span class="result-label">{{ isCheckCompleted ? '最终结果：' : '当前状态：' }}</span>
+            <span :class="['result-text', isCheckCompleted ? finalResult.status : 'checking']">
+              {{ isCheckCompleted ? finalResult.text : `正在批量检查（${checkProgress.completed}/${checkProgress.total}）` }}
             </span>
           </div>
         </div>
@@ -132,6 +153,21 @@ const checkGroups = ref<any[]>([])
 // 滚顶条引用
 const scrollbarRef = ref()
 
+const checkProgress = computed(() => {
+  const items = checkGroups.value.flatMap((group) => group.checkResults || [])
+  const total = items.length
+  const completed = items.filter(
+    (item: any) => item.result !== 'pending' && item.result !== 'loading'
+  ).length
+  const pending = Math.max(total - completed, 0)
+  return {
+    total,
+    completed,
+    pending,
+    percentage: total > 0 ? Math.round((completed / total) * 100) : 0
+  }
+})
+
 // 最终结果
 const finalResult = computed(() => {
   let totalFailed = 0
@@ -168,9 +204,13 @@ const getGroupTagType = (group: any): 'success' | 'warning' | 'danger' | 'info' 
     return 'info'
   }
 
+  const hasPending = group.checkResults.some(
+    (item: any) => item.result === 'pending' || item.result === 'loading'
+  )
   const hasFail = group.checkResults.some((item: any) => item.result === 'fail')
   const hasWarning = group.checkResults.some((item: any) => item.result === 'warning')
 
+  if (hasPending) return 'info'
   if (hasFail) return 'danger'
   if (hasWarning) return 'warning'
   return 'success'
@@ -193,6 +233,13 @@ const getGroupStatus = (group: any): string => {
 
   const failCount = group.checkResults.filter((item: any) => item.result === 'fail').length
   const warningCount = group.checkResults.filter((item: any) => item.result === 'warning').length
+  const completedCount = group.checkResults.filter(
+    (item: any) => item.result !== 'pending' && item.result !== 'loading'
+  ).length
+
+  if (completedCount < group.checkResults.length) {
+    return `检查中 ${completedCount}/${group.checkResults.length}`
+  }
 
   if (failCount > 0) return `${failCount}项未通过`
   if (warningCount > 0) return `${warningCount}项警告`
@@ -678,6 +725,33 @@ defineExpose({
 .risk-check-container {
   padding: 10px;
 
+  .check-progress-panel {
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    background-color: #f5f7fa;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 4px;
+
+    .progress-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .progress-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #303133;
+    }
+
+    .progress-description {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #909399;
+    }
+  }
+
   .check-group {
     margin-bottom: 25px;
 
@@ -769,6 +843,10 @@ defineExpose({
 
     &.fail {
       color: #f56c6c;
+    }
+
+    &.checking {
+      color: #409eff;
     }
   }
 }

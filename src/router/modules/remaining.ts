@@ -787,6 +787,40 @@ const remainingRouter: AppRouteRecordRaw[] = [
       },
     ]
   },
+  {
+    path: '/customerOwnership',
+    component: Layout,
+    name: 'CustomerOwnership',
+    meta: {
+      hidden: true
+    },
+    children: [
+      {
+        path: 'transfer',
+        component: () => import('@/views/customerManagers/compCustMana/ownership/index.vue'),
+        name: 'CustomerOwnershipTransfer',
+        meta: {
+          title: '移交主办权',
+          noCache: true,
+          canTo: true,
+          hidden: true,
+          activeMenu: '/customerManagers/compCustMana'
+        }
+      },
+      {
+        path: 'receive',
+        component: () => import('@/views/customerManagers/compCustMana/ownership/index.vue'),
+        name: 'CustomerOwnershipReceive',
+        meta: {
+          title: '接收主办权',
+          noCache: true,
+          canTo: true,
+          hidden: true,
+          activeMenu: '/customerManagers/compCustMana'
+        }
+      }
+    ]
+  },
   // 统一的iframe 页面
   {
     path: '/iframe',

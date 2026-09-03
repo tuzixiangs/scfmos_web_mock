@@ -14,6 +14,7 @@
 <script setup>
 import * as Api from './api.js'
 import personalProfile from './components/personalProfile/index.vue'
+import customerSection from '@/views/customerManagers/compCustMana/customerDetail/components/customerSection/index.vue'
 import dynamicContainer from '@/components/dynamicContainer/index.vue'
 const modules = import.meta.glob('./components/*/index.vue')
 
@@ -40,6 +41,9 @@ const getCustomerView = () => {
 getCustomerView()
 
 const getComponent = (menu) => {
+  if (menu.value === '@/components/busiComp/crmsIframe/index.vue') {
+    return customerSection
+  }
   if (menu.value === './components/personalProfile/index.vue') {
     return personalProfile
   }

@@ -38,11 +38,20 @@ export const deleteBelongAttribute1 = (data) => {
 
 // 移交主办权调用通用接口
 export const hostingRight = (data) => {
-  return  request.post({url:`system/customerinfo/hostingRight`})
+  return request.post({ url: '/system/customerinfo/hostingRight', data })
 }
-
 
 // 接收主办权调用通用接口
 export const receiveRight = (data) => {
-  return  request.post({url:`system/customerinfo/receiveRight`})
+  return request.post({ url: '/system/customerinfo/receiveRight', data })
+}
+
+// 移交客户列表
+export const getSendCustomerList = (params) => {
+  return request.get({ url: '/system/customerinfo/sendCustomerList', params })
+}
+
+// 接收客户列表
+export const getReceiveCustomerList = (params) => {
+  return request.get({ url: '/system/customerinfo/receiveCustomerList', params })
 }

@@ -59,6 +59,9 @@
       <el-button @click="handleDetail" :disabled="!hasSingleSelectedRow">
         详情
       </el-button>
+      <el-button @click="doRiskDetection(doRiskDetectionAction)" :disabled="!hasSingleSelectedRow">
+        客户信息检查
+      </el-button>
       <el-button @click="handleAddSupplyChainMember" :disabled="!hasSelectedRows">
         加入供应链群成员
       </el-button>
@@ -68,21 +71,21 @@
       <!-- <el-button @click="handleCustomerTypeConversion" :disabled="!hasSelectedRows">
         客户类型转换
       </el-button> -->
-      <!-- <el-button @click="handleGetCustomerOwnership" :disabled="!hasSelectedRows">
+      <el-button @click="handleGetCustomerOwnership" :disabled="!hasSelectedRows">
         获取客户主办权
-      </el-button> -->
-       <!--<el-button @click="handleTransferOwnership" :disabled="!hasSelectedRows">
+      </el-button>
+      <el-button @click="handleTransferOwnership">
         移交主办权
-      </el-button> -->
-      <!-- <el-button @click="handleReceiveOwnership" :disabled="!hasSelectedRows">
+      </el-button>
+      <el-button @click="handleReceiveOwnership">
         接收主办权
-      </el-button> -->
+      </el-button>
       <el-button @click="handleDesensitizedExport" >
         脱敏导出
       </el-button>
-       <!--<el-button @click="handleSyncCreditLimit" :disabled="!hasSelectedRows">
+      <el-button @click="handleSyncCreditLimit" :disabled="!hasSelectedRows">
         同步额度系统
-      </el-button> -->
+      </el-button>
       <el-button type="" @click="handleDelete" :disabled="!hasSelectedRows">
         删除
       </el-button>
@@ -108,29 +111,44 @@
   <select-team-work-pop ref="selectTeamWorkPopRef" />
   <reqPermission ref="reqPermissionRef" @success="reqPermissionConfirm" />
 
+  <RiskMonitor
+    v-model="riskMonitorVisible"
+    :risk-data="riskData"
+    @confirm="handleRiskMonitorConfirm"
+    @cancel="handleRiskMonitorCancel"
+  />
+  <CreditFlowApproval
+    v-model="creditFlowApprovalVisible"
+    :serial-no="serialNo"
+    :phase-no="phaseNo"
+    :object-type="'Customer'"
+    @refresh="getList"
+    @cancel="handleCreditFlowApprovalCancel"
+  />
+
   <OcrRecognitionDialog
     v-model="ocrDialogVisible"
     ref="ocrRecognitionDialog"
     title="新增"
     :add-loading="addLoading"
-    :initial-data="{CustomerType:'0320'}"
+    :initial-data="{CustomerType:'0310'}"
     @confirm='handleOcrConfirm'
     @cancel='handleOcrCancel'
   />
 </template>
 
 <script lang="ts" setup>
-import { nextTick, computed } from 'vue'
-import { ElMessageBox } from 'element-plus'
+import { computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import {
   defaultQueryParams,
-  tableColumns,
-  getMockListData
+  tableColumns
 } from './const/index'
 import { personalApi } from '@/api/customerInfoMGM/sxrs'
-import selectTeamWorkPop from '@/views/customerInfoMGM/companyCustomerMGM/customerMGM/components/selectTeamWorkPop.vue'
-import reqPermission from '@/views/customerInfoMGM/companyCustomerMGM/customerMGM/components/reqPermission.vue'
+import selectTeamWorkPop from '@/views/customerManagers/compCustMana/components/selectTeamWorkPop.vue'
+import reqPermission from '@/views/customerManagers/compCustMana/components/reqPermission.vue'
+import { useRiskDetection } from '@/views/creditApplicationMGM/approvalChangeRequest/hooks'
 import download from '@/utils/download'
 defineOptions({ name: 'salaryEarner' })
 
@@ -147,6 +165,7 @@ const queryParams = reactive({ ...defaultQueryParams })
 
 const queryFormRef = ref()
 const selectedRows = ref<any[]>([])
+const currentRow = computed(() => selectedRows.value[0])
 
 // 计算属性：用于按钮禁用状态
 const hasSelectedRows = computed(() => selectedRows.value && selectedRows.value.length > 0)
@@ -196,7 +215,7 @@ const { getList, setSearchParams } = tableMethods
 
 // 表格选择变化
 const handleSelectionChange = (val) => {
-    selectedRows.value[0] = val
+  selectedRows.value = val ? [val] : []
 }
 
 /** 搜索按钮操作 */
@@ -295,7 +314,7 @@ const addLoading = ref(false)
  }
 
 
- const reqPermissionConfirm =async (params) => {
+ const reqPermissionConfirm =async (params: any = {}) => {
    getList()
   if (params.backToDetail) {
   
@@ -379,48 +398,44 @@ const handleCustomerTypeConversion = () => {
 
 /** 获取客户主办权 */
 const handleGetCustomerOwnership = async () => {
-  console.log(selectedRows.value[0])
   if (selectedRows.value.length === 0) {
     message.warning('请选择要操作的记录')
     return
   }
   try {
-    var params ={};
-    console.log(selectedRows.value[0])
-    params.customerId = selectedRows.value[0].customerId;
-   
-       const res = await personalApi.getCustomerRight(params)
-       console.log('ressdsad',res);
-       if (res ) {
-        return {
-          list: res.list || res.data.records || [],
-          total: res.total || 0
-        }
-      }
-    } catch (error: any) {
-         console.log('新增失败');
-         loading.value = false
-         message.error(error?.msg || '新增失败')
-       }
-   }
+    loading.value = true
+    const res = await personalApi.getCustomerRight({
+      customerId: currentRow.value.customerId
+    })
+    if (res?.GetHost === 'Y') {
+      reqPermissionRef.value.open({
+        ...currentRow.value,
+        isHostRights: true
+      })
+    } else {
+      message.success('获取成功')
+      getList()
+    }
+  } finally {
+    loading.value = false
+  }
+}
 
 
 /** 移交主办权 */
 const handleTransferOwnership = () => {
-  if (selectedRows.value.length === 0) {
-    message.warning('请选择要操作的记录')
-    return
-  }
-  message.info('移交主办权功能待实现')
+  router.push({
+    name: 'CustomerOwnershipTransfer',
+    query: { customerType: '0310' }
+  })
 }
 
 /** 接收主办权 */
 const handleReceiveOwnership = () => {
-  if (selectedRows.value.length === 0) {
-    message.warning('请选择要操作的记录')
-    return
-  }
-  message.info('接收主办权功能待实现')
+  router.push({
+    name: 'CustomerOwnershipReceive',
+    query: { customerType: '0310' }
+  })
 }
 
 /** 脱敏导出 */
@@ -437,12 +452,42 @@ const handleDesensitizedExport = async() => {
 }
 
 /** 同步额度系统 */
-const handleSyncCreditLimit = () => {
+const handleSyncCreditLimit = async () => {
   if (selectedRows.value.length === 0) {
     message.warning('请选择要操作的记录')
     return
   }
-  message.info('同步额度系统功能待实现')
+  try {
+    loading.value = true
+    await personalApi.synchronizeCustomer({ customerId: currentRow.value.customerId })
+    message.success('同步成功')
+    getList()
+  } finally {
+    loading.value = false
+  }
+}
+
+const {
+  riskData,
+  phaseNo,
+  serialNo,
+  doRiskDetection,
+  riskMonitorVisible,
+  creditFlowApprovalVisible,
+  handleRiskMonitorConfirm,
+  handleCreditFlowApprovalCancel,
+  handleRiskMonitorCancel
+} = useRiskDetection(currentRow)
+
+const doRiskDetectionAction = () => {
+  riskData.value = {
+    scenarioId: '005',
+    rskTp: 1,
+    params: {
+      ObjectType: 'Customer',
+      ObjectNo: currentRow.value.customerId
+    }
+  }
 }
 
 /** 删除 */
