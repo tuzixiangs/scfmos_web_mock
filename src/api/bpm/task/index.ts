@@ -127,3 +127,16 @@ export const myTodoTask = async (processInstanceId: string) => {
 export const getChildrenTaskList = async (id: string) => {
   return await request.get({ url: '/bpm/task/list-by-parent-task-id?parentTaskId=' + id })
 }
+
+// 流程详情页使用的兼容接口
+export const taskSubSign = async (data: any) => {
+  return await request.put({ url: '/bpm/task/sub-sign', data })
+}
+
+export const getReturnList = async (params: any) => {
+  return await request.get({ url: '/bpm/task/return-list', params })
+}
+
+export const updateTaskAssignee = async (data: any) => {
+  return await request.put({ url: '/bpm/task/update-assignee', data })
+}

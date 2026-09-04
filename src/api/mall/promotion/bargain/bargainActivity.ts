@@ -62,6 +62,9 @@ export const closeBargainActivity = async (id: number) => {
   return await request.put({ url: '/promotion/bargain-activity/close?id=' + id })
 }
 
+// 兼容旧页面中的关闭接口命名
+export const closeSeckillActivity = closeBargainActivity
+
 // 删除砍价活动
 export const deleteBargainActivity = async (id: number) => {
   return await request.delete({ url: '/promotion/bargain-activity/delete?id=' + id })

@@ -1,5 +1,7 @@
 import request from '@/config/axios'
 
+export const getDetail = (params) => request.get({ url: '/system/modelManage/change/getDetail', params })
+
 // 新增
 export const qryCoreviewApplyCustomerPage = (params) => {
   return request.get({ url: '/system/projectCoreviewApply/qryCoreviewApplyCustomerPage', params })

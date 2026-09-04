@@ -284,6 +284,9 @@ const batchDel = async () => {
 }
 
 // 初始化
+onMounted(() => {
+  getList()
+})
 
 onActivated(() => {
   getList()

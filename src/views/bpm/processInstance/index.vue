@@ -331,7 +331,7 @@ onActivated(() => {
 
 /** 初始化 **/
 onMounted(async () => {
-  // await getList()
+  await getList()
   categoryList.value = await CategoryApi.getCategorySimpleList()
   // 获取流程定义列表
   processDefinitionList.value = await DefinitionApi.getSimpleProcessDefinitionList()

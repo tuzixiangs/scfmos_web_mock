@@ -23,3 +23,7 @@ export const aprrovalOptionPage = (params) => {
 export const checkComment = (params) => {
   return request.get({ url: 'system/modelManage/apply/checkComment', params })
 }
+
+export const addTeamWorkCustomer = (data) => {
+  return request.post({ url: '/system/teamwork/relative/add', data })
+}

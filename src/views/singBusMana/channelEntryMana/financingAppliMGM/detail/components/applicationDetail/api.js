@@ -4,3 +4,7 @@ import request from '@/config/axios'
 export const getChangeCustomerInfo = (params) => {
   return request.get({ url: '/system/customerinfo/ent/customerInfoEntDetail', params })
 }
+
+export const saveCustomer = (data) => {
+  return request.post({ url: '/system/customerinfo/ent/saveCustomer', data })
+}

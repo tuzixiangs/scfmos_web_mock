@@ -17,3 +17,11 @@ export const getApproveClassifyDetail = (data) => {
 export const submitApproveClassifyInfo  = (data) => {
   return request.post({ url: '/system/credit-apply/submitApproveClassifyInfo', data })
 }
+
+export const getWhiteApplyList = (params) => {
+  return request.get({ url: '/system/credit-apply/getWhiteApplyList', params })
+}
+
+export const addWhiteApply = (data) => {
+  return request.post({ url: '/system/credit-apply/addWhiteApply', data })
+}

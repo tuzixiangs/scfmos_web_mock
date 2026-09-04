@@ -46,7 +46,8 @@ async function getDealtype(dealtype){
 }
 
 // const activeMenu
-const activeMenu = ref('')
+// 无渠道参数时默认展示第一个业务节点，避免首次进入只显示空白内容区。
+const activeMenu = ref('1010')
 watch(()=> route.query?.channel,async (channel)=> {
   if(!channel) return
   getDealtype(channel)

@@ -130,9 +130,9 @@
         <template #default="scope">
           <div
             class="flex flex-col"
-            v-if="scope.row.processInstance.summary && scope.row.processInstance.summary.length > 0"
+            v-if="scope.row.processInstance?.summary?.length > 0"
           >
-            <div v-for="(item, index) in scope.row.processInstance.summary" :key="index">
+            <div v-for="(item, index) in scope.row.processInstance?.summary || []" :key="index">
               <el-text type="info"> {{ item.key }} : {{ item.value }} </el-text>
             </div>
           </div>

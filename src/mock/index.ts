@@ -183,6 +183,20 @@ import {
 } from './project-param-adjustment'
 import { projectCreditApprovalMenus, projectCreditApprovalPage } from './project-credit-approval'
 import {
+  createProjectCoreviewRecord,
+  deleteProjectCoreviewRecord,
+  getProjectCoreviewDetail,
+  getProjectCoreviewFlowRecords,
+  getProjectCoreviewOpinion,
+  projectCoreviewOldDicts,
+  projectCoreviewRecords,
+  removeProjectCoreviewOpinion,
+  saveProjectCoreviewOpinion,
+  submitProjectCoreviewRecord,
+  withdrawProjectCoreviewRecord,
+  updateProjectCoreviewDetail
+} from './project-collaboration-review'
+import {
   createCustomerRiskCheckTask,
   getCustomerRiskCheckResults
 } from './customer-risk-detection'
@@ -317,6 +331,29 @@ const detailData = (config: AxiosRequestConfig) => ({
   contactName: '王磊',
   contactMobile: '13800000000'
 })
+
+const projectCoreviewPageData = (config: AxiosRequestConfig) => {
+  const query = { ...urlQuery(config.url), ...(config.params || {}) }
+  const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+  const pageSize = Math.max(1, Number(query.pageSize || 20))
+  const serialNo = String(query.serialNo || '').trim()
+  const projectName = String(query.projectName || '').trim()
+  const customerName = String(query.customerName || '').trim()
+  const customerId = String(query.customerId || '').trim()
+  const phaseType = String(query.phaseType || '').trim()
+  const filtered = projectCoreviewRecords.filter(
+    (record) =>
+      (!phaseType || record.phaseType === phaseType) &&
+      (!serialNo || record.serialNo.includes(serialNo)) &&
+      (!projectName || record.projectName.includes(projectName)) &&
+      (!customerName || record.customerName.includes(customerName)) &&
+      (!customerId || record.customerId.includes(customerId))
+  )
+  const start = (pageNo - 1) * pageSize
+  const list = cloneMockData(filtered.slice(start, start + pageSize).map(({ detail, ...record }) => record))
+
+  return { total: filtered.length, list, records: list, pageNo, pageSize }
+}
 
 const inventoryGoodsPageData = (config: AxiosRequestConfig) => {
   const query = { ...urlQuery(config.url), ...(config.params || {}) }
@@ -920,6 +957,103 @@ export const mockAdapter: AxiosAdapter = async (config) => {
         }
       ]
     }
+  } else if (/\/system\/projectCoreviewApply\/getProjectCoreviewPage$/.test(url)) {
+    data = projectCoreviewPageData(config)
+  } else if (/\/system\/projectCoreviewApply\/qryCompletedPage$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const keyword = String(query.serialNo || '').trim()
+    const completed = projectCoreviewRecords.filter((record) =>
+      ['1040', '1050'].includes(String(record.phaseType)) &&
+      (!keyword || record.serialNo.includes(keyword))
+    )
+    const start = (pageNo - 1) * pageSize
+    const list = cloneMockData(completed.slice(start, start + pageSize).map(({ detail, ...record }) => ({
+      ...record,
+      userName: record.inputUserID,
+      phaseNo: record.phaseType === '1040' ? '审批通过' : '审批否决'
+    })))
+    data = { total: completed.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/projectCoreviewApply\/(?:aprrovalPage|aprrovalOptionPage)$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const pageNo = Math.max(1, Number(query.pageNo || query.pageNum || 1))
+    const pageSize = Math.max(1, Number(query.pageSize || 20))
+    const approval = projectCoreviewRecords.filter((record) => record.phaseType === '1020')
+    const start = (pageNo - 1) * pageSize
+    const list = cloneMockData(approval.slice(start, start + pageSize).map(({ detail, ...record }) => ({
+      ...record,
+      userName: record.inputUserID,
+      taskId: `TASK-${record.serialNo}`,
+      flowNo: record.ftSerialNo,
+      checked: false
+    })))
+    data = { total: approval.length, list, records: list, pageNo, pageSize }
+  } else if (/\/system\/projectCoreviewApply\/add$/.test(url)) {
+    data = cloneMockData(createProjectCoreviewRecord(parseMockPayload(config.data)))
+  } else if (/\/system\/projectCoreviewApply\/deleteApply$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    data = { success: deleteProjectCoreviewRecord(payload.serialNo || payload.serialno) }
+  } else if (/\/system\/projectCoreviewApply\/get$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(getProjectCoreviewDetail(query.serialNo || query.serialno))
+  } else if (/\/system\/projectCoreviewApply\/tempSaveRecord$/.test(url)) {
+    data = cloneMockData(updateProjectCoreviewDetail(parseMockPayload(config.data), '1'))
+  } else if (/\/system\/projectCoreviewApply\/saveRecord$/.test(url)) {
+    data = cloneMockData(updateProjectCoreviewDetail(parseMockPayload(config.data), '2'))
+  } else if (/\/system\/projectCoreviewApply\/getCoreviewApplyOpinion$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const opinion = getProjectCoreviewOpinion(query.serialNo || query.serialno)
+    data = opinion.approvalComment
+      ? [{
+          phaseNo: '1010', phaseName: '项目协审申请', userName: opinion.nickName,
+          orgName: opinion.orgName, attribute: '供应链金融平台',
+          beginTime: '2026-09-04 09:30:00', endTime: opinion.oprDate,
+          phaseOpinion: opinion.approvalComment
+        }]
+      : []
+  } else if (/(?:^|\/)system\/modelManage\/apply\/checkComment$/.test(url)) {
+    data = { phaseOpinion: true }
+  } else if (/\/system\/bpmComment\/getCheckOpinionTab$/.test(url)) {
+    data = ['项目协审意见']
+  } else if (/\/system\/bpmComment\/getRelativeObjNo$/.test(url)) {
+    data = {}
+  } else if (/\/system\/bpmComment\/get$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(getProjectCoreviewOpinion(query.businessId))
+  } else if (/\/system\/bpmComment\/save$/.test(url)) {
+    data = cloneMockData(saveProjectCoreviewOpinion(parseMockPayload(config.data)))
+  } else if (/\/system\/bpmComment\/remove$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    data = { success: removeProjectCoreviewOpinion(payload.id || payload.businessId) }
+  } else if (/\/system\/credit-flow\/getFlowTaskByObjNoAndTypeAndPhaseNo$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = { serialNo: `FT-${String(query.objectNo || '')}`, phaseNo: query.phaseNo || '1010' }
+  } else if (/\/system\/credit-flow\/next-select-users$/.test(url)) {
+    data = {
+      stgInfArray: [
+        {
+          opnnChosInf: '同意提交',
+          hiddenAprverInfArray: false,
+          aprverInfArray: [
+            { aprverInf: '供应链金融审查岗（张晨）' },
+            { aprverInf: '公司业务审批岗（李敏）' }
+          ]
+        }
+      ]
+    }
+  } else if (/\/system\/credit-flow\/getFlowRecordPage$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const records = getProjectCoreviewFlowRecords(query.serialNo)
+    data = { total: records.length, list: cloneMockData(records), records: cloneMockData(records) }
+  } else if (/\/system\/credit-flow\/submit$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    data = { success: submitProjectCoreviewRecord(payload.serialNo) }
+  } else if (/\/system\/credit-flow\/withdraw$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    data = { success: withdrawProjectCoreviewRecord(payload.serialNo) }
+  } else if (/\/system\/codeLibrary\/getCreditStageFlow$/.test(url)) {
+    data = [{ attribute1: '', attribute2: '', attribute3: '' }]
   } else if (/\/system\/creditLimitApply\/qryApplyListPage$/.test(url)) {
     const query = { ...urlQuery(config.url), ...(config.params || {}) }
     const pageNo = Number(query.pageNo || query.pageNum || 1)
@@ -1274,6 +1408,15 @@ export const mockAdapter: AxiosAdapter = async (config) => {
       ['0310', '0320'].includes(String(query.customerType || ''))
         ? cloneMockData(selfEmployedCustomerPageVO)
         : cloneMockData(companyCustomerPageVO)
+  } else if (/\/system\/codeLibrary\/list$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    const codeNos = String(query.codeNos || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+    data = Object.fromEntries(
+      codeNos.map((codeNo) => [codeNo, cloneMockData(projectCoreviewOldDicts[codeNo] || [])])
+    )
   } else if (/\/system\/codeLibrary\/cityTreeList$/.test(url)) {
     data = cloneMockData(customerRegionTree)
   } else if (/\/system\/codeLibrary\/industryTreeList$/.test(url)) {
@@ -2121,6 +2264,145 @@ export const mockAdapter: AxiosAdapter = async (config) => {
     data = cloneMockData(
       updateOrderContractModificationRecord(payload.id || payload.modificationId, payload)
     )
+  } else if (/\/system\/big-supply\/electron\/detail$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = {
+      serialNo: query.serialNo || 'SCF202607200001',
+      certID: '91330201MA2J5K8X6Q',
+      customerName: '华东供应链有限公司',
+      mfCustomerID: 'C202607200001',
+      applySum: '1,200,000.00',
+      termMonth: '12个月',
+      occurTypeName: '新增',
+      contractNo: 'HT202607200001',
+      channelSource: '手机银行',
+      isRelWhiteListName: '是',
+      inputDate: '2026-09-04 09:30:00',
+      passTime: '2026-09-04 10:15:00',
+      applyStatus: '待审批',
+      baSerial: 'BA202609040001',
+      bcSerial: 'BC202609040001',
+      invalidTime: '2026-10-04 23:59:59'
+    }
+  } else if (/\/system\/big-supply\/application\/(?:credit-apply-pending|credit-apply-processed|credit-apply-failure|put-out-apply-effective|put-out-apply-failure|put-out-apply-cancel)$/.test(url)) {
+    const isPutOut = /put-out-apply/.test(url)
+    const rows = [
+      {
+        serialNo: isPutOut ? 'BP202609040001' : 'CA202609040001', borrowerType: '企业法人',
+        certId: '91330200MA2J8X6M3Q', borrowerName: '宁波华联供应链有限公司',
+        customerName: '宁波华联供应链有限公司', mfCustomerID: 'C202609040001',
+        inputDate: '2026-09-04 09:20:00', passTime: '2026-09-04 10:05:00',
+        invalidDate: '2026-10-04 23:59:59', applyStatus: /processed/.test(url) ? '已进件' : '待进件',
+        baNo: 'BA202609040001', bcNo: 'BC202609040001', loanChannelNo: 'QD-BP-202609040001',
+        bcSerialNo: 'BCT202609040001', businessSum: 3200000, termMonth: 6, termDay: 0,
+        bpApplyDate: '2026-09-04', applyEffectDate: '2026-09-30', accountNo: '6217000012345678',
+        openCustomerName: '宁波华联供应链有限公司', openBankNo: '313332000001',
+        openBankName: '宁波通商银行营业部', bpSerialNo: 'CZ202609040001', status: '有效',
+        haidaTransSumOfYear: 26800000, haidaRecommendSum: 5000000, haidaRecommendRate: '3.65%',
+        haidaDealerType: '核心经销商'
+      },
+      {
+        serialNo: isPutOut ? 'BP202609040002' : 'CA202609040002', borrowerType: '企业法人',
+        certId: '91330100MA2B0P9R7W', borrowerName: '杭州恒通贸易有限公司',
+        customerName: '杭州恒通贸易有限公司', mfCustomerID: 'C202609040002',
+        inputDate: '2026-09-04 08:40:00', passTime: '2026-09-04 09:35:00',
+        invalidDate: '2026-10-04 23:59:59', applyStatus: /processed/.test(url) ? '已进件' : '待进件',
+        baNo: 'BA202609040002', bcNo: 'BC202609040002', loanChannelNo: 'QD-BP-202609040002',
+        bcSerialNo: 'BCT202609040002', businessSum: 1800000, termMonth: 3, termDay: 0,
+        bpApplyDate: '2026-09-04', applyEffectDate: '2026-09-25', accountNo: '6217000098765432',
+        openCustomerName: '杭州恒通贸易有限公司', openBankNo: '313331000002',
+        openBankName: '宁波通商银行杭州分行', bpSerialNo: 'CZ202609040002', status: '有效',
+        haidaTransSumOfYear: 15600000, haidaRecommendSum: 2800000, haidaRecommendRate: '3.75%',
+        haidaDealerType: '重点经销商'
+      }
+    ]
+    data = { total: rows.length, list: rows, records: rows }
+  } else if (/\/system\/big-supply\/not-passed\/(?:notice|can-add-credit|can-add-bp)$/.test(url)) {
+    const rows = [
+      { serialNo: 'NP202609040001', customerName: '华东供应链有限公司', customerId: 'C202607200001', businessSum: 1200000, projectName: '核心企业供应链融资项目', unPassResult: '影像资料缺少最新购销合同', updateDate: '2026-09-04 10:20:00' },
+      { serialNo: 'NP202609040002', customerName: '新城贸易有限公司', customerId: 'C202607190002', businessSum: 860000, projectName: '经销商融资项目', unPassResult: '申请金额与合同金额不一致', updateDate: '2026-09-04 09:45:00' }
+    ]
+    data = { total: rows.length, list: rows, records: rows }
+  } else if (/\/system\/crRule\/query\/varAndConst$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    const ruleId = String(payload.ruleId || 'R001')
+    const rows = [
+      { id: 'RV001', ruleId, variablesId: 'V001', variablesGroupId: 'VG001', variablesName: '合同剩余可用金额', variablesKey: 'contractAvailableAmount', argType: 'V' },
+      { id: 'RV002', ruleId, variablesId: 'V002', variablesGroupId: 'VG002', variablesName: '当前库存数量', variablesKey: 'inventoryQuantity', argType: 'V' },
+      { id: 'RV003', ruleId, variablesId: 'V003', variablesGroupId: 'VG003', variablesName: '最新市场单价', variablesKey: 'latestMarketPrice', argType: 'V' }
+    ]
+    data = { total: rows.length, list: rows, records: rows, crRuleVarConsts: rows, crDtRelaReqList: [] }
+  } else if (/\/system\/crRule\/list$/.test(url)) {
+    const rows = [
+      { id: 'R001', ruleType: 'A', ruleGroup: '0', ruleName: '合同有效性校验', ruleExpression: '合同状态=有效 AND 剩余可用金额>0', ruleStatus: '1' },
+      { id: 'R002', ruleType: 'B', ruleGroup: '0', ruleName: '存货资产准入校验', ruleExpression: '商品分类已配置 AND 仓库状态=有效', ruleStatus: '1' },
+      { id: 'R003', ruleType: 'C', ruleGroup: '0', ruleName: '价格跌幅预警', ruleExpression: '最新单价/入库单价<0.9', ruleStatus: '1' }
+    ]
+    data = { total: rows.length, list: rows, records: rows }
+  } else if (/\/(?:system|indebt)\/crVariablesGroup\/list$/.test(url)) {
+    const rows = [
+      { id: 'VG001', variablesGroupName: 'CONTRACT', variablesGroupCode: '合同基础因子', variablesOrigin: '1', ruleType: 'A' },
+      { id: 'VG002', variablesGroupName: 'INVENTORY', variablesGroupCode: '存货资产因子', variablesOrigin: '2', ruleType: 'B' },
+      { id: 'VG003', variablesGroupName: 'PRICE', variablesGroupCode: '价格监测因子', variablesOrigin: '3', ruleType: 'C' }
+    ]
+    data = { total: rows.length, list: rows, records: rows }
+  } else if (/\/(?:system|indebt)\/crVariables\/list$/.test(url)) {
+    const rows = [
+      { id: 'V001', variablesName: '合同剩余可用金额', variablesKey: 'contractAvailableAmount', variablesGroupId: 'VG001', variablesType: 'N', variablesOrigin: '1' },
+      { id: 'V002', variablesName: '当前库存数量', variablesKey: 'inventoryQuantity', variablesGroupId: 'VG002', variablesType: 'N', variablesOrigin: '2' },
+      { id: 'V003', variablesName: '最新市场单价', variablesKey: 'latestMarketPrice', variablesGroupId: 'VG003', variablesType: 'N', variablesOrigin: '3' }
+    ]
+    data = { total: rows.length, list: rows, records: rows }
+  } else if (/\/bpm\/category\/simple-list$/.test(url)) {
+    data = [
+      { id: 1, name: '项目管理', code: 'project', status: 0, sort: 1 },
+      { id: 2, name: '债项管理', code: 'indebt', status: 0, sort: 2 },
+      { id: 3, name: '客户管理', code: 'customer', status: 0, sort: 3 }
+    ]
+  } else if (/\/bpm\/model\/list$/.test(url)) {
+    data = [
+      { id: 1, key: 'project_coreview', name: '项目协审流程', categoryName: '项目管理', status: 0 },
+      { id: 2, key: 'indebt_inbound', name: '债项资产入库流程', categoryName: '债项管理', status: 0 },
+      { id: 3, key: 'customer_change', name: '客户信息变更流程', categoryName: '客户管理', status: 0 }
+    ]
+  } else if (/\/bpm\/process-definition\/simple-list$/.test(url)) {
+    data = [
+      { id: 'PD-001', key: 'project_coreview', name: '项目协审流程' },
+      { id: 'PD-002', key: 'indebt_inbound', name: '债项资产入库流程' },
+      { id: 'PD-003', key: 'customer_change', name: '客户信息变更流程' }
+    ]
+  } else if (/\/bpm\/task\/(?:todo-page|done-page)$/.test(url)) {
+    const done = /done-page$/.test(url)
+    const now = Date.now()
+    const rows = [0, 1, 2].map((index) => ({
+      id: `${done ? 'DONE' : 'TODO'}-20260904-00${index + 1}`,
+      name: done ? '审批完成' : ['资料审查', '业务复核', '合规审批'][index],
+      status: done ? 2 : 1,
+      reason: done ? '资料完整，同意办理' : '',
+      createTime: now - (index + 1) * 3600000,
+      endTime: done ? now - index * 1800000 : undefined,
+      durationInMillis: (index + 1) * 1800000,
+      processInstanceId: `PI-20260904-00${index + 1}`,
+      processDefinition: { id: `PD-00${index + 1}`, name: ['项目协审流程', '债项资产入库流程', '客户信息变更流程'][index] },
+      processInstance: {
+        id: `PI-20260904-00${index + 1}`,
+        name: ['项目协审申请', '债项资产入库申请', '客户信息变更申请'][index],
+        summary: [
+          { key: '业务编号', value: ['SC202609040001', 'AMA202609040001', 'CC202609040001'][index] },
+          { key: '客户名称', value: ['华东供应链有限公司', '宁波钢贸有限公司', '上海智造科技有限公司'][index] }
+        ],
+        startUser: { nickname: ['张晨', '李敏', '王磊'][index] },
+        createTime: now - (index + 2) * 3600000
+      }
+    }))
+    data = { total: rows.length, list: rows }
+  } else if (/\/bpm\/process-instance\/my-page$/.test(url)) {
+    const now = Date.now()
+    const rows = [
+      { id: 'PI-20260904-001', name: '项目协审申请', categoryName: '项目管理', status: 1, summary: [{ key: '协审编号', value: 'SC202609040001' }], startUser: { nickname: '本地演示用户' }, createTime: now - 7200000, tasks: [{ name: '资料审查', assigneeUser: { nickname: '张晨' } }] },
+      { id: 'PI-20260903-002', name: '债项资产入库申请', categoryName: '债项管理', status: 2, summary: [{ key: '申请编号', value: 'AMA202609030002' }], startUser: { nickname: '本地演示用户' }, createTime: now - 86400000, endTime: now - 3600000, tasks: [] }
+    ]
+    data = { total: rows.length, list: rows }
   } else if (/captcha\/(get|check)$/.test(url)) {
     data = { repCode: '0000', repMsg: '校验成功', uuid: 'mock-captcha', captchaType: 'blockPuzzle' }
   } else if (

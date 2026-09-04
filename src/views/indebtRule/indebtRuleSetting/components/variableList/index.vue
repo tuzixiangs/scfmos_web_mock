@@ -53,9 +53,8 @@ fetchCback(() => {
   })
 })
 
-if (props.ruleId) {
-  reSearch()
-}
+// 演示环境直接进入规则详情时也展示已配置的债项因子，避免空白表格。
+reSearch()
 
 const selectPopRef = ref()
 const selectIndebtRule = () => {

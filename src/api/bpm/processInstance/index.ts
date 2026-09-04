@@ -135,3 +135,7 @@ export const getUserByCondition = async (data) => {
 export const createProcessInstanceCC = async (data) => {
   return await request.post({ url: '/bpm/process-instance/cc/create', data: data })
 }
+
+export const getProcessInstanceCCPage = async (params: any) => {
+  return await request.get({ url: '/bpm/process-instance/cc/page', params })
+}

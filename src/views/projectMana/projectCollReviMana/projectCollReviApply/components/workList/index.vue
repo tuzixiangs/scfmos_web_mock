@@ -149,6 +149,7 @@ const props = defineProps({
 })
 
 const isExpand = ref(false)
+const pageLoading = ref(false)
 const handleExpand = () => {
   isExpand.value = !isExpand.value
 }
@@ -239,10 +240,13 @@ const add = () => {
 }
 
 const addConfirm = (item) => {
+  const serialNo = item?.serialNo || item?.serialno
+  if (!serialNo) return ElMessage.error('新增成功，但未获取到协审编号')
+
   router.push({
     path: '/projectMana/projectCollReviMana/projectCollReviManaDetail',
     query: {
-      serialNo: item.serialNo,
+      serialNo,
       t: Date.now()
     }
   })
@@ -277,6 +281,14 @@ const handleSignOpinion = () => {
     objectType: 'ProjectCoreviewGYL'
   }
   signOpinionVisible.value = true
+}
+
+const handleSignOpinionConfirm = () => {
+  signOpinionVisible.value = false
+}
+
+const handleSignOpinionCancel = () => {
+  signOpinionVisible.value = false
 }
 
 const riskMonitorVisible = ref(false)

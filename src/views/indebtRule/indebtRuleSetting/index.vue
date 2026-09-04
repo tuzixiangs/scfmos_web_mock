@@ -167,7 +167,32 @@ const crRuleEdit = (data: any) => {
 const queryVarAndContant = (data: any) => {
   return Promise.resolve({
     result: {
-      crRuleVarConsts: [],
+      crRuleVarConsts: [
+        {
+          id: 'RV001',
+          ruleId: data.ruleId || 'R001',
+          variablesId: 'V001',
+          variablesName: '合同剩余可用金额',
+          variablesKey: 'contractAvailableAmount',
+          argType: 'V'
+        },
+        {
+          id: 'RV002',
+          ruleId: data.ruleId || 'R001',
+          variablesId: 'V002',
+          variablesName: '当前库存数量',
+          variablesKey: 'inventoryQuantity',
+          argType: 'V'
+        },
+        {
+          id: 'RV003',
+          ruleId: data.ruleId || 'R001',
+          variablesId: 'V003',
+          variablesName: '最新市场单价',
+          variablesKey: 'latestMarketPrice',
+          argType: 'V'
+        }
+      ],
       crDtRelaReqList: []
     }
   })
