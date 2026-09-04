@@ -196,7 +196,7 @@
     :close-on-click-modal="false"
   >
     <el-alert
-      title="客户经理提交商品范围配置后进入审批；具体审批路径按最终确认结果接入。"
+      title="商品品类配置由总行产品经理维护，提交后按双岗审核要求复核。"
       type="info"
       :closable="false"
       class="mb-16px"
@@ -531,7 +531,7 @@ const submitCustomerConfig = () => {
     return
   }
   customerConfigVisible.value = false
-  ElMessage.success('客户经理商品配置申请已提交（审批路径待最终确认）')
+  ElMessage.success('商品配置申请已提交，进入双岗复核')
 }
 
 const openCreate = (

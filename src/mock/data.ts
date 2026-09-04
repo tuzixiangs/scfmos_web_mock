@@ -19,7 +19,13 @@ export const dictData = [
   { id: 3, dictType: 'yes_no', label: '是', value: '1', colorType: 'success', cssClass: '' },
   { id: 4, dictType: 'yes_no', label: '否', value: '0', colorType: 'info', cssClass: '' },
   { id: 5, dictType: 'approval_status', label: '待处理', value: '0', colorType: 'warning', cssClass: '' },
-  { id: 6, dictType: 'approval_status', label: '已通过', value: '1', colorType: 'success', cssClass: '' }
+  { id: 6, dictType: 'approval_status', label: '已通过', value: '1', colorType: 'success', cssClass: '' },
+  { id: 7, dictType: 'coreview_method', label: '新增协审', value: '01', colorType: '', cssClass: '' },
+  { id: 8, dictType: 'coreview_method', label: '续作协审', value: '02', colorType: '', cssClass: '' },
+  { id: 9, dictType: 'coreview_type', label: '项目方案协审', value: '01', colorType: '', cssClass: '' },
+  { id: 10, dictType: 'coreview_type', label: '授信方案协审', value: '02', colorType: '', cssClass: '' },
+  { id: 11, dictType: 'supply_chain_flag', label: '供应链业务', value: '1', colorType: '', cssClass: '' },
+  { id: 12, dictType: 'supply_chain_flag', label: '非供应链业务', value: '0', colorType: '', cssClass: '' }
 ]
 
 export const pageRecords = [

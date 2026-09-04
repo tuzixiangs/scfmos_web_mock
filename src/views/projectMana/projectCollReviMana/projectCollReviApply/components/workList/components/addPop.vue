@@ -137,12 +137,14 @@ import * as Api from './api.js'
 import dayjs from 'dayjs'
 import { getDictOptions } from '@/utils/dict'
 import useFormHelper from '@/hooks/web/useFormHelper'
+import { useDictStoreWithOut } from '@/store/modules/dict'
 
 const visible = ref(false)
 
-const coreviewMethodoption = getDictOptions('coreview_method')
-const coreviewTypeOption = getDictOptions('coreview_type')
-const gylFlagOption = getDictOptions('supply_chain_flag')
+const dictStore = useDictStoreWithOut()
+const coreviewMethodoption = computed(() => getDictOptions('coreview_method'))
+const coreviewTypeOption = computed(() => getDictOptions('coreview_type'))
+const gylFlagOption = computed(() => getDictOptions('supply_chain_flag'))
 
 const columns1 = [
   { label: '客户编号', prop: 'customerId', minWidth: 220},
@@ -202,9 +204,13 @@ const formRules = reactive({
   gylFlag: [{ required: true, message: '供应链标识 必录', trigger: 'change' }]
 })
 
-const open = (row) => {
+const open = async (row) => {
   Object.keys(formData).forEach((key) => (formData[key] = ''))
   visible.value = true
+
+  if (!coreviewMethodoption.value.length || !coreviewTypeOption.value.length) {
+    await dictStore.resetDict()
+  }
 
   formData.createTm = dayjs().format('YYYY/MM/DD')
 }
