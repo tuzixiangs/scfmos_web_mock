@@ -177,9 +177,14 @@ import {
 import {
   cancelProjectParamAdjustmentRecord,
   createProjectParamAdjustmentRecord,
+  getProjectParamAdjustmentTemplateValue,
+  saveProjectParamAdjustmentTemplateValue,
+  projectParamAdjustmentHistoryTemplate,
+  projectParamAdjustmentHistoryPage,
   projectParamAdjustmentMenu,
   projectParamAdjustmentPage,
-  projectParamAdjustmentProjects
+  projectParamAdjustmentProjects,
+  projectParamAdjustmentTemplateInfo
 } from './project-param-adjustment'
 import { projectCreditApprovalMenus, projectCreditApprovalPage } from './project-credit-approval'
 import {
@@ -823,6 +828,18 @@ export const mockAdapter: AxiosAdapter = async (config) => {
       list: cloneMockData(projectParamAdjustmentProjects),
       records: cloneMockData(projectParamAdjustmentProjects)
     }
+  } else if (/\/system\/paramAdjust\/getTemplateInfo$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(query.templateNo === 'ProjectParamAdjustHisList'
+      ? projectParamAdjustmentHistoryTemplate : projectParamAdjustmentTemplateInfo)
+  } else if (/\/system\/paramAdjust\/getTemplatePageValue$/.test(url)) {
+    const payload = parseMockPayload(config.data)
+    data = cloneMockData(projectParamAdjustmentHistoryPage(payload.serialno))
+  } else if (/\/system\/paramAdjust\/getTemplateValue$/.test(url)) {
+    const query = { ...urlQuery(config.url), ...(config.params || {}) }
+    data = cloneMockData(getProjectParamAdjustmentTemplateValue(query.serialno || query.serialNo))
+  } else if (/\/system\/paramAdjust\/saveApply$/.test(url)) {
+    data = saveProjectParamAdjustmentTemplateValue(parseMockPayload(config.data))
   } else if (/\/system\/paramAdjust\/addApply$/.test(url)) {
     data = cloneMockData(createProjectParamAdjustmentRecord(parseMockPayload(config.data)))
   } else if (/\/system\/paramAdjust\/cancelApply$/.test(url)) {

@@ -570,7 +570,8 @@ const save = async (btn: ActionButton) => {
   }
   const form = activeDynamicFormRef.value?.formDataFixToSave()
   const params = {
-    ...form
+    ...form,
+    serialno: routeQuery.value.serialno
   }
   if (activeTabName.value === 'ContractPart_HEAD') {
     if (params.issinglepaycontrol === '1') {

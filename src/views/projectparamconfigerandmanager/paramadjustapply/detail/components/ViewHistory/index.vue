@@ -63,7 +63,7 @@ const viewHistory = (row)=> {
         t: Date.now()
       }
     })
-    props.onClose({ command: 'cancel'})
+    props.onClose?.({ command: 'cancel'})
   } catch(error: any) {
     if(error && error?.message?.includes('No match for')) {
       router.push('/404')
