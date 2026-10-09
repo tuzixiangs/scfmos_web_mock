@@ -291,12 +291,10 @@ import { computed, onActivated, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { ActionBar, type ActionButton } from '@/components/ActionBar'
 import { useCrudSchemas, type CrudSchema } from '@/hooks/web/useCrudSchemas'
-import { useUserStore } from '@/store/modules/user'
 import * as AssetManagementApi from '@/api/indebt/assetManagement'
 
 defineOptions({ name: 'AssetManagementApplicationWorkList' })
 
-const userStore = useUserStore()
 
 type AssetManagementApplicationPhase = 'pending' | 'reviewing' | 'rejected' | 'approved'
 
@@ -1170,21 +1168,6 @@ const openImage = async (record: AssetManagementRecord) => {
   }
 }
 
-const generatePledgeTask = () => {
-  const record = requireCurrentRecord()
-  if (!record) return
-  const permissions = userStore.getPermissions
-  const canCreate =
-    permissions.includes('*:*:*') ||
-    permissions.includes('indebt:movable-registration:create') ||
-    permissions.includes('indebt:movableRegistration:create')
-  if (!canCreate) {
-    ElMessage.warning('当前用户无动产登记创建权限，不能生成变更待办')
-    return
-  }
-  const creator = userStore.getUser.nickname || '当前操作人'
-  ElMessage.success(`已为${creator}生成动产质押变更待办：${record.applicationNo}（Mock）`)
-}
 
 const deleteCurrentRecord = async () => {
   const record = requireCurrentRecord()
@@ -1296,13 +1279,6 @@ const visibleButtons = computed<ActionButton[]>(() => {
         plain: true,
         loading: actionLoading.value === 'withdraw',
         onClick: () => handleTransition('withdraw')
-      },
-      {
-        key: 'generate-pledge',
-        label: '生成动产质押变更待办',
-        icon: 'ep:document-add',
-        plain: true,
-        onClick: generatePledgeTask
       }
     ]
   }

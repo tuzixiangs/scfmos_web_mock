@@ -29,6 +29,11 @@ export interface OrderContractItem {
   batchNo: string
   cabinetNo: string
   guidancePrice?: number
+  latestStockPrice?: number
+  purchaseMethod?: string
+  creditPurpose?: string
+  remark1?: string
+  remark2?: string
   specification: string
   origin: string
   warehouseName: string
@@ -49,6 +54,11 @@ export interface OrderContractItemPayload {
   batchNo?: string
   cabinetNo?: string
   guidancePrice?: number | string
+  latestStockPrice?: number
+  purchaseMethod?: string
+  creditPurpose?: string
+  remark1?: string
+  remark2?: string
   specification?: string
   origin?: string
   warehouseName?: string
@@ -161,6 +171,11 @@ const item = (
   id: number,
   sequence: number
 ) => ({
+  latestStockPrice: data.unitPrice,
+  purchaseMethod: '境内采购',
+  creditPurpose: '支付货款',
+  remark1: '已入库资产维护',
+  remark2: '',
   ...data,
   id,
   sequence,
@@ -657,6 +672,11 @@ const buildItem = (
     batchNo: trim(payload.batchNo),
     cabinetNo: trim(payload.cabinetNo),
     guidancePrice: amount(payload.guidancePrice, unitPrice),
+    latestStockPrice: amount(payload.latestStockPrice, unitPrice),
+    purchaseMethod: trim(payload.purchaseMethod),
+    creditPurpose: trim(payload.creditPurpose),
+    remark1: trim(payload.remark1),
+    remark2: trim(payload.remark2),
     specification: trim(payload.specification),
     origin: trim(payload.origin),
     warehouseName: trim(payload.warehouseName) || '待选择仓库',
@@ -859,13 +879,14 @@ export const updateOrderContractModificationItem = (
     {
       ...itemRecord,
       ...payload,
-      productName: payload.productName ?? itemRecord.productName,
-      largeCategory: payload.largeCategory ?? itemRecord.largeCategory,
-      middleCategory: payload.middleCategory ?? itemRecord.middleCategory,
-      smallCategory: payload.smallCategory ?? itemRecord.smallCategory,
+      productName: itemRecord.productName,
+      largeCategory: itemRecord.largeCategory,
+      middleCategory: itemRecord.middleCategory,
+      smallCategory: itemRecord.smallCategory,
+      origin: itemRecord.origin,
       warehouseName: payload.warehouseName ?? itemRecord.warehouseName,
       quantityOrWeight: payload.quantityOrWeight ?? itemRecord.quantityOrWeight,
-      unitPrice: payload.unitPrice ?? itemRecord.unitPrice,
+      unitPrice: itemRecord.unitPrice,
       cargoStartDate: payload.cargoStartDate ?? itemRecord.cargoStartDate,
       cargoEndDate: payload.cargoEndDate ?? itemRecord.cargoEndDate,
       cargoOwner: payload.cargoOwner ?? itemRecord.cargoOwner
@@ -873,7 +894,7 @@ export const updateOrderContractModificationItem = (
     itemRecord.id,
     itemRecord.sequence
   )
-  Object.assign(itemRecord, merged)
+  Object.assign(itemRecord, merged, { productCode: itemRecord.productCode })
   changeMeta(record)
   return { success: true, item: itemRecord, record }
 }
@@ -892,14 +913,24 @@ export const updateOrderContractModificationItems = (
   const nextBaseId = nextItemId()
   record.items = payload.map((entry, index) => {
     const source = originalItems[index]
-    return buildItem(
+    const updated = buildItem(
       {
         ...(source || {}),
-        ...((entry || {}) as OrderContractItemPayload)
+        ...((entry || {}) as OrderContractItemPayload),
+        ...(source ? {
+          productName: source.productName,
+          largeCategory: source.largeCategory,
+          middleCategory: source.middleCategory,
+          smallCategory: source.smallCategory,
+          origin: source.origin,
+          unitPrice: source.unitPrice
+        } : {})
       },
       source?.id || nextBaseId + index,
       index + 1
     )
+    if (source) updated.productCode = source.productCode
+    return updated
   })
   changeMeta(record)
   return { success: true, record }

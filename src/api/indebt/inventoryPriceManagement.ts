@@ -41,6 +41,10 @@ export interface InventoryPriceApplicationOpinion {
  * 分类、产地、入库单价、最新单价由项目商品信息带入；盯市单价和来源由用户维护。
  */
 export interface InventoryPriceItem {
+  largeCategoryCode?: string
+  middleCategoryCode?: string
+  smallCategoryCode?: string
+  customerWarningRates?: number[]
   id: number
   largeCategory: string
   middleCategory: string

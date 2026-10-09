@@ -1223,7 +1223,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
       {
         "id": 1728,
         "parentId": 1760,
-        "name": "债项数据维护",
+        "name": "债项资产维护",
         "path": "",
         "component": null,
         "componentName": null,
@@ -1235,7 +1235,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
           {
             "id": 1761,
             "parentId": 1728,
-            "name": "待提交债项数据修改",
+            "name": "待提交债项资产修改",
             "path": "orderContractModification",
             "component": "indebt/orderContractModification/index",
             "componentName": "OrderContractModification",
@@ -1248,7 +1248,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
           {
             "id": 1762,
             "parentId": 1728,
-            "name": "债项数据修改记录",
+            "name": "债项资产修改记录",
             "path": "orderContractModificationQuery",
             "component": "indebt/orderContractModification/index",
             "componentName": "OrderContractModificationRecordQuery",
@@ -1399,7 +1399,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
             "component": "indebt/debtLedgerQuery/offlineLedgerUpdate/index",
             "componentName": "OfflineLedgerUpdate",
             "icon": null,
-            "visible": true,
+            "visible": false,
             "keepAlive": true,
             "alwaysShow": true,
             "children": null
@@ -1438,7 +1438,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
             "component": "indebt/debtLedgerQuery/offlineLedgerQuery/index",
             "componentName": "OfflineLedgerQuery",
             "icon": null,
-            "visible": true,
+            "visible": false,
             "keepAlive": true,
             "alwaysShow": true,
             "children": null
@@ -1464,7 +1464,7 @@ export const intranetPermissionMenus: IntranetPermissionMenu[] = JSON.parse(Stri
             "component": "indebt/debtLedgerQuery/assetRiskLedgerQuery/index",
             "componentName": "AssetRiskLedgerQuery",
             "icon": null,
-            "visible": true,
+            "visible": false,
             "keepAlive": true,
             "alwaysShow": true,
             "children": null

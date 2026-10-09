@@ -49,13 +49,13 @@
 
   <el-dialog
     v-model="createVisible"
-    title="新增债项数据修改"
+    title="新增债项资产修改"
     width="780px"
     destroy-on-close
     :close-on-click-modal="false"
   >
     <el-alert
-      title="请选择一笔已完成放款的记录，系统自动带入项目、授信、产品方案及合同信息，并生成一条待提交债项数据修改。"
+      title="请选择一笔已完成放款的记录，系统自动带入项目、授信、产品方案及合同信息，并生成一条待提交债项资产修改。"
       type="info"
       :closable="false"
       class="mb-16px"
@@ -532,7 +532,7 @@
 
   <el-dialog
     v-model="batchSubmitVisible"
-    title="批量提交债项数据修改"
+    title="批量提交债项资产修改"
     width="620px"
     destroy-on-close
   >
@@ -748,7 +748,7 @@ const api = OrderContractModificationApi as unknown as Record<string, ApiFunctio
 const callApi = async <T,>(name: string, ...args: any[]): Promise<T> => {
   const fn = api[name]
   if (typeof fn !== 'function') {
-    throw new Error(`债项数据维护 Mock 未提供 ${name} 接口`)
+    throw new Error(`债项资产维护 Mock 未提供 ${name} 接口`)
   }
   return fn(...args) as Promise<T>
 }
@@ -972,7 +972,7 @@ const selectedEffectiveContract = computed(() =>
 )
 const currentRecord = computed(() => tableObject.currentRow || undefined)
 const detailTitle = computed(() =>
-  isRecordMode.value ? '债项数据修改记录详情' : '待提交债项数据修改详情'
+  isRecordMode.value ? '债项资产修改记录详情' : '待提交债项资产修改详情'
 )
 const itemEditorTitle = computed(() =>
   editingItemIndex.value === undefined ? '新增合同项下信息' : '编辑合同项下信息'
@@ -1221,14 +1221,14 @@ const handleCreate = async () => {
       contractEndDate: createForm.contractEndDate
     })
     if (isFailedResult(result)) {
-      ElMessage.error(result.message || '新增债项数据修改失败')
+      ElMessage.error(result.message || '新增债项资产修改失败')
       return
     }
-    ElMessage.success('新增成功，申请已进入“待提交债项数据修改”节点')
+    ElMessage.success('新增成功，申请已进入“待提交债项资产修改”节点')
     createVisible.value = false
     if (!isRecordMode.value) await refreshList()
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '新增债项数据修改失败')
+    ElMessage.error(error instanceof Error ? error.message : '新增债项资产修改失败')
   } finally {
     createLoading.value = false
   }
@@ -1540,7 +1540,7 @@ const handleTransition = async (type: 'submit' | 'delete') => {
   const label = isSubmit ? '提交' : '删除'
   try {
     await ElMessageBox.confirm(
-      `确认${label}债项数据修改申请“${record.applicationNo}”吗？`,
+      `确认${label}债项资产修改申请“${record.applicationNo}”吗？`,
       '提示',
       { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
     )
@@ -1569,7 +1569,7 @@ const handleTransition = async (type: 'submit' | 'delete') => {
 
 const openBatchSubmit = () => {
   if (!selectedRecords.value.length) {
-    ElMessage.warning('请先勾选需要提交的债项数据修改申请')
+    ElMessage.warning('请先勾选需要提交的债项资产修改申请')
     return
   }
   batchSubmitOpinion.value = ''
@@ -1587,7 +1587,7 @@ const handleBatchSubmit = async () => {
     .map((record) => Number(record.id))
     .filter((id) => Number.isFinite(id))
   if (!ids.length) {
-    ElMessage.warning('未找到可提交的债项数据修改申请')
+    ElMessage.warning('未找到可提交的债项资产修改申请')
     return
   }
 
@@ -1609,7 +1609,7 @@ const handleBatchSubmit = async () => {
       )
     } else {
       ElMessage.success(
-        result.message || `已提交 ${result.submitted || ids.length} 条债项数据修改申请`
+        result.message || `已提交 ${result.submitted || ids.length} 条债项资产修改申请`
       )
     }
     batchSubmitVisible.value = false

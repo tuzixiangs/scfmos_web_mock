@@ -1,3 +1,5 @@
+import { inventoryGoodsRecords } from './inventory-goods'
+import { generateInventoryGoodsCodes } from '@/utils/productCategoryCode'
 export type InventoryPriceApplicationPhase = 'pending' | 'reviewing' | 'rejected' | 'approved'
 export type InventoryPriceApplicationStatus = '待提交' | '审查审批中' | '被否决' | '审批通过'
 
@@ -26,6 +28,10 @@ export interface InventoryPriceApplicationOpinion {
 }
 
 export interface InventoryPriceItem {
+  largeCategoryCode?: string
+  middleCategoryCode?: string
+  smallCategoryCode?: string
+  customerWarningRates?: number[]
   id: number
   largeCategory: string
   middleCategory: string
@@ -576,7 +582,33 @@ inventoryPriceApplicationRecords
   .filter((entry) => entry.phase === 'approved')
   .forEach((entry) => syncAssetLedger(entry))
 
-export const getInventoryPriceApplicationRecord = (id: number | string) => getRecord(id)
+export const getInventoryPriceApplicationRecord = (id: number | string) => {
+  const application = getRecord(id)
+  if (!application) return application
+  application.items.forEach((item) => {
+    const category = inventoryGoodsRecords.find(
+      (entry) =>
+        entry.largeCategoryName === item.largeCategory &&
+        entry.middleCategoryName === item.middleCategory &&
+        entry.smallCategoryName === item.smallCategory
+    )
+    const codes =
+      category ||
+      generateInventoryGoodsCodes({
+        largeCategoryName: item.largeCategory,
+        middleCategoryName: item.middleCategory,
+        smallCategoryName: item.smallCategory
+      })
+    item.largeCategoryCode = codes.largeCategoryCode
+    item.middleCategoryCode = codes.middleCategoryCode
+    item.smallCategoryCode = codes.smallCategoryCode
+    // Each item belongs to this application's project/product scope. These are
+    // mock customer rule factors, not prices inferred from the market quote.
+    item.customerWarningRates ||= [item.warningRate, Math.max(0, item.warningRate - 0.02)]
+    item.warningRate = Math.max(...item.customerWarningRates)
+  })
+  return application
+}
 
 export const createInventoryPriceApplicationRecord = (
   payload: InventoryPriceApplicationCreatePayload

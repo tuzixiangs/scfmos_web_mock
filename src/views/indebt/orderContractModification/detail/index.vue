@@ -13,12 +13,12 @@
 
     <el-alert
       v-if="detail && isRecordMode"
-      title="当前为已提交的债项数据修改记录，仅支持查看。"
+      title="当前为已提交的债项资产修改记录，仅支持查看。"
       type="info"
       :closable="false"
       class="record-alert"
     />
-    <el-empty v-if="!loading && !detail" description="未获取到债项数据修改详情" />
+    <el-empty v-if="!loading && !detail" description="未获取到债项资产修改详情" />
 
     <el-collapse v-if="detail" v-model="activeSections" class="system-detail-collapse">
       <el-collapse-item name="application">
@@ -198,52 +198,12 @@
           <el-table :data="detail.items" border empty-text="暂无合同项下信息">
             <el-table-column prop="sequence" label="序号" width="66" fixed="left" align="center" />
             <el-table-column prop="productCode" label="商品编号" min-width="150" fixed="left" />
-            <el-table-column label="商品名称" min-width="180" fixed="left"
-              ><template #default="{ row }"
-                ><el-input
-                  v-if="editingItemId === row.id"
-                  v-model.trim="itemForm.productName"
-                  size="small"
-                  @keyup.enter="saveInlineItem(row)"
-                /><span v-else>{{ row.productName }}</span></template
-              ></el-table-column
-            >
-            <el-table-column
-              v-for="field in categoryColumns"
-              :key="field.prop"
-              :label="field.label"
-              min-width="140"
-              ><template #default="{ row }"
-                ><div v-if="editingItemId === row.id" class="editable-category-cell"
-                  ><span>{{ itemForm[field.prop] }}</span
-                  ><el-button link type="primary" @click.stop="openCategoryDialog"
-                    ><Icon icon="ep:search" /></el-button></div
-                ><span v-else>{{ row[field.prop] }}</span></template
-              ></el-table-column
-            >
-            <el-table-column label="商品小类" min-width="150">
-              <template #default="{ row }">
-                <el-input
-                  v-if="editingItemId === row.id"
-                  v-model.trim="itemForm.smallCategory"
-                  size="small"
-                  maxlength="50"
-                  placeholder="请输入商品小类"
-                />
-                <span v-else>{{ row.smallCategory }}</span>
-              </template>
+            <el-table-column prop="productName" label="商品名称" min-width="180" fixed="left" />
+            <el-table-column v-for="field in [...categoryColumns, { prop: 'smallCategory', label: '商品小类' }]" :key="field.prop" :prop="field.prop" :label="field.label" min-width="140" />
+            <el-table-column v-for="field in editableTextFields" :key="field.prop" :label="field.label" min-width="150">
+              <template #default="{ row }"><el-input v-if="editingItemId === row.id" v-model="itemForm[field.prop]" maxlength="200" size="small" /><span v-else>{{ row[field.prop] || '-' }}</span></template>
             </el-table-column>
-            <el-table-column prop="batchNo" label="批号" min-width="120" />
-            <el-table-column prop="cabinetNo" label="柜号" min-width="120" />
-            <el-table-column label="产地" min-width="145"
-              ><template #default="{ row }"
-                ><div v-if="editingItemId === row.id" class="editable-category-cell"
-                  ><span>{{ itemForm.origin }}</span
-                  ><el-button link type="primary" @click.stop="openOriginDialog"
-                    ><Icon icon="ep:location" /></el-button></div
-                ><span v-else>{{ row.origin }}</span></template
-              ></el-table-column
-            >
+            <el-table-column prop="origin" label="产地" min-width="145" />
             <el-table-column label="仓储地" min-width="185"
               ><template #default="{ row }"
                 ><div v-if="editingItemId === row.id" class="editable-category-cell"
@@ -253,8 +213,7 @@
                 ><span v-else>{{ row.warehouseName }}</span></template
               ></el-table-column
             >
-            <el-table-column prop="specification" label="规格" min-width="120" />
-            <el-table-column label="入库数量/重量" min-width="170" align="right"
+            <el-table-column label="在库数量/重量" min-width="170" align="right"
               ><template #default="{ row }"
                 ><el-input-number
                   v-if="editingItemId === row.id"
@@ -266,18 +225,9 @@
                 /><span v-else>{{ formatQuantity(row.quantityOrWeight) }}</span></template
               ></el-table-column
             >
-            <el-table-column label="初始认定价格" min-width="165" align="right"
-              ><template #default="{ row }"
-                ><el-input-number
-                  v-if="editingItemId === row.id"
-                  v-model="itemForm.unitPrice"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  size="small"
-                /><span v-else>{{ formatAmount(row.unitPrice) }}</span></template
-              ></el-table-column
-            >
+            <el-table-column label="初始认定价格" min-width="150" align="right"><template #default="{ row }">{{ formatAmount(row.unitPrice) }}</template></el-table-column>
+            <el-table-column label="在库最新价格" min-width="165" align="right"><template #default="{ row }"><el-input-number v-if="editingItemId === row.id" v-model="itemForm.latestStockPrice" :min="0" :precision="2" :controls="false" size="small" /><span v-else>{{ formatAmount(row.latestStockPrice ?? row.unitPrice) }}</span></template></el-table-column>
+            <el-table-column v-for="field in assetSelectFields" :key="field.prop" :label="field.label" min-width="155"><template #default="{ row }"><el-select v-if="editingItemId === row.id" v-model="itemForm[field.prop]" clearable><el-option v-for="option in field.options" :key="option" :label="option" :value="option" /></el-select><span v-else>{{ row[field.prop] || '-' }}</span></template></el-table-column>
             <el-table-column label="初始认定价值" min-width="150" align="right"
               ><template #default="{ row }">{{
                 formatAmount(editingItemId === row.id ? itemCalculatedTotal : row.totalAmount)
@@ -289,10 +239,11 @@
                 ><el-date-picker
                   v-if="editingItemId === row.id"
                   v-model="itemForm.cargoStartDate"
-                  type="date"
-                  value-format="YYYY-MM-DD"
+                  type="month"
+                  value-format="YYYY-MM"
+                  format="YYYY/MM"
                   size="small"
-                /><span v-else>{{ row.cargoStartDate }}</span></template
+                /><span v-else>{{ row.cargoStartDate?.slice(0, 7).replace('-', '/') || '-' }}</span></template
               ></el-table-column
             >
             <el-table-column label="货物到期日" min-width="165"
@@ -300,10 +251,12 @@
                 ><el-date-picker
                   v-if="editingItemId === row.id"
                   v-model="itemForm.cargoEndDate"
-                  type="date"
-                  value-format="YYYY-MM-DD"
+                  :disabled-date="isPastMonth"
+                  type="month"
+                  value-format="YYYY-MM"
+                  format="YYYY/MM"
                   size="small"
-                /><span v-else>{{ row.cargoEndDate }}</span></template
+                /><span v-else>{{ row.cargoEndDate?.slice(0, 7).replace('-', '/') || '-' }}</span></template
               ></el-table-column
             >
             <el-table-column label="货物所有权" min-width="150"
@@ -725,8 +678,21 @@ const newItemForm = (): ItemEditor => ({
   currency: detail.value?.currency || '人民币',
   cargoStartDate: '',
   cargoEndDate: '',
-  cargoOwner: '核心企业'
+  cargoOwner: '核心企业',
+  latestStockPrice: 0, purchaseMethod: '', creditPurpose: '', remark1: '', remark2: ''
 })
+const editableTextFields = [
+  { prop: 'batchNo', label: '批次号' }, { prop: 'cabinetNo', label: '柜号' },
+  { prop: 'specification', label: '规格' }, { prop: 'remark1', label: '备注1' }, { prop: 'remark2', label: '备注2' }
+] as const
+const assetSelectFields = [
+  { prop: 'purchaseMethod', label: '采购方式', options: ['境内采购', '境外采购'] },
+  { prop: 'creditPurpose', label: '授信用途', options: ['支付税费', '支付货款'] }
+] as const
+const isPastMonth = (date: Date) => {
+  const now = new Date()
+  return date.getFullYear() * 12 + date.getMonth() <= now.getFullYear() * 12 + now.getMonth()
+}
 const itemForm = reactive<ItemEditor>(newItemForm())
 const itemCalculatedTotal = computed(
   () => Number(itemForm.quantityOrWeight || 0) * Number(itemForm.unitPrice || 0)
@@ -762,7 +728,7 @@ const loadDetail = async () => {
     applyDetail(await getOrderContractModificationDetail(id, node.value))
   } catch (error) {
     detail.value = undefined
-    ElMessage.error(error instanceof Error ? error.message : '获取债项数据修改详情失败')
+    ElMessage.error(error instanceof Error ? error.message : '获取债项资产修改详情失败')
   } finally {
     loading.value = false
   }
@@ -822,13 +788,12 @@ const startItemEdit = (row: OrderContractItem) => {
     : []
   Object.assign(itemForm, newItemForm(), row || {}, {
     guidancePrice: row?.guidancePrice ?? row?.unitPrice ?? 0,
-    originPath
+    originPath,
+    latestStockPrice: row.latestStockPrice ?? row.unitPrice,
+    cargoStartDate: row.cargoStartDate?.slice(0, 7) || '',
+    cargoEndDate: row.cargoEndDate?.slice(0, 7) || ''
   })
   editingItemId.value = row.id
-}
-const openCategoryDialog = () => {
-  pendingCategoryPath.value = [itemForm.largeCategory, itemForm.middleCategory].filter(Boolean)
-  categoryDialogVisible.value = true
 }
 const confirmCategory = () => {
   if (pendingCategoryPath.value.length !== 2) return
@@ -841,14 +806,6 @@ const confirmCategory = () => {
     itemForm.smallCategory = ''
   }
   categoryDialogVisible.value = false
-}
-const openOriginDialog = () => {
-  const province = provinceNames.find((name) =>
-    itemForm.origin.includes(name.replace(/[省市]$/, ''))
-  )
-  const country = countryNames.find((name) => itemForm.origin.includes(name))
-  pendingOriginPath.value = province ? ['domestic', province] : country ? ['overseas', country] : []
-  originDialogVisible.value = true
 }
 const confirmOrigin = () => {
   if (pendingOriginPath.value.length !== 2) return
@@ -869,24 +826,15 @@ const confirmWarehouse = () => {
 }
 const saveInlineItem = async (row: OrderContractItem) => {
   if (!detail.value) return
-  if (!itemForm.productName.trim()) return ElMessage.warning('请输入商品名称')
-  if (!itemForm.largeCategory || !itemForm.middleCategory)
-    return ElMessage.warning('请选择授信商品范围内的商品大类和商品中类')
-  if (!itemForm.smallCategory.trim()) return ElMessage.warning('请输入商品小类')
-  if (
-    !allowedSmallCategories(itemForm.largeCategory, itemForm.middleCategory).includes(
-      itemForm.smallCategory.trim()
-    )
-  )
-    return ElMessage.warning('商品小类必须在商品管理的小类范围内')
-  if (!itemForm.origin) return ElMessage.warning('请选择产地')
   if (!itemForm.warehouseName) return ElMessage.warning('请选择仓储地')
-  if (itemForm.quantityOrWeight <= 0 || itemForm.unitPrice <= 0)
-    return ElMessage.warning('入库数量/重量和初始认定价格必须大于0')
-  if (!itemForm.cargoStartDate || !itemForm.cargoEndDate)
-    return ElMessage.warning('请选择货物起止日期')
-  if (itemForm.cargoEndDate < itemForm.cargoStartDate)
-    return ElMessage.warning('货物到期日不能早于货物起始日')
+  if (!Number.isFinite(itemForm.quantityOrWeight) || itemForm.quantityOrWeight <= 0)
+    return ElMessage.warning('在库数量/重量必须大于0')
+  if (!Number.isFinite(itemForm.latestStockPrice) || Number(itemForm.latestStockPrice) < 0)
+    return ElMessage.warning('请输入有效的在库最新价格')
+  if (itemForm.cargoEndDate && itemForm.cargoEndDate !== row.cargoEndDate?.slice(0, 7) && isPastMonth(new Date(itemForm.cargoEndDate + '-01')))
+    return ElMessage.warning('货物到期月份须晚于当前月份')
+  if (itemForm.cargoStartDate && itemForm.cargoEndDate && itemForm.cargoEndDate < itemForm.cargoStartDate)
+    return ElMessage.warning('货物到期月份不能早于起始月份')
   itemSaving.value = true
   try {
     const { id: _id, productCode: _productCode, originPath: _originPath, ...payload } = itemForm

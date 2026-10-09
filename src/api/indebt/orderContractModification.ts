@@ -36,6 +36,11 @@ export interface OrderContractItem {
   batchNo: string
   cabinetNo: string
   guidancePrice?: number
+  latestStockPrice?: number
+  purchaseMethod?: string
+  creditPurpose?: string
+  remark1?: string
+  remark2?: string
   specification: string
   origin: string
   warehouseName: string
@@ -49,6 +54,11 @@ export interface OrderContractItem {
 }
 
 export interface OrderContractItemForm {
+  latestStockPrice?: number
+  purchaseMethod?: string
+  creditPurpose?: string
+  remark1?: string
+  remark2?: string
   productName: string
   largeCategory: string
   middleCategory: string
